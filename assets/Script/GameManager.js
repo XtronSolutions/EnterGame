@@ -1,0 +1,1422 @@
+//#region superclasses and enumerations
+//-------------------------------------------enumeration for type of business-------------------------//
+var EnumBusinessType = cc.Enum({
+    None:0,
+    HomeBased: 1,                   //a business that you operate out of your home
+    brickAndmortar: 2               //a store front business
+});
+
+//-------------------------------------------class for BusinessInfo-------------------------//
+var BusinessInfo = cc.Class({
+    name: "BusinessInfo",
+properties: { 
+    Name: "BusinessData",
+    BusinessType:
+   {
+       displayName:"Mode",
+       type: EnumBusinessType,
+       default: EnumBusinessType.None,
+       serializable: true,
+       tooltip:"Business catogory for players",}, 
+    BusinessTypeDescription:
+   {
+       displayName: "Type",
+       type: cc.Text,
+       default: "",
+       serializable: true,
+       tooltip: "Type (by name) of business player is opening",},
+    BusinessName:
+   {
+       displayName: "Name",
+       type: cc.Text,
+       default: "",
+       serializable: true,
+       tooltip: "Name of the business player is opening",},
+     Amount:
+       {
+           displayName: "Amount",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "balance of business",},
+      IsPartnership:
+       {
+           displayName: "IsPartnership",
+           default: false,
+           typw:cc.Boolean,
+           serializable: true,
+           tooltip: "Check if player has done partnership with someone with current business",},
+       PartnerID:
+           {
+               displayName:"PartnerID",
+               type: cc.Text,
+               default: "",
+               serializable: true,
+               tooltip:"ID of the partner with whom player has formed partnership",},
+        LocationsName:
+           {
+               displayName:"LocationsName",
+               type: [cc.Text],
+               default: [],
+               serializable: true,
+               tooltip:"if player owns brick and mortar he/she can expand to new location",},
+        LoanTaken:
+           {
+               displayName:"LoanTaken",
+               type: cc.Boolean,
+               default: false,
+               serializable: true,},
+        LoanAmount:
+           {
+               displayName:"LoanAmount",
+               type: cc.Integer,
+               default: 0,
+               serializable: true,},
+
+},
+
+ctor: function () { //constructor
+}
+});
+
+//-------------------------------------------class for StockInfo-------------------------//
+var StockInfo = cc.Class({
+    name: "StockInfo",
+properties: { 
+    Name: "StockData",
+    BusinessName:
+   {
+       displayName:"BusinessName",
+       type: cc.Text,
+       default: "",
+       serializable: true,
+       tooltip:"name of the business in which stocks will be held",}, 
+    ShareAmount:
+   {
+       displayName: "ShareAmount",
+       type: cc.Integer,
+       default: 0,
+       serializable: true,
+       tooltip: "Share amount of the stock",},
+},
+
+ctor: function () { //constructor
+}
+});
+
+//-------------------------------------------class for  Player Data-------------------------//
+var PlayerData = cc.Class({
+    name:"PlayerData",
+properties: { 
+    PlayerName:
+   {
+       displayName:"PlayerName",
+       type: cc.Text,
+       default: "",
+       serializable: true,
+       tooltip:"name of the player",},
+    PlayerUID:
+   {
+       displayName:"PlayerUID",
+       type: cc.Text,
+       default: "",
+       serializable: true,
+       tooltip:"ID of the player",},
+    AvatarID:
+       {
+           displayName: "AvatarID",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "id reference for player avatar selection",},
+    IsBot:
+       {
+           displayName: "IsBot",
+           default: false,
+           typw:cc.Boolean,
+           serializable: true,
+           tooltip: "Check if current player is bot",}, 
+    NoOfBusiness:
+   {
+       displayName:"Business",
+       type: [BusinessInfo],
+       default: [],
+       serializable: true,
+       tooltip:"Number of business a player can own",}, 
+    HomeBasedAmount:
+   {
+       displayName:"HomeBasedAmount",
+       type: cc.Integer,
+       default: 0,
+       serializable: true,
+       tooltip:"number of home based business a player owns",}, 
+    BrickAndMortarAmount:
+   {
+       displayName:"BrickAndMortarAmount",
+       type: cc.Integer,
+       default: 0,
+       serializable: true,
+       tooltip:"number of brick and mortar business a player owns",}, 
+    TotalLocationsAmount:
+   {
+       displayName:"TotalLocationsAmount",
+       type: cc.Integer,
+       default: 0,
+       serializable: true,
+       tooltip:"number of locations of all brick and mortar businessess",}, 
+    NoOfStocks:
+   {
+       displayName:"Stocks",
+       type: [StockInfo],
+       default: [],
+       serializable: true,
+       tooltip:"Number of stock a player owns",}, 
+    Cash:
+       {
+           displayName: "PlayerCash",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "Amount of cash player owns",},
+    GoldCount:
+       {
+           displayName: "GoldCount",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "count of gold a player owns",},
+    StockCount:
+       {
+           displayName: "StockCount",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "count of stocks a player owns",},
+    LoanTaken:
+       {
+           displayName: "LoanTaken",
+           default: false,
+           typw:cc.Boolean,
+           serializable: true,
+           tooltip: "Check if player has taken loan from bank or not",},
+     LoanAmount:
+       {
+           displayName: "LoanAmount",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "Amount of loan taken from the bank",},
+    MarketingAmount:
+       {
+           displayName: "MarketingAmount",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "marketing amount a player owns",},
+    LawyerStatus:
+       {
+           displayName: "LawyerStatus",
+           default: false,
+           type:cc.Boolean,
+           serializable: true,
+           tooltip: "Check if player has hired a lawyer or not",},
+    IsBankrupt:
+       {
+           displayName: "IsBankrupt",
+           default: false,
+           type:cc.Boolean,
+           serializable: true,
+           tooltip: "Check if player has been Bankrupted or not",},
+    PlayerRollCounter:
+       {
+           displayName: "PlayerRollCounter",
+           default: 0,
+           type:cc.Integer,
+           serializable: true,
+           tooltip: "integer to store roll countor for player",},
+    InitialCounterAssigned:
+       {
+           displayName: "InitialCounterAssigned",
+           default: false,
+           type:cc.Boolean,
+           serializable: true,},
+     isGameFinished:
+           {
+               displayName:"isGameFinished",
+               type: cc.Boolean,
+               default: false,
+               serializable: true,},
+     TotalScore:
+           {
+               displayName:"TotalScore",
+               type: cc.Integer,
+               default: 0,
+               serializable: true,},
+    GameOver:
+           {
+               displayName:"GameOver",
+               type: cc.Boolean,
+               default: false,
+               serializable: true,},
+},
+ctor: function () { //constructor
+}
+
+});
+//#endregion
+
+//#region Game Manager Class
+//-------------------------------------------(main class) class for Game Manager-------------------------//
+var RollCounter=0;
+var DiceTemp=0;
+var DiceRoll=0;
+var IsTweening=false;
+var GamePlayReferenceManager=null;
+var TurnCheckArray=[];
+var BusinessLocationNodes=[];
+
+var PassedPayDay=false;
+var DoublePayDay=false;
+
+//cards functionality
+var NextTurnDoublePay=false;
+var SkipNextTurn=false;
+var SkipNextPayday=false; //skip whole pay day
+var SkipHMNextPayday=false; //skip pay day for home based businessess only
+var SkipBMNextPayday=false; //skip pay day for brick & mortar businessess only
+var CardEventReceived=false;
+
+var isGameOver=false;
+
+var GameManager=cc.Class({
+    name:"GameManager",
+    extends: cc.Component,
+    properties: {
+        PlayerGameInfo: {
+            default: [],                
+            type: [PlayerData],
+            serializable: true,
+            tooltip: "all player's data"},
+        PlayerNode: {
+            default:null,                
+            type: cc.Node,
+            serializable: true,
+            tooltip:"Node reference for player",},    
+        CameraNode: {
+            default:null,                
+            type: cc.Node,
+            serializable: true,
+            tooltip:"Node reference for camera",},    
+        AllPlayerUI: {
+            default:[],                
+            type: [cc.Node],
+            serializable: true,
+            tooltip:"Node reference of ui of all players",},      
+        AllPlayerNodes: {
+            default:[],                
+            type: [cc.Node],
+            serializable: true,
+            tooltip:"Node reference of node of all players inside gameplay",},   
+        StartLocationNodes: {
+            default:[],                
+            type: [cc.Node],
+            serializable: true,
+            tooltip:"Node reference of attay of locations",},   
+    },
+    statics: {
+        PlayerData: PlayerData,
+        BusinessInfo:BusinessInfo,
+        EnumBusinessType:EnumBusinessType,
+        Instance:null
+    },
+
+    //#region All Functions of GameManager
+    
+    /**
+    @summary called when instance of class is created
+    @method onLoad
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    onLoad () {
+        GameManager.Instance=this;
+        this.TurnNumber=0;
+        this.TurnCompleted=false;
+        TurnCheckArray=[];
+        this.CheckReferences();
+        this.Init_GameManager();   
+        
+        this.RandomCardIndex=0;
+        this.CardCounter=0;
+        this.CardDisplayed=false;
+        CardEventReceived=false;
+    },
+
+    /**
+    @summary called to assign reference of required classes
+    @method CheckReferences
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    CheckReferences()
+     {
+        if(!GamePlayReferenceManager || GamePlayReferenceManager==null)
+        GamePlayReferenceManager=require('GamePlayReferenceManager');
+     },
+
+    /**
+    @summary initial gamemanager essetials
+    @method Init_GameManager
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    Init_GameManager () {
+        this.Camera=this.CameraNode.getComponent(cc.Camera);
+        this.isCameraZooming=false;
+        this.PlayerGameInfo=[];
+        RollCounter=0;
+        DiceTemp=0;
+        DiceRoll=0;  
+
+        //if joined player is spectate
+        if(GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate()==true)
+        {
+            console.log("status of initial business setp: "+GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("InitialSetup"));
+            //if inital setup has been done and game is under way
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("InitialSetup")==true)
+            {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleLeaveRoomButton_SpectateModeUI(true);
+                var AllData=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("PlayerGameInfo");
+                this.PlayerGameInfo=AllData;
+
+                console.log(this.PlayerGameInfo);
+
+                this.SyncDataToPlayerGameInfo(0);
+                this.SyncAllData_SpectateManager();
+                this.TurnNumber=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("TurnNumber");
+                this.UpdateGameUI(true,this.TurnNumber);            
+            }
+            else
+            {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleLeaveRoomButton_SpectateModeUI(true);
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().InitialScreen_SpectateMode();
+            }
+        }
+        else
+        {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(true);
+        }
+    },
+
+    //#region public functions to get data (accessible from other classes)
+    GetTurnNumber () {
+        return this.TurnNumber;
+    },
+    //#endregion
+
+
+    //#region SpectateMode Code
+
+    SyncAllData_SpectateManager()
+    {
+        this.AssignPlayerGameUI();
+
+        for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+            var _toPos=cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.x,GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.y);
+            this.AllPlayerNodes[index].setPosition(_toPos.x,_toPos.y);
+        }
+
+        console.log("synced playernodes");
+
+        for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; index++) {
+            this.AllPlayerNodes[index].active=true;
+        }
+    },
+
+    CheckTurnOnSpectateLeave_SpectateManager()
+    {
+      var TotalConnectedPlayers=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorCount();
+      if(TurnCheckArray.length==TotalConnectedPlayers)
+      {
+        TurnCheckArray=[];
+        this.TurnCompleted=true;
+
+        if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+        {
+            this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=RollCounter;
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[this.TurnNumber]);
+            this.ChangeTurn();
+            console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
+            console.log("Change Turn is called by: "+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+        }
+      }
+
+    },
+
+    //#endregion
+
+
+    //#region functions related to Turn Mechanism
+
+   /**
+    @summary raised event on all connected clients to let others know a what card has been selected by player
+    @method RaiseEventForCard
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+  RaiseEventForCard(_data)
+  {
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(5,_data);
+  },
+
+
+  DisplayCardOnOthers()
+  {
+    console.error(CardEventReceived);
+    if(CardEventReceived==true)
+    {
+        console.error(this.CardCounter);
+        CardEventReceived=false;
+        if(!this.CardDisplayed)
+        {
+            this.CardDisplayed=true;
+            GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.CardCounter].ReferenceLocation.getComponent('SpaceHandler').OnLandedOnSpace(false,this.RandomCardIndex);
+        }
+    }
+    else
+    {
+        setTimeout(() => { //check after every 0.5 seconds
+            this.DisplayCardOnOthers();
+        }, 500);
+    }
+  },
+
+  ResetCardDisplay()
+  {
+    this.CardDisplayed=false;
+  },
+
+  ReceiveEventForCard(_data)
+  {
+
+    this.CheckReferences();
+    console.log(_data);
+
+    var RandomCard=_data.randomCard;
+    var counter=_data.counter;
+
+    this.RandomCardIndex=RandomCard;
+    this.CardCounter=counter;
+
+   
+    console.error(CardEventReceived);
+    if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+    {
+        GamePlayReferenceManager.Instance.Get_SpaceManager().Data[counter].ReferenceLocation.getComponent('SpaceHandler').OnLandedOnSpace(true,RandomCard);
+    }
+    else
+    {
+        CardEventReceived=true;
+        // if(IsTweening==false && this.CardDisplayed==false)
+        // {
+        //     GamePlayReferenceManager.Instance.Get_SpaceManager().Data[counter].ReferenceLocation.getComponent('SpaceHandler').OnLandedOnSpace(false,RandomCard);
+        //     this.CardDisplayed=true;
+        // }
+    }
+
+    console.error(CardEventReceived);
+
+    
+  },
+
+   /**
+    @summary raised event on all connected clients to let others know a particular player has complete their move
+    @method RaiseEventTurnComplete
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+  RaiseEventTurnComplete()
+  {
+    if(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate==false)
+    {
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(4,GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID);
+    }
+  },
+
+
+  /**
+    @summary called on all players to validate if move is completed on all connected clients
+    @method ReceiveEventTurnComplete
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+  ReceiveEventTurnComplete(_uid)
+  {
+      if(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate==false)
+      {
+        console.log(TurnCheckArray.length);
+
+        if(TurnCheckArray.length==0)
+                TurnCheckArray.push(_uid); 
+
+        var ArrayLength=TurnCheckArray.length;
+        var IDFound=false;
+        for (let index = 0; index < ArrayLength; index++) {
+                if(TurnCheckArray[index]==_uid)
+                IDFound=true;
+        }
+
+        if(!IDFound)
+        {
+            TurnCheckArray.push(_uid);
+        }
+        console.log(TurnCheckArray);
+        console.log(TurnCheckArray.length);
+
+        // var TotalConnectedPlayers=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorCount();
+        var TotalConnectedPlayers=this.PlayerGameInfo.length;
+        if(TurnCheckArray.length==TotalConnectedPlayers)
+        {
+            TurnCheckArray=[];
+            this.TurnCompleted=true;
+
+            if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+            {
+                this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=RollCounter;
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[this.TurnNumber]);
+                this.ChangeTurn();
+                console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
+                console.log("Change Turn is called by: "+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+            }
+        }
+    }
+  },
+
+
+   /**
+    @summary called when dice animation is played on all players
+    @method ChangeTurn
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    ChangeTurn()
+    {
+        if(this.TurnNumber<this.PlayerGameInfo.length-1)
+            this.TurnNumber=this.TurnNumber+1;
+        else
+            this.TurnNumber=0;
+
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2,this.TurnNumber);
+    },
+
+    /**
+    @summary called from raise on event (from function "StartTurn" and "ChangeTurn" of this same class) to handle turn
+    @method TurnHandler
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    TurnHandler(_turn)
+    {
+        var _playerMatched=false;
+        if(IsTweening) //check if animation of turn being played on other players 
+        {
+            setTimeout(() => {
+                this.TurnHandler(_turn);
+            }, 800);
+        }
+        else
+        {
+            
+            this.TurnNumber=_turn;
+            if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+            {
+                _playerMatched=true;
+
+                if(!SkipNextTurn)
+                {
+                    setTimeout(() => {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+                    }, 1000);
+                    console.log("its your turn "+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+                }
+            }
+
+            this.UpdateGameUI(true,this.TurnNumber);
+
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("TurnNumber",this.TurnNumber,true);
+            console.log("Turn Of: "+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+            console.log(this.AllPlayerUI[this.TurnNumber].getComponent('PlayerProfileManager').PlayerInfo);
+            console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
+            console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors());
+            this.SyncDataToPlayerGameInfo(0);
+
+
+            //force sync spectator after completion of each turn
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate==true)
+                this.SyncAllData_SpectateManager();
+
+            //skip this turn as skip turn has been called before
+            if(_playerMatched && SkipNextTurn)
+            {
+                IsTweening=false;
+                this.ChangeTurn();
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping current turn",1200);
+                SkipNextTurn=false;
+            }
+
+            if(_playerMatched && this.PlayerGameInfo[this.TurnNumber].isGameFinished)
+            {
+                IsTweening=false;
+                this.ChangeTurn();
+            }
+
+        }
+    },
+
+    SyncDataToPlayerGameInfo(_ind)
+    {
+        var MainSessionData=GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors();
+        var MyData=GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor();
+        var _counter=_ind;
+        console.log(this.PlayerGameInfo[_counter].PlayerUID);
+        console.log(MyData.customProperties.PlayerSessionData.PlayerUID);
+        if(this.PlayerGameInfo[_counter].PlayerUID!=MyData.customProperties.PlayerSessionData.PlayerUID) //dont update my own data
+        {
+            for (let index = 0; index < MainSessionData.length; index++) {
+                    if(this.PlayerGameInfo[_counter].PlayerUID==MainSessionData[index].customProperties.PlayerSessionData.PlayerUID)
+                    {
+                        this.PlayerGameInfo[_counter]=MainSessionData[index].customProperties.PlayerSessionData;
+                        
+                        if(_counter<this.PlayerGameInfo.length-1)
+                        {
+                            _counter++;
+                            console.log("adding counter: "+_counter);
+                            this.SyncDataToPlayerGameInfo(_counter);
+                        }
+                        else{
+                            console.log(this.PlayerGameInfo);
+                        }
+                    }
+                }
+        }
+        else
+            {
+                if(_counter<this.PlayerGameInfo.length-1)
+                    {
+                        _counter++;
+                        console.log("adding counter: "+_counter);
+                        this.SyncDataToPlayerGameInfo(_counter);
+                    }
+                else{
+                        console.log(this.PlayerGameInfo);
+                    }
+            }
+    },
+
+    
+
+    /**
+    @summary called when all players have done their initial setup and first turn starts
+    @method StartTurn
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    StartTurn()
+    {
+        this.AssignPlayerGameUI();
+        this.EnablePlayerNodes();
+        this.TurnNumber=0; //reseting the turn number on start of the game
+
+        //sending initial turn number over the network to start turn simultanously on all connected player's devices
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2,this.TurnNumber);
+    },
+    //#endregion
+
+
+    //#region Function for gameplay
+     /**
+    @summary called to assign player UI (name/icons/number of players that to be active etc)
+    @method AssignPlayerGameUI
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    AssignPlayerGameUI()
+    {
+        for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; index++) {
+            this.AllPlayerUI[index].active=true;
+            this.AllPlayerUI[index].getComponent('PlayerProfileManager').PlayerInfo=this.PlayerGameInfo[index];
+            this.AllPlayerUI[index].getComponent('PlayerProfileManager').SetName(this.PlayerGameInfo[index].PlayerName);
+        }
+    },
+
+    UpdateGameUI(_toggleHighlight,_index)
+    {
+        if(_toggleHighlight)
+        {
+            this.AllPlayerUI[_index].getComponent('PlayerProfileManager').PlayerInfo=this.PlayerGameInfo[_index];
+
+            for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; index++) {
+                if(_index==index)
+                {
+                    this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleBGHighlighter(true);
+                    this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleTextighlighter(true);
+                }
+                else
+                {
+                    this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleBGHighlighter(false);
+                    this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleTextighlighter(false);
+                }
+            }
+        }
+    },
+
+     /**
+    @summary called to enbale respective players nodes inside gamaplay
+    @method EnablePlayerNodes
+    @param {string} none
+    @returns {boolean} no return
+   **/ 
+    EnablePlayerNodes()
+    {
+        for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+            if(this.PlayerGameInfo[index].HomeBasedAmount==1)   
+                this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[0].position.x,this.StartLocationNodes[0].position.y);
+            else if(this.PlayerGameInfo[index].BrickAndMortarAmount==1)   
+                this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[1].position.x,this.StartLocationNodes[1].position.y);
+        }
+
+        for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; index++) {
+            this.AllPlayerNodes[index].active=true;
+        }
+    },
+
+    SetFollowCameraProperties()
+    {
+        let targetPos=this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0,120));
+        this.CameraNode.position=this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
+   
+        let ratio=targetPos.y/cc.winSize.height;
+        this.Camera.zoomRatio=2;
+    },
+
+    lateUpdate () {
+        if(this.isCameraZooming)    
+            this.SetFollowCameraProperties();
+    },
+
+    syncDiceRoll(_roll)
+    {
+        IsTweening=true;
+        this.CardDisplayed=false;
+
+        for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray().length; index++) {
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray()[index].customProperties.Data.userID==this.PlayerGameInfo[this.TurnNumber].PlayerUID)
+            {
+                console.log("player matched:"+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+                this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray()[index].customProperties.PlayerSessionData.PlayerRollCounter;
+            } 
+        }
+
+        if(this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter==0 && !this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned)
+        {
+            if(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[0].BusinessType==1)
+            {
+                RollCounter=0;
+                this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned=true;
+                console.error(RollCounter);
+            }
+            else
+            {
+                this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned=true;
+                RollCounter=13;
+                console.error(RollCounter);
+            }
+        }
+        else
+        {
+            if(this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter==12)
+                this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter+21;  
+            else
+                this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter+1;
+
+            RollCounter=this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter;
+            console.error(RollCounter-1);
+        }
+        
+
+        DiceRoll=_roll;
+        DiceTemp=0;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().PrintDiceValue_TurnDecision(DiceRoll);
+        let targetPos=this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0,120));
+        var _pos=this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
+        this.TweenCamera(_pos,true,0.4);   
+    },
+
+    TempCheckSpace(_rolling)
+    {
+        var tempcounter=0;
+        var tempcounter2=0;
+        for (let index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray().length; index++) {
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray()[index].customProperties.Data.userID==this.PlayerGameInfo[this.TurnNumber].PlayerUID)
+            {
+                //console.log("player matched:"+this.PlayerGameInfo[this.TurnNumber].PlayerName);
+                tempcounter2=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray()[index].customProperties.PlayerSessionData.PlayerRollCounter;
+            } 
+        }
+
+        // console.error(tempcounter2+" "+_roll);
+        // if((tempcounter2+_roll)<33)
+        // {
+        //     if(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[0].BusinessType==1)
+        //     {
+        //         tempcounter=0+_roll-1;
+        //         console.error(tempcounter);
+        //     }
+        //     else
+        //     {
+        //         tempcounter=13+_roll-1;
+        //         console.error(tempcounter);
+        //     }
+        // }
+        // else
+        // {
+        //     console.error(tempcounter2+" "+_roll);
+        //     tempcounter=tempcounter2+_roll;
+        // }
+
+      if(tempcounter2-1<0)
+      {
+        console.error("starting from oblivion");
+        tempcounter=tempcounter2+_rolling-1;
+        var dicetobe=parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[tempcounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType);
+        console.error("to be: "+dicetobe);
+      }
+      else
+      {
+        tempcounter=tempcounter2+_rolling;
+        var dicetobe=parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[tempcounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType);
+        console.error("to be: "+dicetobe);
+      }
+
+    },
+
+    RollDice:function()
+    {
+        var Dice1=this.getRandom(1,7);
+        var Dice2=this.getRandom(1,7);
+
+        // var Dice1=this.getRandom(8,25);
+        // var Dice2=this.getRandom(8,25);
+
+        DiceRoll=Dice1+Dice2;
+        //this.TempCheckSpace(DiceRoll);
+        console.log("dice number: "+DiceRoll);
+
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(3,DiceRoll); 
+    },
+
+    RollOneDice()
+    {
+        var Dice1=this.getRandom(1,7);
+        return Dice1;
+    },
+
+    RollTwoDices()
+    {
+        var Dice1=this.getRandom(1,7);
+        var Dice2=this.getRandom(1,7);
+        return (Dice1+Dice2);
+    },
+
+    callUponCard()
+    {
+        var _spaceID=parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType);
+        if(_spaceID!=6 && _spaceID!=7) //6 menas payday and 7 means double payday
+        {
+            var RandomCard=this.getRandom(0,15);
+            
+            //for testing only
+            if(_spaceID==2) //landed on some big buseinss
+            {
+                var valueIndex=[0,1,7,10];
+                var index=this.getRandom(0,4);
+                RandomCard=valueIndex[index];
+            }else if(_spaceID==5) //landed on some losses cards
+            {
+                var valueIndex=[0,5,6,2];
+                var index=this.getRandom(0,4);
+                RandomCard=valueIndex[index];
+            }
+            else if(_spaceID==3) //landed on some marketing cards
+            {
+                var valueIndex=[0,7,3,8,13,9];
+                var index=this.getRandom(0,6);
+                RandomCard=valueIndex[index];
+            }
+
+            else if(_spaceID==1) //landed on some marketing cards
+            {
+                var valueIndex=[0,1,6,10];
+                var index=this.getRandom(0,4);
+                RandomCard=valueIndex[index];
+            }
+
+            IsTweening=false;
+            if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+            {    
+                var SendingData={"randomCard":RandomCard,"counter":RollCounter};    
+                this.RaiseEventForCard(SendingData);
+            }
+            else
+            {
+                this.DisplayCardOnOthers();
+            }
+        }
+        else
+        {
+            IsTweening=false;
+            console.log("landed on pay day or double pay day and work is done so changing turn");
+            this.RaiseEventTurnComplete();
+        }
+    },
+
+    CallGameComplete()
+    {
+        if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+        {
+            var _playerIndex=this.TurnNumber;
+            if(this.PlayerGameInfo[_playerIndex].isGameFinished==false)
+            {
+                this.PlayerGameInfo[_playerIndex].isGameFinished=true;
+
+                var _cash=this.PlayerGameInfo[this.TurnNumber].Cash;
+                var HMAmount=GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
+                var BMAmount=GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+                var BMLocations=GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+
+                var loanAmount=0;
+                for (let index = 0; index < GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness.length; index++) {
+                    if(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[index].LoanTaken)
+                    {
+                        loanAmount+=GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[index].LoanAmount;
+                    } 
+                }
+
+                var BMCash=(BMAmount+BMLocations)*150000;
+
+                var HMCash=0;
+                if(HMAmount==1)
+                    HMCash=60000;
+                else if(HMAmount==2)
+                    HMCash=25000+60000;
+                else if(HMAmount==3)
+                    HMCash=25000+25000+60000;
+
+                var TotalAssets=_cash+BMCash+HMCash-loanAmount;
+
+                this.PlayerGameInfo[this.TurnNumber].TotalScore=TotalAssets;
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[this.TurnNumber]);
+                
+            }
+        }
+    },
+
+   RaiseEventForGameComplete(_data)
+   {
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(6,_data);
+   },
+
+   SyncGameOver(_UID)
+   {
+    var MainSessionData=GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors();
+    var MyData=GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor();
+    console.log(_UID);
+    console.log(MyData.customProperties.PlayerSessionData.PlayerUID);
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData.GameOver=true;
+
+    if(MyData.customProperties.PlayerSessionData.PlayerUID==_UID)
+    {
+        //you won
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(
+            "Total Cash: "+MyData.customProperties.PlayerSessionData.TotalScore+"\n"+'\n'+
+            "Congrats! your cash is highest, you have won the game."+"\n"+'\n'+"\n"+
+            "Game will be restarted automatcally after 15 seconds",
+            15000
+        );
+    }
+    else
+    {
+        //you lose
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(
+            "Total Cash: "+MyData.customProperties.PlayerSessionData.TotalScore+"\n"+'\n'+
+            "unfortunately you have lost the game."+"\n"+'\n'+"\n"+
+            "Game will be restarted automatcally after 15 seconds",
+            15000
+        );
+    }
+
+    setTimeout(() => {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().RestartGame();
+    }, 15060);
+
+   },
+
+    StartDiceRoll:function()
+    {
+        if(RollCounter>=GamePlayReferenceManager.Instance.Get_SpaceManager().Data.length)
+        {
+            console.log("Gameover");
+            isGameOver=true;
+            this.ZoomCameraOut();
+
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate==false)
+            {
+
+                this.CallGameComplete();
+                var playercompleted=0;
+
+                var MainSessionData=GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors();
+                for (let index = 0; index < MainSessionData.length; index++) {
+                    if(MainSessionData[index].customProperties.PlayerSessionData.isGameFinished)
+                    {
+                        playercompleted++;
+                    }
+                }
+        
+            
+                if(playercompleted==this.PlayerGameInfo.length)
+                {
+                    var max=0;
+                    var SelectedInd=0;
+                    var SessionData=GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors();
+                    for (let index = 0; index < SessionData.length; index++) {
+                        var _value = SessionData[index].customProperties.PlayerSessionData.TotalScore;
+
+                        if(_value > max)
+                        {
+                            SelectedInd=index;
+                            max=_value;
+                        }
+                    }
+
+                    console.log("game won by player id: "+SessionData[SelectedInd].customProperties.PlayerSessionData.PlayerUID);
+                
+
+                    this.RaiseEventForGameComplete(SessionData[SelectedInd].customProperties.PlayerSessionData.PlayerUID);
+                    //game completed on all systems
+                }else
+                {
+                    IsTweening=false;
+                    this.ChangeTurn();
+                }
+            }
+        }
+        else
+        {
+            DiceTemp=DiceTemp+1; 
+            var _toPos=cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.x,GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.y);
+            this.TweenPlayer(this.AllPlayerNodes[this.TurnNumber],_toPos);
+        }
+    },
+
+    getRandom:function(min,max)
+    {
+        return Math.floor(Math.random() * (max - min) ) + min; // min included and max excluded
+    },
+
+    TweenCamera: function (_pos, isZoom,time) {   
+        cc.tween(this.CameraNode)
+        .to(time, { position: cc.v2(_pos.x, _pos.y)},{easing:"quadInOut"})
+        .call(() => {
+        if(isZoom)
+            this.ZoomCameraIn();
+        else
+            this.ZoomCameraOut();
+        })
+        .start();
+    },
+
+    ZoomCameraIn () {
+        setTimeout(() => {
+             if(this.Camera.zoomRatio<2)
+             {
+                this.Camera.zoomRatio=this.Camera.zoomRatio+0.03;
+                this.ZoomCameraIn();
+             }
+             else
+             {
+                this.Camera.zoomRatio=2;
+                this.isCameraZooming=true;
+                this.StartDiceRoll();
+             }
+          }, 10);
+    },
+
+    ZoomCameraOut () {
+        setTimeout(() => {
+            if(this.Camera.zoomRatio>=1)
+            {
+               this.isCameraZooming=false;
+               this.Camera.zoomRatio=this.Camera.zoomRatio-0.03;
+               this.ZoomCameraOut();
+            }
+            else
+            {
+                this.CameraNode.position=cc.Vec2(0,0);
+                this.Camera.zoomRatio=1;
+
+                //GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().PrintDiceValue_TurnDecision(0);
+                
+                if(!isGameOver)
+                {
+                if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+                {
+                    if(parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType)==6)
+                        PassedPayDay=true;
+                    
+                    if(parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType)==7)
+                        DoublePayDay=true;
+                     
+                    if(PassedPayDay && !DoublePayDay && !NextTurnDoublePay)
+                    {
+                        NextTurnDoublePay=false;
+                        PassedPayDay=false;
+                        DoublePayDay=false;
+                        this.ProcessPayDay_TurnDecision(false);
+                    }
+                    else if( (PassedPayDay && DoublePayDay) || (PassedPayDay && NextTurnDoublePay))
+                    {
+                        NextTurnDoublePay=false;
+                        PassedPayDay=false;
+                        DoublePayDay=false;
+                        this.ProcessPayDay_TurnDecision(true);
+                        
+                    }
+                    else
+                    {
+                        this.callUponCard();
+                    }
+                }
+                else
+                {
+                    this.callUponCard();
+                }
+            }
+            }
+         }, 10);
+         
+    },
+
+    TweenPlayer: function (Node,ToPos) {
+        cc.tween(Node)
+        .to(0.4, { position: cc.v2(ToPos.x, ToPos.y)},{easing:"quadInOut"})
+        .call(() => {
+        if(DiceTemp<DiceRoll)
+        {
+            if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+            {
+                if(parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType)==6)
+                    PassedPayDay=true;
+                
+                if(parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType)==7)
+                    DoublePayDay=true;
+            }
+
+            if(RollCounter==12)
+                RollCounter=RollCounter+21;  
+            else
+                RollCounter=RollCounter+1;
+
+            //DiceTemp=DiceTemp+1; 
+            console.log(DiceTemp+" "+RollCounter);
+            
+            this.StartDiceRoll();
+            //this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter=RollCounter;
+           
+        }
+        else
+        {
+            var _newpos=cc.Vec2(0,0);
+            this.TweenCamera(_newpos,false,0.6); //zoomout
+        }
+
+        })
+        .start();
+    },
+
+    //rules implmentation during turn (turn decisions)
+
+    TogglePayDay(_st1,_St2)
+    {
+        PassedPayDay=_st1;
+        DoublePayDay=_St2;
+    },
+
+    ExpandBusiness_TurnDecision(amount,_index,_locationName)
+    {
+        if(this.PlayerGameInfo[this.TurnNumber].Cash>=amount)
+        {
+            this.PlayerGameInfo[this.TurnNumber].Cash=this.PlayerGameInfo[this.TurnNumber].Cash-amount;
+            this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount=this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount+1;
+            this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.",1000);
+            setTimeout(() => {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
+            }, 1200);
+        }
+        else
+        {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ "+amount);
+        }
+
+    },
+
+    GenerateExpandBusiness_Prefabs_TurnDecision()
+    {
+        BusinessLocationNodes=[];
+
+        console.log(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness);
+        for (let i = 0; i < this.PlayerGameInfo[this.TurnNumber].NoOfBusiness.length; i++) {
+            if(parseInt(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[i].BusinessType)==2) //this means there is brick and mortar in list
+            {
+                var node = cc.instantiate(GamePlayReferenceManager.Instance.Get_GameplayUIManager().TurnDecisionSetupUI.ExpandBusinessPrefab);
+                node.parent = GamePlayReferenceManager.Instance.Get_GameplayUIManager().TurnDecisionSetupUI.ExpandBusinessScrollContent;
+                node.getComponent('ExpandBusinessHandler').SetBusinessIndex(i);
+                node.getComponent('ExpandBusinessHandler').SetName(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[i].BusinessName);
+                node.getComponent('ExpandBusinessHandler').ResetEditBox();
+                BusinessLocationNodes.push(node);
+            } 
+        }
+        console.log(BusinessLocationNodes);
+        return BusinessLocationNodes.length;
+    },
+
+    DestroyGeneratedNodes()
+    {
+        for (let index = 0; index < BusinessLocationNodes.length; index++) {
+            BusinessLocationNodes[index].destroy();
+        }
+
+        BusinessLocationNodes=[];
+    },
+
+    UpdateStocks_TurnDecision(_name,_ShareAmount,_isAdding)
+    {
+        if(_isAdding)
+        {
+            var _stock=new StockInfo();
+            _stock.BusinessName=_name;
+            _stock.ShareAmount=_ShareAmount;
+
+            this.PlayerGameInfo[this.TurnNumber].NoOfStocks.push(_stock);
+        }
+    },
+
+    ProcessPayDay_TurnDecision(_isDoublePayDay=false)
+    {
+        if(SkipNextPayday) //if previously skip payday was stored by any card
+        {
+            SkipNextPayday=false;
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping PayDay.",1600);
+            setTimeout(() => {
+                this.callUponCard();
+            }, 1650);
+        }
+        else
+        {
+            var _title="";
+
+            if(_isDoublePayDay)
+                _title="DoublePayDay";
+            else
+                _title="PayDay";
+
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title,_isDoublePayDay,SkipHMNextPayday,SkipBMNextPayday);
+        }
+    },
+
+//#endregion
+   
+    //#region Cards Rules
+    ToggleDoublePayNextTurn(_state)
+    {
+        NextTurnDoublePay=_state;
+    },
+
+    ToggleSkipNextTurn(_state)
+    {
+        SkipNextTurn=_state;
+    },
+
+    ToggleSkipPayDay_Whole(_state)
+    {
+        SkipNextPayday=_state;
+    },
+
+    ToggleSkipPayDay_HomeBased(_state)
+    {
+        SkipHMNextPayday=_state;
+    },
+
+    ToggleSkipPayDay_BrickAndMortar(_state)
+    {
+        SkipBMNextPayday=_state;
+    },
+
+    LoseAllMarketingMoney()
+    {
+        var _loseAmount=-1;
+        if(this.PlayerGameInfo[this.TurnNumber].MarketingAmount>0)
+        {
+            _loseAmount=this.PlayerGameInfo[this.TurnNumber].MarketingAmount;
+            this.PlayerGameInfo[this.TurnNumber].MarketingAmount=0;
+        }
+        else
+        {
+            _loseAmount=0;
+        }
+
+        return _loseAmount
+    },
+
+    MultiplyMarketingMoney(_multiplier)
+    {
+        var _amountIncreased=-1;
+        if(this.PlayerGameInfo[this.TurnNumber].MarketingAmount>0)
+        {
+            _amountIncreased=this.PlayerGameInfo[this.TurnNumber].MarketingAmount*=_multiplier;
+        }
+        else
+        {
+            _amountIncreased=0;
+        }
+
+        return _amountIncreased
+    },
+
+    GetMarketingMoney(_profit)
+    {
+        var _amount=-1;
+        if(this.PlayerGameInfo[this.TurnNumber].MarketingAmount>0)
+        {
+            _profit=(_profit/100);
+            _amount=this.PlayerGameInfo[this.TurnNumber].MarketingAmount*=_profit;
+            this.PlayerGameInfo[this.TurnNumber].MarketingAmount=0;
+            this.PlayerGameInfo[this.TurnNumber].Cash+=_amount;
+        }
+        else
+        {
+            _amount=0;
+        }
+
+        return _amount
+    },
+
+
+    //#endregion
+    //#endregion
+});
+//module.exports  = PlayerData; //when imports in another script only reference of playerdata class would be able to accessed from Gamemanager import
+module.exports  = GameManager;
+//#endregion

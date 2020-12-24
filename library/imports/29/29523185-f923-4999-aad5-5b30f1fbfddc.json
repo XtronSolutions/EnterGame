@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Path",
+    "texture": "08afbc72-e0f2-4fef-99a9-ab108b33bd09",
+    "atlas": "",
+    "rect": [
+      318,
+      7,
+      646,
+      695
+    ],
+    "offset": [
+      1,
+      5.5
+    ],
+    "originalSize": [
+      1280,
+      720
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

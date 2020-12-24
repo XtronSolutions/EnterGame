@@ -1,0 +1,36 @@
+{
+  "ver": "2.3.5",
+  "uuid": "e7d6930a-bd47-4bca-88fc-825012c03f15",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 1804,
+  "height": 1228,
+  "platformSettings": {},
+  "subMetas": {
+    "Enterpreneur Game New Logo": {
+      "ver": "1.0.4",
+      "uuid": "da0f2830-0b38-4ca4-bd6b-1dcaca929437",
+      "rawTextureUuid": "e7d6930a-bd47-4bca-88fc-825012c03f15",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 1804,
+      "height": 1228,
+      "rawWidth": 1804,
+      "rawHeight": 1228,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

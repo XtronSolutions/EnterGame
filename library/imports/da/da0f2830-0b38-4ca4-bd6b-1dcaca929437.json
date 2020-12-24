@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Enterpreneur Game New Logo",
+    "texture": "e7d6930a-bd47-4bca-88fc-825012c03f15",
+    "atlas": "",
+    "rect": [
+      0,
+      0,
+      1804,
+      1228
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      1804,
+      1228
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}
