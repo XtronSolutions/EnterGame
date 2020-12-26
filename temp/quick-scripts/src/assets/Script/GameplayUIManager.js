@@ -5,7 +5,8 @@ cc._RF.push(module, '80e5dJMhAJM0b0RW9xz0opK', 'GameplayUIManager');
 "use strict";
 
 var GameManager = null;
-var GamePlayReferenceManager = null; //-------------------------------------------enumeration for amount of loan-------------------------//
+var GamePlayReferenceManager = null;
+var businessDetailNodes = []; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -283,6 +284,70 @@ var InvestSellUI = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for SellBusinessUI-------------------------//
+
+var SellBusinessUI = cc.Class({
+  name: "SellBusinessUI",
+  properties: {
+    TitleLabel: {
+      displayName: "Title",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of title of Sell node"
+    },
+    CashLabel: {
+      displayName: "CashLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of Sell node"
+    },
+    PlayerNameLabel: {
+      displayName: "PlayerNameLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of Sell node"
+    },
+    BusinessCountLabel: {
+      displayName: "BusinessCount",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of BusinessCount of Sell node"
+    },
+    ScrollContentNode: {
+      displayName: "ScrollContentNode",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of ScrollContentNode of Sell node"
+    },
+    BusinessSellPrefab: {
+      displayName: "BusinessSellPrefab",
+      type: cc.Prefab,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of BusinessSellPrefab of Sell node"
+    },
+    ExitButton: {
+      displayName: "ExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of ExitButton of Sell node"
+    },
+    TurnOverExitButton: {
+      displayName: "TurnOverExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of TurnOverExitButton of Sell node"
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for PayDayUI-------------------------//
 
 var PayDayUI = cc.Class({
@@ -351,6 +416,13 @@ var PayDayUI = cc.Class({
       serializable: true,
       tooltip: "UI reference to the label of ResultPanel node"
     },
+    LoanResultPanelNode: {
+      displayName: "LoanResultPanelNode",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of LoanResultPanelNode node"
+    },
     ResultScreenTitleLabel: {
       displayName: "ResultScreenTitle",
       type: cc.Label,
@@ -378,6 +450,106 @@ var PayDayUI = cc.Class({
       "default": null,
       serializable: true,
       tooltip: "UI reference to the label of TotalAmount node"
+    },
+    SkipLoanButton: {
+      displayName: "SkipLoanButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of SkipLoanButton node"
+    },
+    LoanFotterLabel: {
+      displayName: "LoanFotterLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of LoanFotterLabel node"
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
+}); //-------------------------------------------class for InvestUI-------------------------//
+
+var InvestUI = cc.Class({
+  name: "InvestUI",
+  properties: {
+    TitleLabel: {
+      displayName: "Title",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of title of Invest node"
+    },
+    CashLabel: {
+      displayName: "CashLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of Invest node"
+    },
+    PlayerNameLabel: {
+      displayName: "PlayerNameLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of Invest node"
+    },
+    ExitButton: {
+      displayName: "ExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of ExitButton of Invest node"
+    },
+    TurnOverExitButton: {
+      displayName: "TurnOverExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of TurnOverExitButton of Invest node"
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
+}); //-------------------------------------------class for BuyOrSellUI-------------------------//
+
+var BuyOrSellUI = cc.Class({
+  name: "BuyOrSellUI",
+  properties: {
+    TitleLabel: {
+      displayName: "Title",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of title of BuyOrSell node"
+    },
+    CashLabel: {
+      displayName: "CashLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of BuyOrSell node"
+    },
+    PlayerNameLabel: {
+      displayName: "PlayerNameLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of BuyOrSell node"
+    },
+    ExitButton: {
+      displayName: "ExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of ExitButton of BuyOrSell node"
+    },
+    TurnOverExitButton: {
+      displayName: "TurnOverExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of TurnOverExitButton of BuyOrSell node"
     }
   },
   ctor: function ctor() {//constructor
@@ -432,6 +604,24 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "reference of InvestSellUI class"
     },
+    SellBusinessSetupUI: {
+      "default": {},
+      type: SellBusinessUI,
+      serializable: true,
+      tooltip: "reference of SellBusinessUI class"
+    },
+    InvestSetupUI: {
+      "default": {},
+      type: InvestUI,
+      serializable: true,
+      tooltip: "reference of InvestUI class"
+    },
+    BuyOrSellSetupUI: {
+      "default": {},
+      type: BuyOrSellUI,
+      serializable: true,
+      tooltip: "reference of BuyOrSellUI class"
+    },
     PopUpUI: {
       "default": null,
       type: cc.Node,
@@ -468,6 +658,24 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for PayDay screen"
     },
+    SellBusinessScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for SellBusiness screen"
+    },
+    InvestScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for Invest screen"
+    },
+    BuyOrSellScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for BuyOrSell screen"
+    },
     TempDiceText: {
       "default": null,
       type: cc.Label,
@@ -482,7 +690,18 @@ var GameplayUIManager = cc.Class({
   },
   // LIFE-CYCLE CALLBACKS:
   onLoad: function onLoad() {
-    this.CheckReferences();
+    this.CheckReferences(); //local variables
+
+    this.GoldInvested = false;
+    this.GoldSold = false;
+    this.StockInvested = false;
+    this.StockSold = false;
+  },
+  ResetTurnVariable: function ResetTurnVariable() {
+    this.GoldInvested = false;
+    this.GoldSold = false;
+    this.StockInvested = false;
+    this.StockSold = false;
   },
   CheckReferences: function CheckReferences() {
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
@@ -538,7 +757,7 @@ var GameplayUIManager = cc.Class({
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
       this.BusinessSetupData.TimerNode.active = true;
-      PlayerDataIntance.Cash = 100000;
+      PlayerDataIntance.Cash = 20000;
     }
 
     this.ResetButtonStates_BusinessSetup();
@@ -715,6 +934,13 @@ var GameplayUIManager = cc.Class({
   },
   Exit_BusinessSetup: function Exit_BusinessSetup() {
     this.BusinessSetupNode.active = false;
+
+    if (PlayerBusinessDataIntance.LoanTaken) {
+      PlayerBusinessDataIntance.LoanTaken = false;
+      PlayerDataIntance.Cash = PlayerDataIntance.Cash - PlayerBusinessDataIntance.LoanAmount;
+      PlayerBusinessDataIntance.LoanAmount = 0;
+      this.ShowToast("Reverting back loan amount.", 500);
+    }
   },
   InitialSetup_BusinessSetup: function InitialSetup_BusinessSetup() {
     GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.push(PlayerDataIntance); //setting player current data in custom properties when his/her turn overs
@@ -848,62 +1074,77 @@ var GameplayUIManager = cc.Class({
     GoldCashAmount = amount;
   },
   OnGoldDiceClicked_TurnDecision: function OnGoldDiceClicked_TurnDecision() {
-    if (GoldCashAmount == "") {
-      this.ResetGoldInput();
-      this.ShowToast("Please enter cash amount to invest in GOLD.");
-    } else {
+    if (!this.GoldInvested) {
+      this.GoldInvested = true;
       EnterBuySellAmount = "";
       this.ToggleInvestSellScreen_InvestSell(true);
       this.InvestSellSetupUI.InvestState = InvestEnum.GoldInvest;
       DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
       OnceOrShare = DiceResult * 1000;
       this.AssignData_InvestSell("Invest In GOLD", DiceResult, "Each Ounce of GOLD price is:", OnceOrShare + "/ounce", "Enter the number of ounce of GOLD you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
+    } else {
+      this.ShowToast("You can invest in gold one time during turn.", 800);
     }
   },
   OnStockBusinessNameChanged_TurnDecision: function OnStockBusinessNameChanged_TurnDecision(name) {
     StockBusinessName = name;
   },
   OnStockDiceClicked_TurnDecision: function OnStockDiceClicked_TurnDecision() {
-    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+    if (!this.StockInvested) {
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-    if (StockBusinessName == "") {
-      this.ResetStockBusinessNameInput();
-      this.ShowToast("Please enter a business name to invest.");
+      if (StockBusinessName == "") {
+        this.ResetStockBusinessNameInput();
+        this.ShowToast("Please enter a business name to invest.");
+      } else {
+        this.StockInvested = true;
+        EnterBuySellAmount = "";
+        this.ToggleInvestSellScreen_InvestSell(true);
+        this.InvestSellSetupUI.InvestState = InvestEnum.StockInvest;
+        DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
+        OnceOrShare = DiceResult * 1000;
+        this.AssignData_InvestSell("Invest in Stock", DiceResult, "Each Share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
+      }
     } else {
-      EnterBuySellAmount = "";
-      this.ToggleInvestSellScreen_InvestSell(true);
-      this.InvestSellSetupUI.InvestState = InvestEnum.StockInvest;
-      DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
-      OnceOrShare = DiceResult * 1000;
-      this.AssignData_InvestSell("Invest in Stock", DiceResult, "Each Share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
+      this.ShowToast("You can invest in stocks one time during turn.", 800);
     }
   },
   OnSellGoldClicked_TurnDecision: function OnSellGoldClicked_TurnDecision() {
-    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+    if (!this.GoldSold) {
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-    if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount > 0) {
-      EnterBuySellAmount = "";
-      this.ToggleInvestSellScreen_InvestSell(true);
-      this.InvestSellSetupUI.InvestState = InvestEnum.GoldSell;
-      DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
-      OnceOrShare = DiceResult * 1000;
-      this.AssignData_InvestSell("Sell GOLD", DiceResult, "Each Ounce of GOLD price is:", OnceOrShare + "/ounce", "Enter the number of ounce of GOLD you want to SELL", "Total Selling Amount:", OnceOrShare + "*0=0", "SELL", this.InvestSellSetupUI.InvestState);
+      if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount > 0) {
+        this.GoldSold = true;
+        EnterBuySellAmount = "";
+        this.ToggleInvestSellScreen_InvestSell(true);
+        this.InvestSellSetupUI.InvestState = InvestEnum.GoldSell;
+        DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
+        OnceOrShare = DiceResult * 1000;
+        this.AssignData_InvestSell("Sell GOLD", DiceResult, "Each Ounce of GOLD price is:", OnceOrShare + "/ounce", "Enter the number of ounce of GOLD you want to SELL", "Total Selling Amount:", OnceOrShare + "*0=0", "SELL", this.InvestSellSetupUI.InvestState);
+      } else {
+        this.ShowToast("you have not purchased any GOLD ounces, please buy them.");
+      }
     } else {
-      this.ShowToast("you have not purchased any GOLD ounces, please buy them.");
+      this.ShowToast("You can sell gold one time during turn.", 800);
     }
   },
   OnSellStockClicked_TurnDecision: function OnSellStockClicked_TurnDecision() {
-    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+    if (!this.StockSold) {
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-    if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount > 0) {
-      EnterBuySellAmount = "";
-      this.ToggleInvestSellScreen_InvestSell(true);
-      this.InvestSellSetupUI.InvestState = InvestEnum.StockSell;
-      DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
-      OnceOrShare = DiceResult * 1000;
-      this.AssignData_InvestSell("Sell STOCK", DiceResult, "Each share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to SELL", "Total Selling Amount:", OnceOrShare + "*0=0", "SELL", this.InvestSellSetupUI.InvestState);
+      if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount > 0) {
+        this.StockSold = true;
+        EnterBuySellAmount = "";
+        this.ToggleInvestSellScreen_InvestSell(true);
+        this.InvestSellSetupUI.InvestState = InvestEnum.StockSell;
+        DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
+        OnceOrShare = DiceResult * 1000;
+        this.AssignData_InvestSell("Sell STOCK", DiceResult, "Each share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to SELL", "Total Selling Amount:", OnceOrShare + "*0=0", "SELL", this.InvestSellSetupUI.InvestState);
+      } else {
+        this.ShowToast("you have not purchased any shares, please buy them.");
+      }
     } else {
-      this.ShowToast("you have not purchased any shares, please buy them.");
+      this.ShowToast("You can sell stocks one time during turn.", 800);
     }
   },
   OnPartnershipClicked_TurnDecision: function OnPartnershipClicked_TurnDecision() {
@@ -1082,6 +1323,22 @@ var GameplayUIManager = cc.Class({
       this.PayDaySetupUI.LoanBtn.getComponent(cc.Button).interactable = true;
     }
   },
+  GetLoanAmount_PayDay: function GetLoanAmount_PayDay() {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    var _loan = 0;
+
+    for (var index = 0; index < _manager.PlayerGameInfo[_playerIndex].NoOfBusiness.length; index++) {
+      if (_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[index].LoanTaken) {
+        _loan = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[index].LoanAmount;
+        break;
+      }
+    }
+
+    return _loan;
+  },
   AssignData_PayDay: function AssignData_PayDay(_title, _isDoublePayDay, _skipHM, _skipBM) {
     var _this3 = this;
 
@@ -1126,7 +1383,21 @@ var GameplayUIManager = cc.Class({
     var loanTaken = _loanTaken;
     this.PayDaySetupUI.HomeBasedNumberLabel.string = HMAmount;
     this.PayDaySetupUI.BMNumberLabel.string = BMAmount;
-    this.PayDaySetupUI.BMNumberLocationLabel.string = BMLocations; //check skip payday variables
+    this.PayDaySetupUI.BMNumberLocationLabel.string = BMLocations;
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber(); //check if loan was skipped previously
+
+
+    if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) {
+      var _loan = this.GetLoanAmount_PayDay();
+
+      this.PayDaySetupUI.LoanFotterLabel.string = "*pay $" + _loan;
+    } else {
+      this.PayDaySetupUI.LoanFotterLabel.string = "*pay $5000";
+    } //check skip payday variables
+
 
     if (_skipHM && _skipBM) this.UpdateButtons_PayDay(0, 0, loanTaken);else if (_skipHM) this.UpdateButtons_PayDay(0, BMAmount, loanTaken);else if (_skipBM) this.UpdateButtons_PayDay(HMAmount, 0, loanTaken);else this.UpdateButtons_PayDay(HMAmount, BMAmount, loanTaken);
 
@@ -1182,13 +1453,17 @@ var GameplayUIManager = cc.Class({
   OnLoanPaymentClicked_PayDay: function OnLoanPaymentClicked_PayDay() //brick and mortar
   {
     if (!LoanPayed) {
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-      LoanPayed = true;
-      this.PayDaySetupUI.LoanBtn.getComponent(cc.Button).interactable = false;
+      var _EstimateLoan = 0;
+      if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) _EstimateLoan = this.GetLoanAmount_PayDay();else _EstimateLoan = 5000;
 
-      if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash >= 5000) {
-        GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - 5000;
+      if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash >= _EstimateLoan) {
+        LoanPayed = true;
+        this.PayDaySetupUI.LoanBtn.getComponent(cc.Button).interactable = false;
+        GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - _EstimateLoan;
         var _loanTaken = false;
         var _businessIndex = 0;
 
@@ -1200,15 +1475,23 @@ var GameplayUIManager = cc.Class({
           }
         }
 
-        GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - 5000;
+        GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - _EstimateLoan;
 
         if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount <= 0) {
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = 0;
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanTaken = false;
         }
-      }
 
-      this.PayDayCompleted();
+        if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) _manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment = false;
+        this.PayDayCompleted();
+      } else {
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = false;else this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = true;
+        this.PayDaySetupUI.LoanResultPanelNode.active = true;
+      }
     }
   },
   ReceivePayment_PayDay: function ReceivePayment_PayDay() //all
@@ -1225,6 +1508,27 @@ var GameplayUIManager = cc.Class({
       _this4.PayDayCompleted();
     }, 1550);
   },
+  SkipLoanOneTime_PayDay: function SkipLoanOneTime_PayDay() {
+    this.ShowToast("You have skipped the loan payment, bank will call upon complete loan amount on next payday", 2000);
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    _manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment = true;
+    this.PayDaySetupUI.LoanResultPanelNode.active = false;
+    LoanPayed = true;
+    this.PayDaySetupUI.LoanBtn.getComponent(cc.Button).interactable = false;
+    this.PayDayCompleted();
+    LoanPayed = true;
+  },
+  SellBusiness_PayDay: function SellBusiness_PayDay() {
+    this.PayDaySetupUI.LoanResultPanelNode.active = false;
+    this.EnableSellScreen__SellBusinessUISetup(false);
+  },
+  ExitLoanScreen_PayDay: function ExitLoanScreen_PayDay() {
+    this.PayDaySetupUI.LoanResultPanelNode.active = false;
+  },
   PayDayCompleted: function PayDayCompleted() {
     if (HomeBasedPaymentCompleted && BrickMortarPaymentCompleted && LoanPayed) {
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
@@ -1237,6 +1541,155 @@ var GameplayUIManager = cc.Class({
       _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
       _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
     }
+  },
+  //#endregion
+  //#region Sell Business UI
+  ToggleSellBusinessScreen_SellBusinessUISetup: function ToggleSellBusinessScreen_SellBusinessUISetup(_state) {
+    this.SellBusinessScreen.active = _state;
+  },
+  SetBusinessUI_SellBusinessUISetup: function SetBusinessUI_SellBusinessUISetup() {
+    this.Reset_SellBusinessUISetup();
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    var _tempData = _manager.PlayerGameInfo[_playerIndex];
+    this.SellBusinessSetupUI.TitleLabel.string = "SELL";
+    this.SellBusinessSetupUI.CashLabel.string = _manager.PlayerGameInfo[_playerIndex].Cash;
+    this.SellBusinessSetupUI.PlayerNameLabel.string = _manager.PlayerGameInfo[_playerIndex].PlayerName;
+    this.SellBusinessSetupUI.BusinessCountLabel.string = "No of Businesses : " + _manager.PlayerGameInfo[_playerIndex].NoOfBusiness.length;
+
+    for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
+      var node = cc.instantiate(this.SellBusinessSetupUI.BusinessSellPrefab);
+      node.parent = this.SellBusinessSetupUI.ScrollContentNode;
+      node.getComponent('BusinessDetail').CheckReferences();
+      node.getComponent('BusinessDetail').SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent('BusinessDetail').SetBusinessIndex(index);
+
+      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) {
+        node.getComponent('BusinessDetail').SetBusinessMode(1);
+        node.getComponent('BusinessDetail').SetMode("Home Based");
+      } else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) {
+        node.getComponent('BusinessDetail').SetBusinessMode(2);
+        node.getComponent('BusinessDetail').SetMode("Brick & Mortar");
+      }
+
+      node.getComponent('BusinessDetail').SetBalance(_tempData.NoOfBusiness[index].Amount);
+      node.getComponent('BusinessDetail').SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+      if (_tempData.NoOfBusiness[index].LocationsName.length == 0) node.getComponent('BusinessDetail').ToggleSellLocationButton(false);else node.getComponent('BusinessDetail').ToggleSellLocationButton(true);
+      businessDetailNodes.push(node);
+    }
+  },
+  Reset_SellBusinessUISetup: function Reset_SellBusinessUISetup() {
+    for (var index = 0; index < businessDetailNodes.length; index++) {
+      businessDetailNodes[index].destroy();
+    }
+
+    businessDetailNodes = [];
+  },
+  EnableSellScreen__SellBusinessUISetup: function EnableSellScreen__SellBusinessUISetup(_isTurnover) {
+    if (_isTurnover === void 0) {
+      _isTurnover = false;
+    }
+
+    if (_isTurnover) {
+      this.SellBusinessSetupUI.ExitButton.active = false;
+      this.SellBusinessSetupUI.TurnOverExitButton.active = true;
+    } else {
+      this.SellBusinessSetupUI.ExitButton.active = true;
+      this.SellBusinessSetupUI.TurnOverExitButton.active = false;
+    }
+
+    this.ToggleSellBusinessScreen_SellBusinessUISetup(true);
+    this.SetBusinessUI_SellBusinessUISetup();
+  },
+  ExitSellScreen__SellBusinessUISetup: function ExitSellScreen__SellBusinessUISetup() {
+    this.Reset_SellBusinessUISetup();
+    this.ToggleSellBusinessScreen_SellBusinessUISetup(false);
+  },
+  ExitSellScreenAlongTurnOver__SellBusinessUISetup: function ExitSellScreenAlongTurnOver__SellBusinessUISetup() {
+    this.Reset_SellBusinessUISetup();
+    this.ToggleSellBusinessScreen_SellBusinessUISetup(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  //#endregion
+  //#region Invest UI
+  ToggleInvestScreen_InvestSetupUI: function ToggleInvestScreen_InvestSetupUI(_state) {
+    this.InvestScreen.active = _state;
+  },
+  EnableInvest_InvestSetupUI: function EnableInvest_InvestSetupUI(_isTurnover) {
+    if (_isTurnover === void 0) {
+      _isTurnover = false;
+    }
+
+    this.ResetTurnVariable();
+    this.ToggleInvestScreen_InvestSetupUI(true);
+    this.SetInvestUI_InvestSetupUI(_isTurnover);
+  },
+  SetInvestUI_InvestSetupUI: function SetInvestUI_InvestSetupUI(_isTurnover) {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    this.InvestSetupUI.TitleLabel.string = "INVEST";
+    this.InvestSetupUI.CashLabel.string = _manager.PlayerGameInfo[_playerIndex].Cash;
+    this.InvestSetupUI.PlayerNameLabel.string = _manager.PlayerGameInfo[_playerIndex].PlayerName;
+
+    if (_isTurnover) {
+      this.InvestSetupUI.ExitButton.active = false;
+      this.InvestSetupUI.TurnOverExitButton.active = true;
+    } else {
+      this.InvestSetupUI.ExitButton.active = true;
+      this.InvestSetupUI.TurnOverExitButton.active = false;
+    }
+  },
+  ExitInvest_InvestSetupUI: function ExitInvest_InvestSetupUI() {
+    this.ToggleInvestScreen_InvestSetupUI(false);
+  },
+  ExitInvestAlongTurnOver_InvestSetupUI: function ExitInvestAlongTurnOver_InvestSetupUI() {
+    this.ToggleInvestScreen_InvestSetupUI(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  //#endregion
+  //#region BuyORSell UI
+  ToggleBuyOrSellScreen_BuyOrSellSetupUI: function ToggleBuyOrSellScreen_BuyOrSellSetupUI(_state) {
+    this.BuyOrSellScreen.active = _state;
+  },
+  EnableBuyOrSell_BuyOrSellSetupUI: function EnableBuyOrSell_BuyOrSellSetupUI(_isTurnover) {
+    if (_isTurnover === void 0) {
+      _isTurnover = false;
+    }
+
+    this.ResetTurnVariable();
+    this.ToggleBuyOrSellScreen_BuyOrSellSetupUI(true);
+    this.SetBuyOrSellUI_BuyOrSellSetupUI(_isTurnover);
+  },
+  SetBuyOrSellUI_BuyOrSellSetupUI: function SetBuyOrSellUI_BuyOrSellSetupUI(_isTurnover) {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    this.BuyOrSellSetupUI.TitleLabel.string = "BUY OR SELL";
+    this.BuyOrSellSetupUI.CashLabel.string = _manager.PlayerGameInfo[_playerIndex].Cash;
+    this.BuyOrSellSetupUI.PlayerNameLabel.string = _manager.PlayerGameInfo[_playerIndex].PlayerName;
+
+    if (_isTurnover) {
+      this.BuyOrSellSetupUI.ExitButton.active = false;
+      this.BuyOrSellSetupUI.TurnOverExitButton.active = true;
+    } else {
+      this.BuyOrSellSetupUI.ExitButton.active = true;
+      this.BuyOrSellSetupUI.TurnOverExitButton.active = false;
+    }
+  },
+  ExitSellOrBuy_BuyOrSellSetupUI: function ExitSellOrBuy_BuyOrSellSetupUI() {
+    this.ToggleBuyOrSellScreen_BuyOrSellSetupUI(false);
+  },
+  ExitSellOrBuyAlongTurnOver_BuyOrSellSetupUI: function ExitSellOrBuyAlongTurnOver_BuyOrSellSetupUI() {
+    this.ToggleBuyOrSellScreen_BuyOrSellSetupUI(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
   //#endregion
   ShowToast: function ShowToast(message, time) {

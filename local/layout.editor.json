@@ -48,7 +48,7 @@
                 "width": 629.75
               },
               {
-                "active": 0,
+                "active": 2,
                 "children": [
                   "console",
                   "timeline",
@@ -88,7 +88,8 @@
         "cocos-services",
         "node-library"
       ]
-    }
+    },
+    "worker": {}
   },
   "panels": {
     "preferences": {

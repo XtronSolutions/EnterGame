@@ -1868,7 +1868,7 @@
     "BusinessType": {
       "__id__": 19
     },
-    "BusinessMode": {
+    "BusinessModeLabel": {
       "__id__": 28
     },
     "BusinessBalance": {
@@ -1877,6 +1877,11 @@
     "BusinessLocations": {
       "__id__": 46
     },
+    "CanSell": false,
+    "SellBusinessBtnNode": null,
+    "SellLocationBtnNode": null,
+    "BusinessMode": -1,
+    "BusinessIndex": -1,
     "_id": ""
   },
   {

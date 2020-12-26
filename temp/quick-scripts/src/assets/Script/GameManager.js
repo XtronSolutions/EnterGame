@@ -82,6 +82,49 @@ var BusinessInfo = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for CardData-------------------------//
+
+var CardDataFunctionality = cc.Class({
+  name: "CardDataFunctionality",
+  properties: {
+    NextTurnDoublePay: {
+      displayName: "NextTurnDoublePay",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true,
+      tooltip: "keep track if its going to be double pay day on next payday for current player"
+    },
+    SkipNextTurn: {
+      displayName: "SkipNextTurn",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true,
+      tooltip: "keep track if turn is going to skipped on next turn for current player"
+    },
+    SkipNextPayday: {
+      displayName: "SkipNextPayday",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true,
+      tooltip: "keep track if payday is going to skipped on next payday for current player"
+    },
+    SkipHMNextPayday: {
+      displayName: "SkipHMNextPayday",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true,
+      tooltip: "keep track if payday for home based buisiness is going to skipped on next payday for current player"
+    },
+    SkipBMNextPayday: {
+      displayName: "SkipBMNextPayday",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true,
+      tooltip: "keep track if payday for bricka and mmortar buisiness is going to skipped on next payday for current player"
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for StockInfo-------------------------//
 
 var StockInfo = cc.Class({
@@ -145,6 +188,13 @@ var PlayerData = cc.Class({
       serializable: true,
       tooltip: "Number of business a player can own"
     },
+    CardFunctionality: {
+      displayName: "CardFunctionality",
+      type: CardDataFunctionality,
+      "default": {},
+      serializable: true,
+      tooltip: "card functionality stored by player"
+    },
     HomeBasedAmount: {
       displayName: "HomeBasedAmount",
       type: cc.Integer,
@@ -197,7 +247,7 @@ var PlayerData = cc.Class({
     LoanTaken: {
       displayName: "LoanTaken",
       "default": false,
-      typw: cc.Boolean,
+      type: cc.Boolean,
       serializable: true,
       tooltip: "Check if player has taken loan from bank or not"
     },
@@ -228,6 +278,13 @@ var PlayerData = cc.Class({
       type: cc.Boolean,
       serializable: true,
       tooltip: "Check if player has been Bankrupted or not"
+    },
+    SkippedLoanPayment: {
+      displayName: "SkippedLoanPayment",
+      "default": false,
+      type: cc.Boolean,
+      serializable: true,
+      tooltip: "Check if player has skipped loan payment"
     },
     PlayerRollCounter: {
       displayName: "PlayerRollCounter",
@@ -277,15 +334,16 @@ var BusinessLocationNodes = [];
 var PassedPayDay = false;
 var DoublePayDay = false; //cards functionality
 
-var NextTurnDoublePay = false;
-var SkipNextTurn = false;
-var SkipNextPayday = false; //skip whole pay day
+var _nextTurnDoublePay = false;
+var _skipNextTurn = false;
+var _skipNextPayday = false; //skip whole pay day
 
-var SkipHMNextPayday = false; //skip pay day for home based businessess only
+var _skipHMNextPayday = false; //skip pay day for home based businessess only
 
-var SkipBMNextPayday = false; //skip pay day for brick & mortar businessess only
+var _skipBMNextPayday = false; //skip pay day for brick & mortar businessess only
 
 var CardEventReceived = false;
+var TurnInProgress = false;
 var isGameOver = false;
 var GameManager = cc.Class({
   name: "GameManager",
@@ -437,7 +495,7 @@ var GameManager = cc.Class({
     }
   },
   //#endregion
-  //#region functions related to Turn Mechanism
+  //#region functions related to Turn Mechanism and card mechanism
 
   /**
    @summary raised event on all connected clients to let others know a what card has been selected by player
@@ -504,6 +562,11 @@ var GameManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(4, GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID);
     }
   },
+  SyncAllData: function SyncAllData() {
+    if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[this.TurnNumber]);
+    }
+  },
 
   /**
     @summary called on all players to validate if move is completed on all connected clients
@@ -536,8 +599,8 @@ var GameManager = cc.Class({
         this.TurnCompleted = true;
 
         if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
-          this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter;
-          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[this.TurnNumber]);
+          this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter; //this.SyncAllData();
+
           this.ChangeTurn();
           console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
           console.log("Change Turn is called by: " + this.PlayerGameInfo[this.TurnNumber].PlayerName);
@@ -553,6 +616,7 @@ var GameManager = cc.Class({
    @returns {boolean} no return
   **/
   ChangeTurn: function ChangeTurn() {
+    this.SyncAllData();
     if (this.TurnNumber < this.PlayerGameInfo.length - 1) this.TurnNumber = this.TurnNumber + 1;else this.TurnNumber = 0;
     GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2, this.TurnNumber);
   },
@@ -567,6 +631,7 @@ var GameManager = cc.Class({
     var _this2 = this;
 
     var _playerMatched = false;
+    _skipNextTurn = false;
 
     if (IsTweening) //check if animation of turn being played on other players 
       {
@@ -577,14 +642,19 @@ var GameManager = cc.Class({
       this.TurnNumber = _turn;
 
       if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+        this.ToggleTurnProgress(true);
         _playerMatched = true;
+        _skipNextTurn = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextTurn;
 
-        if (!SkipNextTurn) {
+        if (!_skipNextTurn) {
           setTimeout(function () {
             GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ResetTurnVariable();
           }, 1000);
           console.log("its your turn " + this.PlayerGameInfo[this.TurnNumber].PlayerName);
         }
+      } else {
+        this.ToggleTurnProgress(false);
       }
 
       this.UpdateGameUI(true, this.TurnNumber);
@@ -597,16 +667,18 @@ var GameManager = cc.Class({
 
       if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == true) this.SyncAllData_SpectateManager(); //skip this turn as skip turn has been called before
 
-      if (_playerMatched && SkipNextTurn) {
+      if (_playerMatched && _skipNextTurn) {
         IsTweening = false;
-        this.ChangeTurn();
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping current turn", 1200);
-        SkipNextTurn = false;
+        this.ToggleSkipNextTurn(false);
+        this.ChangeTurn();
+        this.ToggleTurnProgress(false);
       }
 
       if (_playerMatched && this.PlayerGameInfo[this.TurnNumber].isGameFinished) {
         IsTweening = false;
         this.ChangeTurn();
+        this.ToggleTurnProgress(false);
       }
     }
   },
@@ -795,7 +867,8 @@ var GameManager = cc.Class({
     var Dice2 = this.getRandom(1, 7); // var Dice1=this.getRandom(8,25);
     // var Dice2=this.getRandom(8,25);
 
-    DiceRoll = Dice1 + Dice2; //this.TempCheckSpace(DiceRoll);
+    DiceRoll = Dice1 + Dice2; //DiceRoll=23;
+    //this.TempCheckSpace(DiceRoll);
 
     console.log("dice number: " + DiceRoll);
     GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(3, DiceRoll);
@@ -812,7 +885,7 @@ var GameManager = cc.Class({
   callUponCard: function callUponCard() {
     var _spaceID = parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType);
 
-    if (_spaceID != 6 && _spaceID != 7) //6 menas payday and 7 means double payday
+    if (_spaceID != 6 && _spaceID != 7) //6 means payday and 7 means double payday, 9 menas sell space
       {
         var RandomCard = this.getRandom(0, 15); //for testing only
 
@@ -854,6 +927,11 @@ var GameManager = cc.Class({
       console.log("landed on pay day or double pay day and work is done so changing turn");
       this.RaiseEventTurnComplete();
     }
+  },
+  completeCardTurn: function completeCardTurn() {
+    IsTweening = false;
+    console.log("landed on pay day or double pay day and work is done so changing turn");
+    this.RaiseEventTurnComplete();
   },
   CallGameComplete: function CallGameComplete() {
     if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
@@ -984,6 +1062,23 @@ var GameManager = cc.Class({
       }
     }, 10);
   },
+  CheckPayDayConditions: function CheckPayDayConditions() {
+    if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
+    if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) DoublePayDay = true;
+    _nextTurnDoublePay = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnDoublePay;
+
+    if (PassedPayDay && !DoublePayDay && !_nextTurnDoublePay) {
+      this.ToggleDoublePayNextTurn(false);
+      this.TogglePayDay(false, false);
+      this.ProcessPayDay_TurnDecision(false);
+    } else if (DoublePayDay || PassedPayDay && _nextTurnDoublePay) {
+      this.ToggleDoublePayNextTurn(false);
+      this.TogglePayDay(false, false);
+      this.ProcessPayDay_TurnDecision(true);
+    } else {
+      this.callUponCard();
+    }
+  },
   ZoomCameraOut: function ZoomCameraOut() {
     var _this5 = this;
 
@@ -995,33 +1090,11 @@ var GameManager = cc.Class({
         _this5.ZoomCameraOut();
       } else {
         _this5.CameraNode.position = cc.Vec2(0, 0);
-        _this5.Camera.zoomRatio = 1; //GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
-
+        _this5.Camera.zoomRatio = 1;
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().PrintDiceValue_TurnDecision(0);
 
         if (!isGameOver) {
-          if (_this5.PlayerGameInfo[_this5.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
-            if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
-            if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) DoublePayDay = true;
-
-            if (PassedPayDay && !DoublePayDay && !NextTurnDoublePay) {
-              NextTurnDoublePay = false;
-              PassedPayDay = false;
-              DoublePayDay = false;
-
-              _this5.ProcessPayDay_TurnDecision(false);
-            } else if (PassedPayDay && DoublePayDay || PassedPayDay && NextTurnDoublePay) {
-              NextTurnDoublePay = false;
-              PassedPayDay = false;
-              DoublePayDay = false;
-
-              _this5.ProcessPayDay_TurnDecision(true);
-            } else {
-              _this5.callUponCard();
-            }
-          } else {
-            _this5.callUponCard();
-          }
+          if (_this5.PlayerGameInfo[_this5.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) _this5.CheckPayDayConditions();else _this5.callUponCard();
         }
       }
     }, 10);
@@ -1035,9 +1108,10 @@ var GameManager = cc.Class({
       easing: "quadInOut"
     }).call(function () {
       if (DiceTemp < DiceRoll) {
-        if (_this6.PlayerGameInfo[_this6.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
-          if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
-          if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) DoublePayDay = true;
+        if (!isGameOver) {
+          if (_this6.PlayerGameInfo[_this6.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+            if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
+          }
         }
 
         if (RollCounter == 12) RollCounter = RollCounter + 21;else RollCounter = RollCounter + 1; //DiceTemp=DiceTemp+1; 
@@ -1116,9 +1190,13 @@ var GameManager = cc.Class({
       _isDoublePayDay = false;
     }
 
-    if (SkipNextPayday) //if previously skip payday was stored by any card
+    _skipNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextPayday;
+    _skipHMNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipHMNextPayday;
+    _skipBMNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipBMNextPayday;
+
+    if (_skipNextPayday) //if previously skip payday was stored by any card
       {
-        SkipNextPayday = false;
+        this.ToggleSkipPayDay_Whole(false);
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping PayDay.", 1600);
         setTimeout(function () {
           _this7.callUponCard();
@@ -1126,25 +1204,36 @@ var GameManager = cc.Class({
       } else {
       var _title = "";
       if (_isDoublePayDay) _title = "DoublePayDay";else _title = "PayDay";
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, SkipHMNextPayday, SkipBMNextPayday);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday);
     }
   },
   //#endregion
   //#region Cards Rules
   ToggleDoublePayNextTurn: function ToggleDoublePayNextTurn(_state) {
-    NextTurnDoublePay = _state;
+    _nextTurnDoublePay = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnDoublePay = _nextTurnDoublePay;
   },
   ToggleSkipNextTurn: function ToggleSkipNextTurn(_state) {
-    SkipNextTurn = _state;
+    _skipNextTurn = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextTurn = _skipNextTurn;
   },
   ToggleSkipPayDay_Whole: function ToggleSkipPayDay_Whole(_state) {
-    SkipNextPayday = _state;
+    _skipNextPayday = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextPayday = _skipNextPayday;
   },
   ToggleSkipPayDay_HomeBased: function ToggleSkipPayDay_HomeBased(_state) {
-    SkipHMNextPayday = _state;
+    _skipHMNextPayday = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipHMNextPayday = _skipHMNextPayday;
   },
   ToggleSkipPayDay_BrickAndMortar: function ToggleSkipPayDay_BrickAndMortar(_state) {
-    SkipBMNextPayday = _state;
+    _skipBMNextPayday = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipBMNextPayday = _skipBMNextPayday;
+  },
+  ToggleTurnProgress: function ToggleTurnProgress(_state) {
+    TurnInProgress = _state;
+  },
+  ReturnTurnProgress: function ReturnTurnProgress() {
+    return TurnInProgress;
   },
   LoseAllMarketingMoney: function LoseAllMarketingMoney() {
     var _loseAmount = -1;

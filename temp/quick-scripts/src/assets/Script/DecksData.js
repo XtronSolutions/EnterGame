@@ -207,9 +207,10 @@ var DecksData = cc.Class({
     this.ToggleButtons(_isOwner, this.WildCards[this.SelectedCardIndex].HasButton);
   },
   SpaceInvest: function SpaceInvest(_isOwner, _index) {
-    this.ShowCardInfo("You have landed on investment space.", true);
-    this.InvestFunctionality();
-    this.ToggleButtons(_isOwner, false);
+    this.SpacesType = EnumSpaceType.Invest;
+    this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.", true);
+    this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
+    this.ToggleButtons(_isOwner, true);
   },
   SpacePayDay: function SpacePayDay(_isOwner, _index) {
     this.ShowCardInfo("You have landed on PayDay space.", true);
@@ -227,14 +228,16 @@ var DecksData = cc.Class({
     this.ToggleButtons(_isOwner, false);
   },
   SpaceSell: function SpaceSell(_isOwner, _index) {
-    this.ShowCardInfo("You have landed on Sell space.", true);
-    this.SellFunctionality();
-    this.ToggleButtons(_isOwner, false);
+    this.SpacesType = EnumSpaceType.Sell;
+    this.ShowCardInfo("You can sell any one of your business or can skip turn.", true);
+    this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
+    this.ToggleButtons(_isOwner, true);
   },
   SpaceBuyOrSell: function SpaceBuyOrSell(_isOwner, _index) {
-    this.ShowCardInfo("You have landed on Buy or Sell space.", true);
-    this.BuyOrSellFunctionality();
-    this.ToggleButtons(_isOwner, false);
+    this.SpacesType = EnumSpaceType.BuyOrSell;
+    this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.", true);
+    this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
+    this.ToggleButtons(_isOwner, true);
   },
   SpaceGoBackSpaces: function SpaceGoBackSpaces(_isOwner, _index) {
     this.ShowCardInfo("You have landed on Go Back space.", true);
@@ -266,10 +269,13 @@ var DecksData = cc.Class({
       this.MarketingCardFunctionality(this.CardSelected);
     } else if (this.SpacesType == EnumSpaceType.WildCard) {
       this.WildCardFunctionality(this.CardSelected);
-    } //for testing
-    // this.Counter++;
-    // this.GenerateRandomBigBusinessCard(this.Counter);
-
+    } else if (this.SpacesType == EnumSpaceType.Sell) {
+      this.SellFunctionality();
+    } else if (this.SpacesType == EnumSpaceType.Invest) {
+      this.InvestFunctionality();
+    } else if (this.SpacesType == EnumSpaceType.BuyOrSell) {
+      this.BuyOrSellFunctionality();
+    }
   },
   CheckLoan: function CheckLoan() {
     var _loanTaken = false;
@@ -829,12 +835,21 @@ var DecksData = cc.Class({
         break;
     }
   },
-  InvestFunctionality: function InvestFunctionality() {},
+  InvestFunctionality: function InvestFunctionality() {
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableInvest_InvestSetupUI(true);
+    this.ShowCardInfo("", false);
+  },
   PayDayFunctionality: function PayDayFunctionality() {},
   DoublePayDayFunctionality: function DoublePayDayFunctionality() {},
   OneQuestionFunctionality: function OneQuestionFunctionality() {},
-  SellFunctionality: function SellFunctionality() {},
-  BuyOrSellFunctionality: function BuyOrSellFunctionality() {},
+  SellFunctionality: function SellFunctionality() {
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSellScreen__SellBusinessUISetup(true);
+    this.ShowCardInfo("", false);
+  },
+  BuyOrSellFunctionality: function BuyOrSellFunctionality() {
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableBuyOrSell_BuyOrSellSetupUI(true);
+    this.ShowCardInfo("", false);
+  },
   GoBackFunctionality: function GoBackFunctionality() {}
 });
 module.exports = DecksData;

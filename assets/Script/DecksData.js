@@ -240,10 +240,10 @@ var DecksData=cc.Class({
 
     SpaceInvest(_isOwner,_index)
     {
-      this.ShowCardInfo("You have landed on investment space.",true);
-      this.InvestFunctionality();
-
-      this.ToggleButtons(_isOwner,false);
+      this.SpacesType=EnumSpaceType.Invest;
+      this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.",true);
+      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+      this.ToggleButtons(_isOwner,true);
     },
 
     SpacePayDay(_isOwner,_index)
@@ -272,18 +272,18 @@ var DecksData=cc.Class({
 
     SpaceSell(_isOwner,_index)
     {
-      this.ShowCardInfo("You have landed on Sell space.",true);
-      this.SellFunctionality();
-
-      this.ToggleButtons(_isOwner,false);
+      this.SpacesType=EnumSpaceType.Sell;
+      this.ShowCardInfo("You can sell any one of your business or can skip turn.",true);
+      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+      this.ToggleButtons(_isOwner,true);
     },
 
     SpaceBuyOrSell(_isOwner,_index)
     {
-      this.ShowCardInfo("You have landed on Buy or Sell space.",true);
-      this.BuyOrSellFunctionality();
-
-      this.ToggleButtons(_isOwner,false);
+        this.SpacesType=EnumSpaceType.BuyOrSell;
+        this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.",true);
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.ToggleButtons(_isOwner,true);
     },
 
     SpaceGoBackSpaces(_isOwner,_index)
@@ -335,10 +335,18 @@ var DecksData=cc.Class({
       {
         this.WildCardFunctionality(this.CardSelected);
       }
-      
-      //for testing
-      // this.Counter++;
-      // this.GenerateRandomBigBusinessCard(this.Counter);
+      else if(this.SpacesType==EnumSpaceType.Sell)
+      {
+        this.SellFunctionality();
+      }
+      else if(this.SpacesType==EnumSpaceType.Invest)
+      {
+        this.InvestFunctionality();
+      }
+      else if(this.SpacesType==EnumSpaceType.BuyOrSell)
+      {
+        this.BuyOrSellFunctionality();
+      }
     },
 
     CheckLoan()
@@ -840,7 +848,8 @@ var DecksData=cc.Class({
 
     InvestFunctionality()
     {
-
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableInvest_InvestSetupUI(true);
+        this.ShowCardInfo("",false);
     },
     PayDayFunctionality()
     {
@@ -856,11 +865,13 @@ var DecksData=cc.Class({
     },
     SellFunctionality()
     {
-
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSellScreen__SellBusinessUISetup(true);
+        this.ShowCardInfo("",false);
     },
     BuyOrSellFunctionality()
     {
-
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableBuyOrSell_BuyOrSellSetupUI(true);
+        this.ShowCardInfo("",false);
     },
     GoBackFunctionality()
     {
