@@ -47,6 +47,12 @@ var MultiplayerSyncManager = cc.Class({
       } else if (_eventCode == 6) //sending call to end the game
       {
         GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGameOver(_data);
+      } else if (_eventCode == 7) //sending data for one question space
+      {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionData(_data);
+      } else if (_eventCode == 8) //sending back data for one question space
+      {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionResponseData(_data);
       }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -80,6 +86,16 @@ var MultiplayerSyncManager = cc.Class({
         console.log("sender name: " + _senderName);
         console.log("sender ID: " + _senderID);
         GamePlayReferenceManager.Instance.Get_GameManager().SyncGameOver(_data);
+      } else if (_eventCode == 7) //receiving one question data
+      {
+        console.log("sender name: " + _senderName);
+        console.log("sender ID: " + _senderID);
+        GamePlayReferenceManager.Instance.Get_GameManager().QuestionPopUp_OtherUser_OneQuestion(_data);
+      } else if (_eventCode == 8) //receiving one question response data
+      {
+        console.log("sender name: " + _senderName);
+        console.log("sender ID: " + _senderID);
+        GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEventDecision_OneQuestion(_data);
       }
   },
   start: function start() {} // update (dt) {},

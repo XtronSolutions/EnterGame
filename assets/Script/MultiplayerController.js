@@ -530,6 +530,54 @@ var MultiplayerController=cc.Class({
   },
 
   /**
+    @summary Send one question Data over network
+    @method SendOneQuestionData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendOneQuestionData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending one question data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(7, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.All});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+
+  /**
+    @summary Send one question response over network
+    @method SendOneQuestionResponseData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendOneQuestionResponseData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending one question response data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(8, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+
+  /**
     @summary send dice data
     @method DiceRollEvent
     @param {Object} _data
@@ -901,6 +949,7 @@ var MultiplayerController=cc.Class({
                         {
                             GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("other player "+actor.name+" has left",2000);
                             setTimeout(() => {
+                                GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
                                 GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
                                 GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
                                 GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
@@ -1008,6 +1057,24 @@ var MultiplayerController=cc.Class({
                     var senderID = content.senderID;
                     
                     MultiplayerController.Instance.CallRecieveEvent(6,senderName,senderID,_data);
+
+                    break;
+                case 7: //receive one Question data
+                    console.log("received one question data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(7,senderName,senderID,_data);
+
+                    break;
+                case 8: //receive one Question response data
+                    console.log("received one questio response data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(8,senderName,senderID,_data);
 
                     break;
                 default:

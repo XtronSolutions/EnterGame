@@ -124,6 +124,11 @@ var PlayerProfileManager = cc.Class({
       serializable: true,
       tooltip: "all player's UI data"
     },
+    DiceRollScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true
+    },
     PlayerInfo: {
       "default": null,
       type: GameManager.PlayerData,

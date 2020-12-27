@@ -88,8 +88,7 @@
         "cocos-services",
         "node-library"
       ]
-    },
-    "worker": {}
+    }
   },
   "panels": {
     "preferences": {

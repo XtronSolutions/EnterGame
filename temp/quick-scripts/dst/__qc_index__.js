@@ -12,12 +12,14 @@
                         if (!nodeEnv) {__quick_compile_project__.registerModule(__filename, module);}
 require('./assets/Script/BusinessDetail');
 require('./assets/Script/DecksData');
+require('./assets/Script/DiceController');
 require('./assets/Script/ExpandBusinessHandler');
 require('./assets/Script/GameManager');
 require('./assets/Script/GamePlayReferenceManager');
 require('./assets/Script/GameplayUIManager');
 require('./assets/Script/MultiplayerController');
 require('./assets/Script/MultiplayerSyncManager');
+require('./assets/Script/PlayerDetails');
 require('./assets/Script/PlayerProfileManager');
 require('./assets/Script/RoomListHandler');
 require('./assets/Script/ServerBackend');

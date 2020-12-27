@@ -346,6 +346,17 @@ var CardEventReceived=false;
 var TurnInProgress=false;
 
 var isGameOver=false;
+var OneQuestionIndex=-1;
+var OneQuestions=
+[
+    "you have skipped loan previous payday?",
+    "you have taken any loan?",
+    "you have bankrupted ever?",
+    "your next turn is going to be skipped?",
+    "your next payday is going to be double payday?"
+];
+
+var CardDisplaySetTimout=null;
 
 var GameManager=cc.Class({
     name:"GameManager",
@@ -450,7 +461,8 @@ var GameManager=cc.Class({
 
                 console.log(this.PlayerGameInfo);
 
-                this.SyncDataToPlayerGameInfo(0);
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers=this.PlayerGameInfo.length;
+                //this.SyncDataToPlayerGameInfo(0);
                 this.SyncAllData_SpectateManager();
                 this.TurnNumber=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("TurnNumber");
                 this.UpdateGameUI(true,this.TurnNumber);            
@@ -477,7 +489,13 @@ var GameManager=cc.Class({
 
     SyncAllData_SpectateManager()
     {
+        var AllData=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().getCustomProperty("PlayerGameInfo");
+        this.PlayerGameInfo=AllData;
+        this.SyncDataToPlayerGameInfo(0);
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers=this.PlayerGameInfo.length;
         this.AssignPlayerGameUI();
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().CloseInitialScreen_SpectateMode();
+
 
         for (let index = 0; index < this.PlayerGameInfo.length; index++) {
             var _toPos=cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.x,GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.y);
@@ -527,11 +545,17 @@ var GameManager=cc.Class({
         GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(5,_data);
   },
 
+  ClearDisplayTimeout()
+  {
+    clearTimeout(CardDisplaySetTimout);
+  },
+
   DisplayCardOnOthers()
   {
     console.error(CardEventReceived);
     if(CardEventReceived==true)
     {
+        clearTimeout(CardDisplaySetTimout);
         console.error(this.CardCounter);
         CardEventReceived=false;
         if(!this.CardDisplayed)
@@ -542,7 +566,7 @@ var GameManager=cc.Class({
     }
     else
     {
-        setTimeout(() => { //check after every 0.5 seconds
+        CardDisplaySetTimout=setTimeout(() => { //check after every 0.5 seconds
             this.DisplayCardOnOthers();
         }, 500);
     }
@@ -716,6 +740,10 @@ var GameManager=cc.Class({
 
             this.UpdateGameUI(true,this.TurnNumber);
 
+            for (let index = 0; index < this.AllPlayerUI.length; index++) {
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+            }
+
             GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("TurnNumber",this.TurnNumber,true);
             console.log("Turn Of: "+this.PlayerGameInfo[this.TurnNumber].PlayerName);
             console.log(this.AllPlayerUI[this.TurnNumber].getComponent('PlayerProfileManager').PlayerInfo);
@@ -879,6 +907,10 @@ var GameManager=cc.Class({
 
     syncDiceRoll(_roll)
     {
+        var _dice1=_roll.dice1;
+        var _dice2=_roll.dice2;
+        var _result=_dice1+_dice2;
+
         IsTweening=true;
         this.CardDisplayed=false;
 
@@ -917,12 +949,32 @@ var GameManager=cc.Class({
         }
         
 
-        DiceRoll=_roll;
+        DiceRoll=_result;
         DiceTemp=0;
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().PrintDiceValue_TurnDecision(DiceRoll);
+
+        for (let index = 0; index < this.AllPlayerUI.length; index++) {
+            if(this.TurnNumber==index)
+            {
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=true;
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.getComponent("DiceController").AnimateDice(_dice1,_dice2);
+            }
+            else
+            {
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+            }  
+        }
+
+        // let targetPos=this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0,120));
+        // var _pos=this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
+        // this.TweenCamera(_pos,true,0.4);   
+    },
+
+    DiceFuntionality()
+    {
         let targetPos=this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0,120));
         var _pos=this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
-        this.TweenCamera(_pos,true,0.4);   
+        this.TweenCamera(_pos,true,0.4);  
     },
 
     TempCheckSpace(_rolling)
@@ -978,15 +1030,16 @@ var GameManager=cc.Class({
         var Dice1=this.getRandom(1,7);
         var Dice2=this.getRandom(1,7);
 
-        // var Dice1=this.getRandom(8,25);
-        // var Dice2=this.getRandom(8,25);
+        // var Dice1=4;
+        // var Dice2=4;
 
         DiceRoll=Dice1+Dice2;
+        var _newRoll={dice1:Dice1,dice2:Dice2}
         //DiceRoll=23;
         //this.TempCheckSpace(DiceRoll);
-        console.log("dice number: "+DiceRoll);
+        console.log("dice number: "+DiceRoll+", Dice1:"+Dice1+", Dice2:"+Dice2);
 
-        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(3,DiceRoll); 
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(3,_newRoll); 
     },
 
     RollOneDice()
@@ -1508,6 +1561,184 @@ var GameManager=cc.Class({
         }
 
         return _amount
+    },
+
+    QuestionPopUp_OtherUser_OneQuestion(_data)
+    {
+        var _userID=_data.UserID;
+        var _questionIndex=_data.Question;
+        var _playerIndex=_data.UserIndex;
+        var _gameplayUIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        
+        if(_userID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData.PlayerUID)
+        {
+            console.log("ID matched");
+
+            _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(true);
+
+            OneQuestionIndex=_questionIndex;
+            var _questionAsked=OneQuestions[_questionIndex-1];
+            _gameplayUIManager.SetUpDecisionScreen_OneQuestionSetupUI(_questionAsked);
+        }
+    },
+
+    OneQuestionScreen_Space_OneQuestion(_isTurnOver=false)
+    {
+        var _gameplayUIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        var _roomData=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+        var _myData=GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+        
+        _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(true);
+        _gameplayUIManager.ResetSpaceScreen_OneQuestionSetupUI();
+        _gameplayUIManager.SetUpSpaceScreen_OneQuestionSetupUI(_myData,_roomData,_isTurnOver)
+    
+    },
+
+    OneQuestionDecision_PayAmount_OneQuestion()
+    {
+        var _myData=GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+        var _gameplayUIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+
+        if(_myData.Cash>=5000)
+        {
+            for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+                if(_myData.PlayerUID==this.PlayerGameInfo[index].PlayerUID)
+                {
+                    this.PlayerGameInfo[index].Cash-=5000;
+                    GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[index]);                
+                    break;
+                }
+            }
+
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully paid cash amount to player.",1200);
+            _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+            this.RaiseEventDecision_OneQuestion(true,false,-1,_myData.PlayerUID);
+        }
+        else
+        {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash.");
+        }
+    },
+
+    OneQuestionDecision_AnswerQuestion_OneQuestion()
+    {
+        var _gameplayUIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        var _myData=GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully answered the question.",1200);
+        _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+        this.RaiseEventDecision_OneQuestion(false,true,OneQuestionIndex,_myData.PlayerUID);
+    },
+
+    RaiseEventDecision_OneQuestion(_hasDonePayment,_hasAnsweredQuestion,_questionIndex,_UserID)
+    {
+        var _data={PaymentDone:_hasDonePayment,QuestionAnswered:_hasAnsweredQuestion,QuestionIndex:_questionIndex,ID:_UserID};
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(8,_data);
+    },
+
+    ReceiveEventDecision_OneQuestion(_data)
+    {
+        var _gameplayUIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        if(this.PlayerGameInfo[this.TurnNumber].PlayerUID==GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID)
+        {
+            var _hasDonePayment=_data.PaymentDone;
+            var _hasAnsweredQuestion=_data.QuestionAnswered;
+            var _questionIndex=_data.QuestionIndex;
+            var _uID=_data.ID;
+            
+            if(_hasDonePayment)
+            {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(false);
+                this.PlayerGameInfo[this.TurnNumber].Cash+=5000;
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has refused to answer the question instead payed the cash amount, $5000 added to your cash amount",2100);
+                _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
+                this.completeCardTurn();
+
+            }else if(_hasAnsweredQuestion)
+            {
+                var _selectedPlayerIndex=0;
+                var _actorsData=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+
+                for (let index = 0; index < _actorsData.length; index++) {
+                    if(_uID==_actorsData[index].customProperties.PlayerSessionData.PlayerUID)
+                    {
+                        _selectedPlayerIndex=index;
+                        break;
+                    }
+                }
+
+                if(_questionIndex==1)//have you skipped loan previous payday?
+                {
+                    if(_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.SkippedLoanPayment)
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered to have skipped loan payement in previous payday",2100);
+                    }else
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered not to have skipped loan payement in previous payday",2100);
+                    }
+                }else if(_questionIndex==2)//Have you taken any loan?
+                {
+                    var _loanTaken=false;
+                    for (let index = 0; index < _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness.length; index++) {
+                        if(_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness[index].LoanTaken)
+                        {
+                            _loanTaken=true;
+                            break;
+                        } 
+                    }
+
+                    if(_loanTaken)
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered to have taken some loan",2100);
+                    }else
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered not to have taken any loan",2100);
+                    }
+                }else if(_questionIndex==3)//Are you bankrupted? if more than once, tell me the amount?
+                {
+                    if(_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.IsBankrupt)
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered to have been bankrupted",2100);
+                    }else
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered not to have been bankrupted",2100);
+                    }
+                }else if(_questionIndex==4)//Is your turn going to be skipped next time?
+                {
+                    if(_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.SkipNextTurn)
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered, next turn will be skipped.",2100);
+                    }else
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered, next turn will not be skipped.",2100);
+                    }
+                }
+                else if(_questionIndex==5)//Is it going to be double pay day your next payday?
+                {
+                    if(_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.NextTurnDoublePay)
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered, next payday will be double payday",2100);
+                    }else
+                    {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast
+                        ("Player has answered, next payday will not be double payday",2100);
+                    }
+                }
+
+                setTimeout(() => {
+                    _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
+                    this.completeCardTurn();
+                }, 2150);
+            }
+        }
     },
 
 

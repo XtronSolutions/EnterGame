@@ -6,7 +6,8 @@ cc._RF.push(module, '80e5dJMhAJM0b0RW9xz0opK', 'GameplayUIManager');
 
 var GameManager = null;
 var GamePlayReferenceManager = null;
-var businessDetailNodes = []; //-------------------------------------------enumeration for amount of loan-------------------------//
+var businessDetailNodes = [];
+var oneQuestionNodes = []; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -554,6 +555,105 @@ var BuyOrSellUI = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for OneQuestionUI-------------------------//
+
+var OneQuestionUI = cc.Class({
+  name: "OneQuestionUI",
+  properties: {
+    TitleLabel: {
+      displayName: "Title",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of title of OneQuestion node"
+    },
+    CashLabel: {
+      displayName: "CashLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of OneQuestion node"
+    },
+    PlayerNameLabel: {
+      displayName: "PlayerNameLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of OneQuestion node"
+    },
+    ExitButton: {
+      displayName: "ExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of ExitButton of OneQuestion node"
+    },
+    TurnOverExitButton: {
+      displayName: "TurnOverExitButton",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of TurnOverExitButton of OneQuestion node"
+    },
+    PlayerDetailLabel: {
+      displayName: "PlayerDetailLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of OneQuestion node"
+    },
+    DetailsPrefab: {
+      displayName: "DetailsPrefab",
+      type: cc.Prefab,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab DetailsPrefab of OneQuestion node"
+    },
+    ScrollContent: {
+      displayName: "ScrollContent",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab ScrollContent of OneQuestion node"
+    },
+    WaitingScreen: {
+      displayName: "WaitingScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the node WaitingScreen of OneQuestion node"
+    },
+    DecisionTitleLabel: {
+      displayName: "DecisionTitleLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of title of OneQuestion node"
+    },
+    DecisionCashLabel: {
+      displayName: "DecisionCashLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of OneQuestion node"
+    },
+    DecisionPlayerNameLabel: {
+      displayName: "DecisionPlayerNameLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player name of OneQuestion node"
+    },
+    DecisionQuestionLabel: {
+      displayName: "DecisionQuestionLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of player question of OneQuestion node"
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for GameplayUIManager-------------------------//
 
 var PlayerDataIntance;
@@ -622,6 +722,12 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "reference of BuyOrSellUI class"
     },
+    OneQuestionSetupUI: {
+      "default": {},
+      type: OneQuestionUI,
+      serializable: true,
+      tooltip: "reference of OneQuestionUI class"
+    },
     PopUpUI: {
       "default": null,
       type: cc.Node,
@@ -676,6 +782,18 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for BuyOrSell screen"
     },
+    OneQuestionSpaceScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for OneQuestionSpace screen"
+    },
+    OneQuestionDecisionScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for OneQuestionDecision screen"
+    },
     TempDiceText: {
       "default": null,
       type: cc.Label,
@@ -688,7 +806,6 @@ var GameplayUIManager = cc.Class({
       serializable: true
     }
   },
-  // LIFE-CYCLE CALLBACKS:
   onLoad: function onLoad() {
     this.CheckReferences(); //local variables
 
@@ -714,10 +831,12 @@ var GameplayUIManager = cc.Class({
   onDisable: function onDisable() {
     cc.systemEvent.off('SyncData', this.SyncData, this);
   },
-  start: function start() {},
   //#region Spectate UI Setup
   InitialScreen_SpectateMode: function InitialScreen_SpectateMode() {
     this.BusinessSetupData.WaitingStatusNode.active = true;
+  },
+  CloseInitialScreen_SpectateMode: function CloseInitialScreen_SpectateMode() {
+    this.BusinessSetupData.WaitingStatusNode.active = false;
   },
   ToggleLeaveRoomButton_SpectateModeUI: function ToggleLeaveRoomButton_SpectateModeUI(_state) {
     this.LeaveRoomButton.active = _state;
@@ -726,6 +845,7 @@ var GameplayUIManager = cc.Class({
     GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleLeaveRoom_Bool(true);
     GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
     setTimeout(function () {
+      GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
       GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
       GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
@@ -1156,8 +1276,7 @@ var GameplayUIManager = cc.Class({
     this.ToggleDecision_TurnDecision(false);
     GamePlayReferenceManager.Instance.Get_GameManager().RollDice();
   },
-  PrintDiceValue_TurnDecision: function PrintDiceValue_TurnDecision(value) {
-    this.TempDiceText.string = value;
+  PrintDiceValue_TurnDecision: function PrintDiceValue_TurnDecision(value) {//this.TempDiceText.string=value;
   },
   //#endregion
   //#region Invest and sell moddule
@@ -1690,6 +1809,65 @@ var GameplayUIManager = cc.Class({
   ExitSellOrBuyAlongTurnOver_BuyOrSellSetupUI: function ExitSellOrBuyAlongTurnOver_BuyOrSellSetupUI() {
     this.ToggleBuyOrSellScreen_BuyOrSellSetupUI(false);
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  //#endregion
+  ///#region One Question setup Ui
+  ToggleDecisionScreen_OneQuestionSetupUI: function ToggleDecisionScreen_OneQuestionSetupUI(_state) {
+    this.OneQuestionDecisionScreen.active = _state;
+  },
+  ToggleSpaceScreen_OneQuestionSetupUI: function ToggleSpaceScreen_OneQuestionSetupUI(_state) {
+    this.OneQuestionSpaceScreen.active = _state;
+  },
+  ToggleWaitingScreen_OneQuestionSetupUI: function ToggleWaitingScreen_OneQuestionSetupUI(_state) {
+    this.OneQuestionSetupUI.WaitingScreen.active = _state;
+  },
+  SetUpSpaceScreen_OneQuestionSetupUI: function SetUpSpaceScreen_OneQuestionSetupUI(_myData, _actorsData, _isTurnOver) {
+    this.OneQuestionSetupUI.TitleLabel.string = "ONE QUESTION";
+    this.OneQuestionSetupUI.CashLabel.string = "$" + _myData.Cash;
+    this.OneQuestionSetupUI.PlayerNameLabel.string = _myData.PlayerName;
+    this.OneQuestionSetupUI.PlayerDetailLabel.string = "No of Players: " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length;
+
+    for (var index = 0; index < _actorsData.length; index++) {
+      if (_actorsData[index].customProperties.RoomEssentials.IsSpectate == false) //check if player is spectate or not, dont add any spectates
+        {
+          if (_myData.PlayerUID != _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+            var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
+            node.parent = this.OneQuestionSetupUI.ScrollContent;
+            node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
+            node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
+            oneQuestionNodes.push(node);
+          }
+        }
+    }
+
+    if (_isTurnOver) {
+      this.OneQuestionSetupUI.ExitButton.active = false;
+      this.OneQuestionSetupUI.TurnOverExitButton.active = true;
+    } else {
+      this.OneQuestionSetupUI.ExitButton.active = true;
+      this.OneQuestionSetupUI.TurnOverExitButton.active = false;
+    }
+  },
+  ResetSpaceScreen_OneQuestionSetupUI: function ResetSpaceScreen_OneQuestionSetupUI() {
+    for (var index = 0; index < oneQuestionNodes.length; index++) {
+      oneQuestionNodes[index].destroy();
+    }
+
+    oneQuestionNodes = [];
+  },
+  Exit_OneQuestionSetupUI: function Exit_OneQuestionSetupUI() {
+    this.ToggleSpaceScreen_OneQuestionSetupUI(false);
+  },
+  ExitAlongTurnOver_OneQuestionSetupUI: function ExitAlongTurnOver_OneQuestionSetupUI() {
+    this.ToggleSpaceScreen_OneQuestionSetupUI(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  SetUpDecisionScreen_OneQuestionSetupUI: function SetUpDecisionScreen_OneQuestionSetupUI(_question) {
+    var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    this.OneQuestionSetupUI.DecisionTitleLabel.string = "ONE QUESTION";
+    this.OneQuestionSetupUI.DecisionCashLabel.string = "$" + _myData.Cash;
+    this.OneQuestionSetupUI.DecisionPlayerNameLabel.string = _myData.PlayerName;
+    this.OneQuestionSetupUI.DecisionQuestionLabel.string = "Player has asked if " + _question + "\n" + "\n" + "*either answer question or pay $5000 to player whose asking question.";
   },
   //#endregion
   ShowToast: function ShowToast(message, time) {

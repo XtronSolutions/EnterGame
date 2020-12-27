@@ -60,8 +60,8 @@
     "relativePath": "Texture\\Gameplay\\Start.png"
   },
   "b69dd489-a312-47c1-b392-19a3b8037220": {
-    "asset": 1608250584016,
-    "meta": 1608576331025,
+    "asset": 1608932239782,
+    "meta": 1609013663549,
     "relativePath": "Prefabs"
   },
   "4cc083b6-481f-4ba0-ac6d-db6d5fbc2f8a": {
@@ -699,11 +699,6 @@
     "meta": 1607629741504,
     "relativePath": "Texture\\Gameplay\\Avatars\\6.png"
   },
-  "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1608948973529,
-    "meta": 1608948973695,
-    "relativePath": "Scene\\GamePlay.fire"
-  },
   "74806161-8d34-449c-9ec2-5314694e50cc": {
     "asset": 1607821912817,
     "meta": 1607821996348,
@@ -723,11 +718,6 @@
     "asset": 1608939670629,
     "meta": 1608939670649,
     "relativePath": "Prefabs\\BusinessDetailPrefab.prefab"
-  },
-  "5bf9b335-95ee-48cc-8448-694e673205eb": {
-    "asset": 1608161357807,
-    "meta": 1608161509282,
-    "relativePath": "Script\\PlayerProfileManager.js"
   },
   "94d71e28-9b58-4d73-b021-eb7588d3fa6a": {
     "asset": 1608251395120,
@@ -760,19 +750,9 @@
     "relativePath": "Script\\RoomListHandler.js"
   },
   "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
-    "asset": 1608949766137,
-    "meta": 1608949766166,
+    "asset": 1609040216595,
+    "meta": 1609040216620,
     "relativePath": "Scene\\MainMenu.fire"
-  },
-  "5cea08ea-872c-4f5e-9880-b668ed0bbf94": {
-    "asset": 1608685317387,
-    "meta": 1608685380552,
-    "relativePath": "Script\\MultiplayerController.js"
-  },
-  "b24e187b-8043-497e-943c-3137c70606fd": {
-    "asset": 1608684425552,
-    "meta": 1608685380595,
-    "relativePath": "Script\\MultiplayerSyncManager.js"
   },
   "83160444-2b4b-4bd8-a1ef-54ab2b188c4b": {
     "asset": 1608938224320,
@@ -789,19 +769,59 @@
     "meta": 1608939206010,
     "relativePath": "Script\\BusinessDetail.js"
   },
+  "c777b981-3153-4016-a387-f25f3fab74b3": {
+    "asset": 1589737457894,
+    "meta": 1609016587239,
+    "relativePath": "Texture\\Gameplay\\dice_icon.png"
+  },
+  "5bf9b335-95ee-48cc-8448-694e673205eb": {
+    "asset": 1609021121826,
+    "meta": 1609021123302,
+    "relativePath": "Script\\PlayerProfileManager.js"
+  },
+  "23d62fd1-4ba0-421c-b967-96a8b689df71": {
+    "asset": 1609023138698,
+    "meta": 1609023139099,
+    "relativePath": "Script\\DiceController.js"
+  },
+  "a624f9fd-d73f-40df-a53e-9368f45ebd3a": {
+    "asset": 1609030749999,
+    "meta": 1609030750023,
+    "relativePath": "Prefabs\\PlayerQuestionPrefab.prefab"
+  },
+  "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
+    "asset": 1609034656474,
+    "meta": 1609034656680,
+    "relativePath": "Scene\\GamePlay.fire"
+  },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
-    "asset": 1608948891846,
-    "meta": 1608948896414,
+    "asset": 1609031275938,
+    "meta": 1609031453691,
     "relativePath": "Script\\DecksData.js"
   },
+  "df1540ff-8d14-4e70-8155-07e276311e1e": {
+    "asset": 1609031407073,
+    "meta": 1609031454415,
+    "relativePath": "Script\\PlayerDetails.js"
+  },
+  "b24e187b-8043-497e-943c-3137c70606fd": {
+    "asset": 1609033174378,
+    "meta": 1609034589303,
+    "relativePath": "Script\\MultiplayerSyncManager.js"
+  },
+  "5cea08ea-872c-4f5e-9880-b668ed0bbf94": {
+    "asset": 1609038998329,
+    "meta": 1609039002324,
+    "relativePath": "Script\\MultiplayerController.js"
+  },
   "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
-    "asset": 1608948961053,
-    "meta": 1608948963072,
+    "asset": 1609039626250,
+    "meta": 1609039672451,
     "relativePath": "Script\\GameplayUIManager.js"
   },
   "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1608949248339,
-    "meta": 1608949252052,
+    "asset": 1609040204789,
+    "meta": 1609040213381,
     "relativePath": "Script\\GameManager.js"
   }
 }

@@ -264,10 +264,10 @@ var DecksData=cc.Class({
 
     SpaceOneQuestion(_isOwner,_index)
     {
-      this.ShowCardInfo("You have landed on One Question space.",true);
-      this.OneQuestionFunctionality();
-
-      this.ToggleButtons(_isOwner,false);
+        this.SpacesType=EnumSpaceType.OneQuestion;
+        this.ShowCardInfo("You can ask one question to any other player, if player is unable to answer they will pay you some cash amount.",true);
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.ToggleButtons(_isOwner,true);
     },
 
     SpaceSell(_isOwner,_index)
@@ -346,6 +346,10 @@ var DecksData=cc.Class({
       else if(this.SpacesType==EnumSpaceType.BuyOrSell)
       {
         this.BuyOrSellFunctionality();
+      }
+      else if(this.SpacesType==EnumSpaceType.OneQuestion)
+      {
+        this.OneQuestionFunctionality();
       }
     },
 
@@ -861,7 +865,8 @@ var DecksData=cc.Class({
     },
     OneQuestionFunctionality()
     {
-
+        GamePlayReferenceManager.Instance.Get_GameManager().OneQuestionScreen_Space_OneQuestion(true);
+        this.ShowCardInfo("",false);
     },
     SellFunctionality()
     {
