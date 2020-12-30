@@ -58,14 +58,18 @@ var PlayerDetails = cc.Class({
     this.SelectedPlayerUserID = _uID;
   },
   RaiseEventOneQuestion: function RaiseEventOneQuestion() {
-    var _data = {
-      Question: this.QuestionID,
-      UserID: this.SelectedPlayerUserID,
-      UserIndex: this.SelectedPlayerIndex
-    };
-    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(7, _data); //wait for other player
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var _data = {
+        Question: this.QuestionID,
+        UserID: this.SelectedPlayerUserID,
+        UserIndex: this.SelectedPlayerIndex
+      };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(7, _data); //wait for other player
 
-    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+    } else {
+      console.log("no sending question to bot");
+    }
   },
   SkippedLoan: function SkippedLoan() {
     if (this.IsOneQuestion) {

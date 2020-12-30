@@ -203,6 +203,13 @@ var UIManager = cc.Class({
       serializable: true,
       tooltip: "reference for the reference manager node"
     },
+    ModeSelectionScreen: {
+      displayName: "ModeSelectionScreen",
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "reference to mode selection screen node"
+    },
     UISpectate: {
       displayName: "UISpectate",
       "default": null,
@@ -245,7 +252,6 @@ var UIManager = cc.Class({
   CheckReferences: function CheckReferences() {
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
   },
-  start: function start() {},
   ChangePanelScreen: function ChangePanelScreen(isNext, changeScreen, sceneName) {
     var _this = this;
 
@@ -295,12 +301,24 @@ var UIManager = cc.Class({
     this.TotalPlayers = _number;
   },
   PlayGame: function PlayGame() {
+    this.ResetPlayerCountInput();
+    this.ToggleModeSelection(true);
+  },
+  BackSelectionMode: function BackSelectionMode() {
+    this.ResetPlayerCountInput();
+    this.ToggleModeSelection(false);
+  },
+  ToggleModeSelection: function ToggleModeSelection(_state) {
+    this.ModeSelectionScreen.active = _state;
+  },
+  VersesPlayerMode: function VersesPlayerMode() {
     if (this.TotalPlayers == "") {
       this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.", 3500);
     } else {
       var _players = parseInt(this.TotalPlayers);
 
       if (_players >= 2 && _players <= 6) {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(2);
         GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleShowRoom_Bool(false);
         this.UIProfile.StatusNode.active = true; //this.UIProfile.PlayButtonNode.active=false;
 
@@ -318,6 +336,20 @@ var UIManager = cc.Class({
         this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.", 3500);
       }
     }
+  },
+  VersesAIMode: function VersesAIMode() {
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(1);
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleShowRoom_Bool(false);
+    this.UIProfile.StatusNode.active = true;
+    this.UIProfile.StatusLabel.string = "";
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers = 2;
+    cc.systemEvent.emit("UpdateStatusWindow", "setting up game...");
+    cc.systemEvent.emit("UpdateStatusWindow", "waiting for AI Setup...");
+    cc.systemEvent.emit("UpdateStatusWindow", "starting game...");
+    setTimeout(function () {
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinedRoom = true;
+      cc.systemEvent.emit("ChangePanelScreen", true, true, "GamePlay"); //function in ui manager
+    }, 1000);
   },
   UpdateStatusWindow: function UpdateStatusWindow(msg) {
     this.StatusText = this.StatusText + msg + "\n";

@@ -144,6 +144,7 @@ var DecksData=cc.Class({
       this.CheckReferences();
       this.SelectedCardIndex=-1;
       this.CardSelected=-1;
+      this.IsBotTurn=false;
 
       //this.BigBusinessCardFunctionality("1");
       //for testing
@@ -162,7 +163,7 @@ var DecksData=cc.Class({
         return Math.floor(Math.random() * (max - min) ) + min; // min included and max excluded
     },
 
-    ToggleButtons(_isOwner,_hasButton=false)
+    ToggleButtons(_isOwner,_hasButton=false,_isBot=false)
     {
         if(_isOwner && _hasButton)
       {
@@ -178,15 +179,20 @@ var DecksData=cc.Class({
       {
         this.MainUI.InteractionButtonNode.active=false;
         this.MainUI.ButtonNode.active=false;
-        setTimeout(() => {
-           this.ExitCardInfo();
-       }, 2500);
+
+        if(_isBot==false)
+        {
+            setTimeout(() => {
+            this.ExitCardInfo();
+            }, 2500);
+        }
       }
     },
 
 
-    GenerateRandomBigBusinessCard(_isOwner,_randomValue)
+    GenerateRandomBigBusinessCard(_isOwner,_randomValue,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.BigBusiness;
       this.SelectedCardIndex= _randomValue;
       this.CardSelected=this.BigBusiness[this.SelectedCardIndex].ID;
@@ -195,11 +201,17 @@ var DecksData=cc.Class({
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string=this.BigBusiness[this.SelectedCardIndex].ButtonName;
 
       this.ShowCardInfo(this.BigBusiness[this.SelectedCardIndex].Description,true);
-      this.ToggleButtons(_isOwner,this.BigBusiness[this.SelectedCardIndex].HasButton);
+      this.ToggleButtons(_isOwner,this.BigBusiness[this.SelectedCardIndex].HasButton,_isBot);
+
+      if(_isBot)
+      {
+          this.CardFuntionalityButton();
+      }
     },
 
-    GenerateRandomMarketingCard(_isOwner,_randomValue)
+    GenerateRandomMarketingCard(_isOwner,_randomValue,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Marketing;
       this.SelectedCardIndex= _randomValue;
       this.CardSelected=this.Marketing[this.SelectedCardIndex].ID;
@@ -208,11 +220,17 @@ var DecksData=cc.Class({
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string=this.Marketing[this.SelectedCardIndex].ButtonName;
     
       this.ShowCardInfo(this.Marketing[this.SelectedCardIndex].Description,true);
-      this.ToggleButtons(_isOwner,this.Marketing[this.SelectedCardIndex].HasButton);
+      this.ToggleButtons(_isOwner,this.Marketing[this.SelectedCardIndex].HasButton,_isBot);
+
+      if(_isBot)
+      {
+          this.CardFuntionalityButton();
+      }
     },
 
-    GenerateRandomLossesCard(_isOwner,_randomValue)
+    GenerateRandomLossesCard(_isOwner,_randomValue,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Losses;
       this.SelectedCardIndex= _randomValue;
       this.CardSelected=this.Losses[this.SelectedCardIndex].ID;
@@ -222,11 +240,17 @@ var DecksData=cc.Class({
       if(this.Losses[this.SelectedCardIndex].HasButton)
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string=this.Losses[this.SelectedCardIndex].ButtonName;
      
-      this.ToggleButtons(_isOwner,this.Losses[this.SelectedCardIndex].HasButton);
+      this.ToggleButtons(_isOwner,this.Losses[this.SelectedCardIndex].HasButton,_isBot);
+
+      if(_isBot)
+      {
+          this.CardFuntionalityButton();
+      }
     },
 
-    GenerateRandomWildCard(_isOwner,_randomValue)
+    GenerateRandomWildCard(_isOwner,_randomValue,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.WildCard;
       this.SelectedCardIndex= _randomValue;
       this.CardSelected=this.WildCards[this.SelectedCardIndex].ID;
@@ -235,15 +259,26 @@ var DecksData=cc.Class({
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string=this.WildCards[this.SelectedCardIndex].ButtonName;
  
       this.ShowCardInfo(this.WildCards[this.SelectedCardIndex].Description,true);
-      this.ToggleButtons(_isOwner,this.WildCards[this.SelectedCardIndex].HasButton);
+      this.ToggleButtons(_isOwner,this.WildCards[this.SelectedCardIndex].HasButton,_isBot);
+
+      if(_isBot)
+      {
+          this.CardFuntionalityButton();
+      }
     },
 
-    SpaceInvest(_isOwner,_index)
+    SpaceInvest(_isOwner,_index,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Invest;
       this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.",true);
       this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
-      this.ToggleButtons(_isOwner,true);
+      this.ToggleButtons(_isOwner,true,_isBot);
+
+      if(_isBot)
+      {
+        this.CompleteTurnWithToast("msg",2100);
+      }
     },
 
     SpacePayDay(_isOwner,_index)
@@ -262,28 +297,43 @@ var DecksData=cc.Class({
       this.ToggleButtons(_isOwner,false);
     },
 
-    SpaceOneQuestion(_isOwner,_index)
+    SpaceOneQuestion(_isOwner,_index,_isBot=false)
     {
+        this.IsBotTurn=_isBot;
         this.SpacesType=EnumSpaceType.OneQuestion;
         this.ShowCardInfo("You can ask one question to any other player, if player is unable to answer they will pay you some cash amount.",true);
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
-        this.ToggleButtons(_isOwner,true);
+        this.ToggleButtons(_isOwner,true,_isBot);
+        if(_isBot)
+        {
+            this.CompleteTurnWithToast("msg",2100);
+        }
     },
 
-    SpaceSell(_isOwner,_index)
+    SpaceSell(_isOwner,_index,_isBot=false)
     {
+      this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Sell;
       this.ShowCardInfo("You can sell any one of your business or can skip turn.",true);
       this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
-      this.ToggleButtons(_isOwner,true);
+      this.ToggleButtons(_isOwner,true,_isBot);
+      if(_isBot)
+        {
+            this.CompleteTurnWithToast("msg",2100);
+        }
     },
 
-    SpaceBuyOrSell(_isOwner,_index)
+    SpaceBuyOrSell(_isOwner,_index,_isBot=false)
     {
+        this.IsBotTurn=_isBot;
         this.SpacesType=EnumSpaceType.BuyOrSell;
         this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.",true);
         this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
-        this.ToggleButtons(_isOwner,true);
+        this.ToggleButtons(_isOwner,true,_isBot);
+        if(_isBot)
+        {
+            this.CompleteTurnWithToast("msg",2100);
+        }
     },
 
     SpaceGoBackSpaces(_isOwner,_index)
@@ -380,14 +430,28 @@ var DecksData=cc.Class({
     CompleteTurnWithToast(_msg,_time)
     {
         var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg,_time);
-        this.ShowCardInfo("",false);
 
-        setTimeout(() => {
-          this.ShowCardInfo("",false);
-         _manager.ResetCardDisplay();  
-         _manager.RaiseEventTurnComplete();   
-         }, (_time+100));
+        if(this.IsBotTurn)
+        {
+            console.log(_msg);
+            var _delay=this.getRandom(1500,2500);
+            setTimeout(() => {
+            this.ShowCardInfo("",false);
+            _manager.ResetCardDisplay();  
+            _manager.RaiseEventTurnComplete();   
+            }, (_delay));
+        }
+        else
+        {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg,_time);
+            this.ShowCardInfo("",false);
+
+            setTimeout(() => {
+            this.ShowCardInfo("",false);
+            _manager.ResetCardDisplay();  
+            _manager.RaiseEventTurnComplete();   
+            }, (_time+100));
+        }
     },
 
     BigBusinessCardFunctionality(_id)
@@ -482,6 +546,7 @@ var DecksData=cc.Class({
 
              if(TotalResult>=19)
              {
+                var _mode=GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
                  var _amount=0;
                  for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {
                     _amount=_amount+_manager.PlayerGameInfo[index].MarketingAmount;
@@ -495,10 +560,13 @@ var DecksData=cc.Class({
                  ,4000);
 
 
-                 var _actorsArray=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+                 if(_mode==2)
+                 {
+                    var _actorsArray=GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
 
-                 for (let index = 0; index < _actorsArray.length; index++) {
-                    _actorsArray[index].customProperties.PlayerSessionData.MarketingAmount=0;
+                    for (let index = 0; index < _actorsArray.length; index++) {
+                        _actorsArray[index].customProperties.PlayerSessionData.MarketingAmount=0;
+                    }
                  }
              }
              else

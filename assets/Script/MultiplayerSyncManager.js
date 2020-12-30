@@ -26,6 +26,7 @@ var MultiplayerSyncManager=cc.Class({
             MultiplayerSyncManager.Instance=this;
         }
         this.CheckReferences();
+        this.SelectedMode= GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
     },
 
     CheckReferences()
@@ -37,34 +38,59 @@ var MultiplayerSyncManager=cc.Class({
     RaiseEvent (_eventCode,_data) {  
         if(_eventCode==1) //sending playerinfo 
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SendData(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==2) //sending Turn Start Call
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().StartTurn(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().StartTurn(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==3) //sending Dice Roll Value
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().DiceRollEvent(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().DiceRollEvent(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==4) //sending userID of player who had completed their turn
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SyncTurnCompletion(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SyncTurnCompletion(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==5) //sending card data (index) so other users can sync them
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCardData(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCardData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
+
         }else if(_eventCode==6) //sending call to end the game
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGameOver(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGameOver(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==7) //sending data for one question space
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionData(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
         else if(_eventCode==8) //sending back data for one question space
         {
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionResponseData(_data);
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionResponseData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
     },
 
@@ -118,9 +144,4 @@ var MultiplayerSyncManager=cc.Class({
         }
     },
 
-    start () {
-
-    },
-
-    // update (dt) {},
 });

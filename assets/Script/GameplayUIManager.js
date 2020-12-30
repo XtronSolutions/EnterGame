@@ -806,6 +806,7 @@ var GameplayUIManager=cc.Class({
          this.GoldSold=false;
          this.StockInvested=false;
          this.StockSold=false;
+         this.IsBotTurn=false;
 
      },
 
@@ -868,12 +869,12 @@ var GameplayUIManager=cc.Class({
     
     //#region BusinessSetup with loan
     //Business setup ui//------------------------
-    StartNewBusiness_BusinessSetup: function (isFirstTime,insideGame=false) { //called first time form GameManager onload function
+    StartNewBusiness_BusinessSetup: function (isFirstTime,insideGame=false,modeIndex=0) { //called first time form GameManager onload function
         this.CheckReferences();
         this.BusinessSetupNode.active=true;
-        this.Init_BusinessSetup(isFirstTime,insideGame);
+        this.Init_BusinessSetup(isFirstTime,insideGame,modeIndex);
     },
-    Init_BusinessSetup: function (isFirstTime,insideGame=false) {
+    Init_BusinessSetup: function (isFirstTime,insideGame=false,modeIndex=0) {
         PlayerDataIntance=new GameManager.PlayerData();
         PlayerBusinessDataIntance=new GameManager.BusinessInfo();
        
@@ -1132,12 +1133,31 @@ var GameplayUIManager=cc.Class({
 
     InitialSetup_BusinessSetup:function()
     {
+        var _mode=GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.push(PlayerDataIntance);
                
-        //setting player current data in custom properties when his/her turn overs
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", PlayerDataIntance);
-        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1,PlayerDataIntance);
-        this.BusinessSetupData.WaitingStatusNode.active=true;
+        if(_mode==2)//for real players
+        {
+            //setting player current data in custom properties when his/her turn overs
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", PlayerDataIntance);
+            GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1,PlayerDataIntance);
+            this.BusinessSetupData.WaitingStatusNode.active=true;
+        }
+        else if(_mode==1)//for AI
+        {
+            this.BusinessSetupData.WaitingStatusNode.active=true;
+
+            setTimeout(() => {
+                this.BusinessSetupData.WaitingStatusNode.active=false;
+                this.BusinessSetupNode.active=false;
+                this.GameplayUIScreen.active=true;
+                GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
+            }, 1600);
+        }
+        else{
+            console.error("no mode selected");
+        }
+        
     },
 
     StartNewSetup_DuringGame_BusinessSetup:function()
@@ -1688,21 +1708,35 @@ var GameplayUIManager=cc.Class({
         return _loan;
     },
 
-    AssignData_PayDay(_title,_isDoublePayDay=false,_skipHM=false,_skipBM=false)
+    AssignData_PayDay(_title,_isDoublePayDay=false,_skipHM=false,_skipBM=false,_isBot=false)
     {
+        this.IsBotTurn=_isBot;
         DoublePayDay=_isDoublePayDay;
         this.TogglePayDayScreen_PayDay(true);
         this.PayDaySetupUI.TitleLabel.string=_title;
 
         var _time=1800;
 
-        //check skip payday variables
-        if(_skipHM && _skipBM)
-            this.ShowToast("your payday on home based and brick & mortar businessess will be skipped.",_time);
-        else if(_skipHM)
-            this.ShowToast("your payday on home based businessess will be skipped.",_time);
-        else if(_skipBM)
-            this.ShowToast("your payday on brick & mortar businessess will be skipped.",_time);
+        if(_isBot==false)
+        {
+            //check skip payday variables
+            if(_skipHM && _skipBM)
+                this.ShowToast("your payday on home based and brick & mortar businessess will be skipped.",_time);
+            else if(_skipHM)
+                this.ShowToast("your payday on home based businessess will be skipped.",_time);
+            else if(_skipBM)
+                this.ShowToast("your payday on brick & mortar businessess will be skipped.",_time);
+        }
+        else
+        {
+            //check skip payday variables
+            if(_skipHM && _skipBM)
+                console.log("your payday on home based and brick & mortar businessess will be skipped.");
+            else if(_skipHM)
+                console.log("your payday on home based businessess will be skipped.");
+            else if(_skipBM)
+                console.log("your payday on brick & mortar businessess will be skipped.");
+        }
 
         var _playerIndex=GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
@@ -1758,6 +1792,13 @@ var GameplayUIManager=cc.Class({
                 this.PayDayCompleted();
             }, (_time+200));
         }
+
+        if(_isBot)
+        {
+            this.OnHomeBasedPaymentClicked_PayDay();
+            this.OnBMPaymentClicked_PayDay();
+            this.OnLoanPaymentClicked_PayDay();
+        }
     },
 
     OnHomeBasedPaymentClicked_PayDay()
@@ -1791,6 +1832,11 @@ var GameplayUIManager=cc.Class({
                 this.PayDaySetupUI.TotalAmountLabel.string=_dice+"*"+HMAmount+"*"+"1000="+TotalPayDayAmount;
            else
                 this.PayDaySetupUI.TotalAmountLabel.string=_dice+"*"+HMAmount+"*"+"1000*2="+TotalPayDayAmount;
+
+            if(this.IsBotTurn)
+            {
+                this.ReceivePayment_PayDay();
+            }
         }
     },
 
@@ -1827,6 +1873,11 @@ var GameplayUIManager=cc.Class({
                 this.PayDaySetupUI.TotalAmountLabel.string=_dice+"*"+_amount+"*"+"2000="+TotalPayDayAmount;
            else
                 this.PayDaySetupUI.TotalAmountLabel.string=_dice+"*"+_amount+"*"+"2000*2="+TotalPayDayAmount;
+            
+            if(this.IsBotTurn)
+            {
+                this.ReceivePayment_PayDay();
+            }
         }
     },
 
@@ -1893,11 +1944,21 @@ var GameplayUIManager=cc.Class({
     {
         var  _playerIndex=GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash=GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash+TotalPayDayAmount;
-        this.ShowToast("Amount $"+TotalPayDayAmount+" has been added to your cash amount, Total Cash has become $"+GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash,1500);
-        setTimeout(() => {
+        
+        if(!this.IsBotTurn)
+        {
+            this.ShowToast("Amount $"+TotalPayDayAmount+" has been added to your cash amount, Total Cash has become $"+GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash,1500);
+            setTimeout(() => {
+                this.ToggleResultPanelScreen_PayDay(false);
+                this.PayDayCompleted();
+            }, 1550);
+        }
+        else
+        {
+            console.log("Amount $"+TotalPayDayAmount+" has been added to your cash amount, Total Cash has become $"+GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
             this.ToggleResultPanelScreen_PayDay(false);
             this.PayDayCompleted();
-        }, 1550);
+        }
     },
 
     SkipLoanOneTime_PayDay()
@@ -2136,25 +2197,41 @@ var GameplayUIManager=cc.Class({
         this.OneQuestionSetupUI.WaitingScreen.active=_state;
     },
 
-    SetUpSpaceScreen_OneQuestionSetupUI(_myData,_actorsData,_isTurnOver)
+    SetUpSpaceScreen_OneQuestionSetupUI(_myData,_actorsData,_isTurnOver,_modeIndex=0)
     {
         this.OneQuestionSetupUI.TitleLabel.string="ONE QUESTION";
         this.OneQuestionSetupUI.CashLabel.string="$"+_myData.Cash;
         this.OneQuestionSetupUI.PlayerNameLabel.string=_myData.PlayerName;
         this.OneQuestionSetupUI.PlayerDetailLabel.string="No of Players: "+GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length;
 
-        for (let index = 0; index < _actorsData.length; index++) {
-           if(_actorsData[index].customProperties.RoomEssentials.IsSpectate==false) //check if player is spectate or not, dont add any spectates
-           {
-                if(_myData.PlayerUID!=_actorsData[index].customProperties.PlayerSessionData.PlayerUID)
-                {
-                    var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
-                    node.parent = this.OneQuestionSetupUI.ScrollContent;
-                    node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
-                    node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
-                    oneQuestionNodes.push(node);
+        if(_modeIndex==2)
+        {
+            for (let index = 0; index < _actorsData.length; index++) {
+            if(_actorsData[index].customProperties.RoomEssentials.IsSpectate==false) //check if player is spectate or not, dont add any spectates
+            {
+                    if(_myData.PlayerUID!=_actorsData[index].customProperties.PlayerSessionData.PlayerUID)
+                    {
+                        var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
+                        node.parent = this.OneQuestionSetupUI.ScrollContent;
+                        node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
+                        node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
+                        oneQuestionNodes.push(node);
+                    }
                 }
             }
+        }
+        else if(_modeIndex==1)//for bot
+        {
+            for (let index = 0; index < _actorsData.length; index++) {
+                    if(_myData.PlayerUID!=_actorsData[index].PlayerUID)
+                    {
+                        var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
+                        node.parent = this.OneQuestionSetupUI.ScrollContent;
+                        node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].PlayerName);
+                        node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].PlayerUID);
+                        oneQuestionNodes.push(node);
+                    }
+                }
         }
 
         if(_isTurnOver)
@@ -2166,7 +2243,6 @@ var GameplayUIManager=cc.Class({
             this.OneQuestionSetupUI.ExitButton.active=true;
             this.OneQuestionSetupUI.TurnOverExitButton.active=false;
         }
-
     },
 
     ResetSpaceScreen_OneQuestionSetupUI()

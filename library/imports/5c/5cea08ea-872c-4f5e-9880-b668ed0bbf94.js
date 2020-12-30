@@ -91,6 +91,12 @@ var MultiplayerController = cc.Class({
       "default": 0,
       type: cc.Integer,
       serializable: true
+    },
+    ModeSelection: {
+      // 1 means bot , 2 means real players
+      "default": 0,
+      type: cc.Integer,
+      serializable: true
     }
   },
   statics: {
@@ -100,6 +106,13 @@ var MultiplayerController = cc.Class({
   //this function is called when instance of this class is created
   onLoad: function onLoad() {
     this.Init_MultiplayerController();
+  },
+  ToggleModeSelection: function ToggleModeSelection(_val) // 1 means bot , 2 means real players
+  {
+    this.ModeSelection = _val;
+  },
+  GetSelectedMode: function GetSelectedMode() {
+    return this.ModeSelection;
   },
 
   /**

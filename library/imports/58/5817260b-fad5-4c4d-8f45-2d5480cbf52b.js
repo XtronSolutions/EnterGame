@@ -142,7 +142,8 @@ var DecksData = cc.Class({
   onLoad: function onLoad() {
     this.CheckReferences();
     this.SelectedCardIndex = -1;
-    this.CardSelected = -1; //this.BigBusinessCardFunctionality("1");
+    this.CardSelected = -1;
+    this.IsBotTurn = false; //this.BigBusinessCardFunctionality("1");
     //for testing
     // this.Counter=0;
     // this.GenerateRandomBigBusinessCard(this.Counter);
@@ -153,11 +154,15 @@ var DecksData = cc.Class({
   getRandom: function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; // min included and max excluded
   },
-  ToggleButtons: function ToggleButtons(_isOwner, _hasButton) {
+  ToggleButtons: function ToggleButtons(_isOwner, _hasButton, _isBot) {
     var _this = this;
 
     if (_hasButton === void 0) {
       _hasButton = false;
+    }
+
+    if (_isBot === void 0) {
+      _isBot = false;
     }
 
     if (_isOwner && _hasButton) {
@@ -169,48 +174,96 @@ var DecksData = cc.Class({
     } else {
       this.MainUI.InteractionButtonNode.active = false;
       this.MainUI.ButtonNode.active = false;
-      setTimeout(function () {
-        _this.ExitCardInfo();
-      }, 2500);
+
+      if (_isBot == false) {
+        setTimeout(function () {
+          _this.ExitCardInfo();
+        }, 2500);
+      }
     }
   },
-  GenerateRandomBigBusinessCard: function GenerateRandomBigBusinessCard(_isOwner, _randomValue) {
+  GenerateRandomBigBusinessCard: function GenerateRandomBigBusinessCard(_isOwner, _randomValue, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.BigBusiness;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.BigBusiness[this.SelectedCardIndex].ID;
     if (this.BigBusiness[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.BigBusiness[this.SelectedCardIndex].ButtonName;
     this.ShowCardInfo(this.BigBusiness[this.SelectedCardIndex].Description, true);
-    this.ToggleButtons(_isOwner, this.BigBusiness[this.SelectedCardIndex].HasButton);
+    this.ToggleButtons(_isOwner, this.BigBusiness[this.SelectedCardIndex].HasButton, _isBot);
+
+    if (_isBot) {
+      this.CardFuntionalityButton();
+    }
   },
-  GenerateRandomMarketingCard: function GenerateRandomMarketingCard(_isOwner, _randomValue) {
+  GenerateRandomMarketingCard: function GenerateRandomMarketingCard(_isOwner, _randomValue, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.Marketing;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.Marketing[this.SelectedCardIndex].ID;
     if (this.Marketing[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.Marketing[this.SelectedCardIndex].ButtonName;
     this.ShowCardInfo(this.Marketing[this.SelectedCardIndex].Description, true);
-    this.ToggleButtons(_isOwner, this.Marketing[this.SelectedCardIndex].HasButton);
+    this.ToggleButtons(_isOwner, this.Marketing[this.SelectedCardIndex].HasButton, _isBot);
+
+    if (_isBot) {
+      this.CardFuntionalityButton();
+    }
   },
-  GenerateRandomLossesCard: function GenerateRandomLossesCard(_isOwner, _randomValue) {
+  GenerateRandomLossesCard: function GenerateRandomLossesCard(_isOwner, _randomValue, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.Losses;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.Losses[this.SelectedCardIndex].ID;
     this.ShowCardInfo(this.Losses[this.SelectedCardIndex].Description, true);
     if (this.Losses[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.Losses[this.SelectedCardIndex].ButtonName;
-    this.ToggleButtons(_isOwner, this.Losses[this.SelectedCardIndex].HasButton);
+    this.ToggleButtons(_isOwner, this.Losses[this.SelectedCardIndex].HasButton, _isBot);
+
+    if (_isBot) {
+      this.CardFuntionalityButton();
+    }
   },
-  GenerateRandomWildCard: function GenerateRandomWildCard(_isOwner, _randomValue) {
+  GenerateRandomWildCard: function GenerateRandomWildCard(_isOwner, _randomValue, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.WildCard;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.WildCards[this.SelectedCardIndex].ID;
     if (this.WildCards[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.WildCards[this.SelectedCardIndex].ButtonName;
     this.ShowCardInfo(this.WildCards[this.SelectedCardIndex].Description, true);
-    this.ToggleButtons(_isOwner, this.WildCards[this.SelectedCardIndex].HasButton);
+    this.ToggleButtons(_isOwner, this.WildCards[this.SelectedCardIndex].HasButton, _isBot);
+
+    if (_isBot) {
+      this.CardFuntionalityButton();
+    }
   },
-  SpaceInvest: function SpaceInvest(_isOwner, _index) {
+  SpaceInvest: function SpaceInvest(_isOwner, _index, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.Invest;
     this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
-    this.ToggleButtons(_isOwner, true);
+    this.ToggleButtons(_isOwner, true, _isBot);
+
+    if (_isBot) {
+      this.CompleteTurnWithToast("msg", 2100);
+    }
   },
   SpacePayDay: function SpacePayDay(_isOwner, _index) {
     this.ShowCardInfo("You have landed on PayDay space.", true);
@@ -222,23 +275,50 @@ var DecksData = cc.Class({
     this.DoublePayDayFunctionality();
     this.ToggleButtons(_isOwner, false);
   },
-  SpaceOneQuestion: function SpaceOneQuestion(_isOwner, _index) {
+  SpaceOneQuestion: function SpaceOneQuestion(_isOwner, _index, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.OneQuestion;
     this.ShowCardInfo("You can ask one question to any other player, if player is unable to answer they will pay you some cash amount.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
-    this.ToggleButtons(_isOwner, true);
+    this.ToggleButtons(_isOwner, true, _isBot);
+
+    if (_isBot) {
+      this.CompleteTurnWithToast("msg", 2100);
+    }
   },
-  SpaceSell: function SpaceSell(_isOwner, _index) {
+  SpaceSell: function SpaceSell(_isOwner, _index, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.Sell;
     this.ShowCardInfo("You can sell any one of your business or can skip turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
-    this.ToggleButtons(_isOwner, true);
+    this.ToggleButtons(_isOwner, true, _isBot);
+
+    if (_isBot) {
+      this.CompleteTurnWithToast("msg", 2100);
+    }
   },
-  SpaceBuyOrSell: function SpaceBuyOrSell(_isOwner, _index) {
+  SpaceBuyOrSell: function SpaceBuyOrSell(_isOwner, _index, _isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.BuyOrSell;
     this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
-    this.ToggleButtons(_isOwner, true);
+    this.ToggleButtons(_isOwner, true, _isBot);
+
+    if (_isBot) {
+      this.CompleteTurnWithToast("msg", 2100);
+    }
   },
   SpaceGoBackSpaces: function SpaceGoBackSpaces(_isOwner, _index) {
     this.ShowCardInfo("You have landed on Go Back space.", true);
@@ -306,15 +386,29 @@ var DecksData = cc.Class({
 
     var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
-    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg, _time);
-    this.ShowCardInfo("", false);
-    setTimeout(function () {
-      _this2.ShowCardInfo("", false);
+    if (this.IsBotTurn) {
+      console.log(_msg);
 
-      _manager.ResetCardDisplay();
+      var _delay = this.getRandom(1500, 2500);
 
-      _manager.RaiseEventTurnComplete();
-    }, _time + 100);
+      setTimeout(function () {
+        _this2.ShowCardInfo("", false);
+
+        _manager.ResetCardDisplay();
+
+        _manager.RaiseEventTurnComplete();
+      }, _delay);
+    } else {
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg, _time);
+      this.ShowCardInfo("", false);
+      setTimeout(function () {
+        _this2.ShowCardInfo("", false);
+
+        _manager.ResetCardDisplay();
+
+        _manager.RaiseEventTurnComplete();
+      }, _time + 100);
+    }
   },
   BigBusinessCardFunctionality: function BigBusinessCardFunctionality(_id) {
     var Index = parseInt(_id);
@@ -425,6 +519,8 @@ var DecksData = cc.Class({
         var TotalResult = Dice1Result + Dice2Result;
 
         if (TotalResult >= 19) {
+          var _mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
           var _amount = 0;
 
           for (var index = 0; index < _manager.PlayerGameInfo.length; index++) {
@@ -434,10 +530,12 @@ var DecksData = cc.Class({
           _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
           this.CompleteTurnWithToast("Dice 1 Result: " + Dice1Result + "\n" + "\n" + "Dice 2 Result: " + Dice2Result + "\n" + "\n" + "Total: " + TotalResult + "\n" + "\n" + "\n" + "Amount $" + _amount + " has successfully added in your cash from marketing amount on table.", 4000);
 
-          var _actorsArray = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+          if (_mode == 2) {
+            var _actorsArray = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
 
-          for (var _index2 = 0; _index2 < _actorsArray.length; _index2++) {
-            _actorsArray[_index2].customProperties.PlayerSessionData.MarketingAmount = 0;
+            for (var _index2 = 0; _index2 < _actorsArray.length; _index2++) {
+              _actorsArray[_index2].customProperties.PlayerSessionData.MarketingAmount = 0;
+            }
           }
         } else {
           this.CompleteTurnWithToast("Dice 1 Result: " + Dice1Result + "\n" + "\n" + "Dice 2 Result: " + Dice2Result + "\n" + "\n" + "Total: " + TotalResult + "\n" + "\n" + "\n" + "You ran out of luck, turn will skip now", 4000);
