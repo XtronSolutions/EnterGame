@@ -46,6 +46,7 @@ var RoomListHandler = cc.Class({
     this.RoomName = this.NameLabel.string;
     console.log(this.NameLabel.string);
     console.log(this.RoomName);
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(2);
     GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinRoom(this.RoomName);
   }
 });

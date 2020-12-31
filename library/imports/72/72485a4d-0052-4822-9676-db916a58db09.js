@@ -279,6 +279,13 @@ var PlayerData = cc.Class({
       serializable: true,
       tooltip: "Check if player has been Bankrupted or not"
     },
+    BankruptAmount: {
+      displayName: "BankruptAmount",
+      "default": 0,
+      type: cc.Integer,
+      serializable: true,
+      tooltip: "keep track how much time player has been bankrupted"
+    },
     SkippedLoanPayment: {
       displayName: "SkippedLoanPayment",
       "default": false,
@@ -344,6 +351,7 @@ var _skipBMNextPayday = false; //skip pay day for brick & mortar businessess onl
 
 var CardEventReceived = false;
 var TurnInProgress = false;
+var Backspaces = 3;
 var isGameOver = false;
 var OneQuestionIndex = -1;
 var OneQuestions = ["you have skipped loan previous payday?", "you have taken any loan?", "you have bankrupted ever?", "your next turn is going to be skipped?", "your next payday is going to be double payday?"];
@@ -814,6 +822,53 @@ var GameManager = cc.Class({
 
     GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2, this.TurnNumber);
   },
+  ReceiveBankruptData: function ReceiveBankruptData(_data) {
+    //other player has been bankrupted
+    var _isBankrupted = _data.Data.bankrupted;
+    var _turn = _data.Data.turn;
+    var _playerData = _data.Data.PlayerDataMain;
+    console.log(_data); // console.log(_isBankrupted);
+    // console.log(_turn);
+    // console.log(_playerData);
+
+    this.PlayerGameInfo[_turn] = _playerData;
+    this.AssignPlayerGameUI(true);
+    this.EnablePlayerNodes(true);
+    this.UpdateGameUI(true, this.TurnNumber);
+
+    for (var index = 0; index < this.AllPlayerUI.length; index++) {
+      this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active = false;
+    }
+
+    if (this.SelectedMode == 2) //for real players
+      {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("TurnNumber", this.TurnNumber, true);
+        this.SyncDataToPlayerGameInfo(0); //force sync spectator after completion of each turn
+
+        if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == true) this.SyncAllData_SpectateManager();
+      }
+  },
+  StartTurnAfterBankrupt: function StartTurnAfterBankrupt() {
+    this.AssignPlayerGameUI(true);
+    this.EnablePlayerNodes(true);
+    setTimeout(function () {
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ResetTurnVariable();
+    }, 1000);
+    this.UpdateGameUI(true, this.TurnNumber);
+
+    for (var index = 0; index < this.AllPlayerUI.length; index++) {
+      this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active = false;
+    }
+
+    if (this.SelectedMode == 2) //for real players
+      {
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("TurnNumber", this.TurnNumber, true);
+        this.SyncDataToPlayerGameInfo(0); //force sync spectator after completion of each turn
+
+        if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == true) this.SyncAllData_SpectateManager();
+      }
+  },
   //#endregion
   //#region Function for gameplay
 
@@ -823,13 +878,19 @@ var GameManager = cc.Class({
   @param {string} none
   @returns {boolean} no return
   **/
-  AssignPlayerGameUI: function AssignPlayerGameUI() {
+  AssignPlayerGameUI: function AssignPlayerGameUI(_isBankrupted) {
+    if (_isBankrupted === void 0) {
+      _isBankrupted = false;
+    }
+
     if (this.SelectedMode == 1) //for bot
       {
-        var _randomIndex = this.getRandom(0, this.BotGameInfo.length);
+        if (!_isBankrupted) {
+          var _randomIndex = this.getRandom(0, this.BotGameInfo.length);
 
-        this.PlayerGameInfo.push(this.BotGameInfo[_randomIndex]);
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers = 2;
+          this.PlayerGameInfo.push(this.BotGameInfo[_randomIndex]);
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers = 2;
+        }
       }
 
     for (var index = 0; index < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; index++) {
@@ -860,9 +921,17 @@ var GameManager = cc.Class({
   @param {string} none
   @returns {boolean} no return
   **/
-  EnablePlayerNodes: function EnablePlayerNodes() {
-    for (var index = 0; index < this.PlayerGameInfo.length; index++) {
-      if (this.PlayerGameInfo[index].HomeBasedAmount == 1) this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[0].position.x, this.StartLocationNodes[0].position.y);else if (this.PlayerGameInfo[index].BrickAndMortarAmount == 1) this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[1].position.x, this.StartLocationNodes[1].position.y);
+  EnablePlayerNodes: function EnablePlayerNodes(_isBankrupted) {
+    if (_isBankrupted === void 0) {
+      _isBankrupted = false;
+    }
+
+    if (!_isBankrupted) {
+      for (var index = 0; index < this.PlayerGameInfo.length; index++) {
+        if (this.PlayerGameInfo[index].HomeBasedAmount == 1) this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[0].position.x, this.StartLocationNodes[0].position.y);else if (this.PlayerGameInfo[index].BrickAndMortarAmount == 1) this.AllPlayerNodes[index].setPosition(this.StartLocationNodes[1].position.x, this.StartLocationNodes[1].position.y);
+      }
+    } else {
+      if (this.PlayerGameInfo[this.TurnNumber].HomeBasedAmount == 1) this.AllPlayerNodes[this.TurnNumber].setPosition(this.StartLocationNodes[0].position.x, this.StartLocationNodes[0].position.y);else if (this.PlayerGameInfo[this.TurnNumber].BrickAndMortarAmount == 1) this.AllPlayerNodes[this.TurnNumber].setPosition(this.StartLocationNodes[1].position.x, this.StartLocationNodes[1].position.y);
     }
 
     for (var _index3 = 0; _index3 < GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers; _index3++) {
@@ -961,7 +1030,7 @@ var GameManager = cc.Class({
   },
   RollDice: function RollDice() {
     var Dice1 = this.getRandom(1, 7);
-    var Dice2 = this.getRandom(1, 7); // var Dice1=1;
+    var Dice2 = this.getRandom(1, 7); // var Dice1=20;
     // var Dice2=1;
 
     DiceRoll = Dice1 + Dice2;
@@ -985,6 +1054,8 @@ var GameManager = cc.Class({
   },
   callUponCard: function callUponCard() {
     var _spaceID = parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType);
+
+    this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter;
 
     if (_spaceID != 6 && _spaceID != 7) //6 means payday and 7 means double payday, 9 menas sell space
       {
@@ -1435,6 +1506,11 @@ var GameManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot);
     }
   },
+  Bankrupt_TurnDecision: function Bankrupt_TurnDecision() {
+    this.PlayerGameInfo[this.TurnNumber].IsBankrupt = true;
+    this.PlayerGameInfo[this.TurnNumber].BankruptAmount += 1;
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(true, false, this.SelectedMode, this.PlayerGameInfo[this.TurnNumber].IsBankrupt, this.PlayerGameInfo[this.TurnNumber].BankruptAmount);
+  },
   //#endregion
   //#region Cards Rules
   ToggleDoublePayNextTurn: function ToggleDoublePayNextTurn(_state) {
@@ -1644,7 +1720,7 @@ var GameManager = cc.Class({
           } else if (_questionIndex == 3) //Are you bankrupted? if more than once, tell me the amount?
           {
             if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.IsBankrupt) {
-              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have been bankrupted", 2100);
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have been bankrupted " + _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.BankruptAmount + " time/es.", 2100);
             } else {
               GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have been bankrupted", 2100);
             }
@@ -1671,6 +1747,56 @@ var GameManager = cc.Class({
         }, 2150);
       }
     }
+  },
+  ReceiveGoBackSpacesData_spaceFunctionality: function ReceiveGoBackSpacesData_spaceFunctionality(_data) {
+    var _this9 = this;
+
+    if (IsTweening == true) {
+      setTimeout(function () {
+        _this9.ReceiveGoBackSpacesData_spaceFunctionality(_data);
+      }, 800);
+    } else {
+      var _spaces = _data.Data.backspaces;
+      var _counter = _data.Data.Counter;
+
+      var _toPos = cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[_counter + Backspaces].ReferenceLocation.position.x, GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.y);
+
+      this.TweenPlayer_GoBackSpaces(this.AllPlayerNodes[this.TurnNumber], _toPos, 0.1);
+      RollCounter = _counter;
+
+      var _toPos = cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.x, GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.y);
+
+      this.TweenPlayer_GoBackSpaces(this.AllPlayerNodes[this.TurnNumber], _toPos);
+    }
+  },
+  TweenPlayer_GoBackSpaces: function TweenPlayer_GoBackSpaces(Node, ToPos, speed) {
+    if (speed === void 0) {
+      speed = 0.6;
+    }
+
+    cc.tween(Node).to(speed, {
+      position: cc.v2(ToPos.x, ToPos.y)
+    }, {
+      easing: "quadInOut"
+    }).call(function () {}).start();
+  },
+  GoBackSpaces_spaceFunctionality: function GoBackSpaces_spaceFunctionality() {
+    RollCounter -= Backspaces;
+
+    if (this.SelectedMode == 2) {
+      var _data = {
+        Data: {
+          backspaces: Backspaces,
+          Counter: RollCounter
+        }
+      };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(10, _data);
+    }
+
+    var _toPos = cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.x, GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.y);
+
+    this.TweenPlayer_GoBackSpaces(this.AllPlayerNodes[this.TurnNumber], _toPos);
+    this.completeCardTurn();
   } //#endregion
   //#endregion
 

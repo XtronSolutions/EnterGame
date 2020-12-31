@@ -361,6 +361,13 @@ var PayDayUI = cc.Class({
       serializable: true,
       tooltip: "UI reference to the label of title of PayDay node"
     },
+    CashLabel: {
+      displayName: "Cash",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the label of cash of PayDay node"
+    },
     HomeBasedNumberLabel: {
       displayName: "HomeBasedNumber",
       type: cc.Label,
@@ -814,6 +821,8 @@ var GameplayUIManager = cc.Class({
     this.StockInvested = false;
     this.StockSold = false;
     this.IsBotTurn = false;
+    this.IsBankrupted = false;
+    this.BankruptedAmount = 0;
   },
   ResetTurnVariable: function ResetTurnVariable() {
     this.GoldInvested = false;
@@ -857,27 +866,42 @@ var GameplayUIManager = cc.Class({
   //#endregion
   //#region BusinessSetup with loan
   //Business setup ui//------------------------
-  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex) {
+  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _BankruptAmount) {
     if (insideGame === void 0) {
       insideGame = false;
     }
 
     if (modeIndex === void 0) {
       modeIndex = 0;
+    }
+
+    if (_isBankrupted === void 0) {
+      _isBankrupted = false;
+    }
+
+    if (_BankruptAmount === void 0) {
+      _BankruptAmount = 0;
     }
 
     //called first time form GameManager onload function
     this.CheckReferences();
     this.BusinessSetupNode.active = true;
-    this.Init_BusinessSetup(isFirstTime, insideGame, modeIndex);
+    this.IsBankrupted = _isBankrupted;
+    this.BankruptedAmount = _BankruptAmount;
+    if (_isBankrupted) this.ResetTurnVariable();
+    this.Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted);
   },
-  Init_BusinessSetup: function Init_BusinessSetup(isFirstTime, insideGame, modeIndex) {
+  Init_BusinessSetup: function Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted) {
     if (insideGame === void 0) {
       insideGame = false;
     }
 
     if (modeIndex === void 0) {
       modeIndex = 0;
+    }
+
+    if (_isBankrupted === void 0) {
+      _isBankrupted = false;
     }
 
     PlayerDataIntance = new GameManager.PlayerData();
@@ -1076,23 +1100,52 @@ var GameplayUIManager = cc.Class({
 
     var _mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
 
-    GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.push(PlayerDataIntance);
+    if (this.IsBankrupted) {
+      PlayerDataIntance.IsBankrupt = true;
+      PlayerDataIntance.BankruptAmount = this.BankruptedAmount;
+      GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber()] = PlayerDataIntance;
+    } else {
+      GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.push(PlayerDataIntance);
+    }
 
     if (_mode == 2) //for real players
       {
         //setting player current data in custom properties when his/her turn overs
         GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", PlayerDataIntance);
-        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1, PlayerDataIntance);
-        this.BusinessSetupData.WaitingStatusNode.active = true;
+
+        if (!this.IsBankrupted) {
+          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1, PlayerDataIntance);
+          this.BusinessSetupData.WaitingStatusNode.active = true;
+        } else {
+          this.BusinessSetupData.WaitingStatusNode.active = false;
+          this.BusinessSetupNode.active = false;
+          this.GameplayUIScreen.active = true;
+          var _data = {
+            Data: {
+              bankrupted: true,
+              turn: GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber(),
+              PlayerDataMain: PlayerDataIntance
+            }
+          };
+          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(9, _data);
+          GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
+        }
       } else if (_mode == 1) //for AI
       {
-        this.BusinessSetupData.WaitingStatusNode.active = true;
-        setTimeout(function () {
-          _this.BusinessSetupData.WaitingStatusNode.active = false;
-          _this.BusinessSetupNode.active = false;
-          _this.GameplayUIScreen.active = true;
-          GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
-        }, 1600);
+        if (!this.IsBankrupted) {
+          this.BusinessSetupData.WaitingStatusNode.active = true;
+          setTimeout(function () {
+            _this.BusinessSetupData.WaitingStatusNode.active = false;
+            _this.BusinessSetupNode.active = false;
+            _this.GameplayUIScreen.active = true;
+            GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
+          }, 1600);
+        } else {
+          this.BusinessSetupData.WaitingStatusNode.active = false;
+          this.BusinessSetupNode.active = false;
+          this.GameplayUIScreen.active = true;
+          GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
+        }
       } else {
       console.error("no mode selected");
     }
@@ -1110,7 +1163,7 @@ var GameplayUIManager = cc.Class({
         this.PurchaseBusiness(10000, "home", true);else if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.brickAndmortar) //if selected business is brick and mortar
         this.PurchaseBusiness(50000, "brick and mortar", false);
 
-      if (this.StartGame == true) {
+      if (this.StartGame == true || this.IsBankrupted == true) {
         PlayerDataIntance.NoOfBusiness.push(PlayerBusinessDataIntance);
         if (InsideGameBusinessSetup != -1) //if start new business has not been called from inside game
           this.StartNewSetup_DuringGame_BusinessSetup();else //if start new business has been called at start of game as initial setup
@@ -1521,6 +1574,8 @@ var GameplayUIManager = cc.Class({
 
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
+    this.UpdateCash_PayDay(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
+
     var HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
 
     var BMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
@@ -1630,7 +1685,8 @@ var GameplayUIManager = cc.Class({
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
       var _EstimateLoan = 0;
-      if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) _EstimateLoan = this.GetLoanAmount_PayDay();else _EstimateLoan = 5000;
+      if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) //if player had skippped loan previously call all amount due
+        _EstimateLoan = this.GetLoanAmount_PayDay();else _EstimateLoan = 5000;
 
       if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash >= _EstimateLoan) {
         LoanPayed = true;
@@ -1655,6 +1711,7 @@ var GameplayUIManager = cc.Class({
         }
 
         if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) _manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment = false;
+        this.UpdateCash_PayDay(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
         this.PayDayCompleted();
       } else {
         var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
@@ -1663,6 +1720,7 @@ var GameplayUIManager = cc.Class({
 
         if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = false;else this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = true;
         this.PayDaySetupUI.LoanResultPanelNode.active = true;
+        console.error("out of money");
       }
     }
   },
@@ -1673,6 +1731,7 @@ var GameplayUIManager = cc.Class({
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
     GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + TotalPayDayAmount;
+    this.UpdateCash_PayDay(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
 
     if (!this.IsBotTurn) {
       this.ShowToast("Amount $" + TotalPayDayAmount + " has been added to your cash amount, Total Cash has become $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash, 1500);
@@ -1705,8 +1764,31 @@ var GameplayUIManager = cc.Class({
     this.PayDaySetupUI.LoanResultPanelNode.active = false;
     this.EnableSellScreen__SellBusinessUISetup(false);
   },
+  UpdateCash_PayDay: function UpdateCash_PayDay(_amount) {
+    this.PayDaySetupUI.CashLabel.string = "$" + _amount;
+  },
   ExitLoanScreen_PayDay: function ExitLoanScreen_PayDay() {
     this.PayDaySetupUI.LoanResultPanelNode.active = false;
+  },
+  StartNewGame_PayDay: function StartNewGame_PayDay() //if bankrupted you can start new game
+  {
+    var _this6 = this;
+
+    this.ShowToast("You will lose all progress and start new game from the start.", 3000);
+    setTimeout(function () {
+      _this6.ExitLoanScreen_PayDay();
+
+      _this6.TogglePayDayScreen_PayDay(false);
+
+      HomeBasedPaymentCompleted = false;
+      BrickMortarPaymentCompleted = false;
+      LoanPayed = false;
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
+      GamePlayReferenceManager.Instance.Get_GameManager().Bankrupt_TurnDecision();
+    }, 3010);
   },
   PayDayCompleted: function PayDayCompleted() {
     if (HomeBasedPaymentCompleted && BrickMortarPaymentCompleted && LoanPayed) {
@@ -1714,11 +1796,11 @@ var GameplayUIManager = cc.Class({
 
       console.log("all payday done");
       this.TogglePayDayScreen_PayDay(false);
-      _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
-      _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
-      _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
-      _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
-      _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
+      GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
     }
   },
   //#endregion
@@ -1871,7 +1953,7 @@ var GameplayUIManager = cc.Class({
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
   //#endregion
-  ///#region One Question setup Ui
+  //#region One Question setup Ui
   ToggleDecisionScreen_OneQuestionSetupUI: function ToggleDecisionScreen_OneQuestionSetupUI(_state) {
     this.OneQuestionDecisionScreen.active = _state;
   },

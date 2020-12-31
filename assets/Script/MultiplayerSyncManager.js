@@ -92,6 +92,20 @@ var MultiplayerSyncManager=cc.Class({
             else if(this.SelectedMode==1)//for bot
                 this.ReceiveEvent(_eventCode,"customName","customID",_data);
         }
+        else if(_eventCode==9) //sending data to reset positions after bankrupt
+        {
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendBankruptData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
+        }
+        else if(_eventCode==10) //sending go back spaces data
+        {
+            if(this.SelectedMode==2)//for player
+                GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGoBackSpaceData(_data);
+            else if(this.SelectedMode==1)//for bot
+                this.ReceiveEvent(_eventCode,"customName","customID",_data);
+        }
     },
 
     ReceiveEvent (_eventCode,_senderName,_senderID,_data) {
@@ -141,6 +155,17 @@ var MultiplayerSyncManager=cc.Class({
             console.log("sender name: "+_senderName);
             console.log("sender ID: "+_senderID);
             GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEventDecision_OneQuestion(_data);
+        }else if(_eventCode==9) //receiving bankrupcy data
+        {
+            console.log("sender name: "+_senderName);
+            console.log("sender ID: "+_senderID);
+            GamePlayReferenceManager.Instance.Get_GameManager().ReceiveBankruptData(_data);
+        }
+        else if(_eventCode==10) //receiving bankrupcy data
+        {
+            console.log("sender name: "+_senderName);
+            console.log("sender ID: "+_senderID);
+            GamePlayReferenceManager.Instance.Get_GameManager().ReceiveGoBackSpacesData_spaceFunctionality(_data);
         }
     },
 

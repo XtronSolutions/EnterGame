@@ -336,12 +336,20 @@ var DecksData=cc.Class({
         }
     },
 
-    SpaceGoBackSpaces(_isOwner,_index)
+    SpaceGoBackSpaces(_isOwner,_index,_isBot=false)
     {
-      this.ShowCardInfo("You have landed on Go Back space.",true);
-      this.GoBackFunctionality();
-
-      this.ToggleButtons(_isOwner,false);
+        this.IsBotTurn=_isBot;
+        this.SpacesType=EnumSpaceType.GoBackSpaces;
+        this.ShowCardInfo("you will have to go back 3 spaces.",true);
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.ToggleButtons(_isOwner,true,_isBot);
+        if(_isBot)
+        {
+            setTimeout(() => {
+                this.CardFuntionalityButton();
+            }, 1000);
+            
+        }
     },
 
     ShowCardInfo:function(message,_state)
@@ -400,6 +408,10 @@ var DecksData=cc.Class({
       else if(this.SpacesType==EnumSpaceType.OneQuestion)
       {
         this.OneQuestionFunctionality();
+      }
+      else if(this.SpacesType==EnumSpaceType.GoBackSpaces)
+      {
+        this.GoBackFunctionality();
       }
     },
 
@@ -948,7 +960,8 @@ var DecksData=cc.Class({
     },
     GoBackFunctionality()
     {
-
+        GamePlayReferenceManager.Instance.Get_GameManager().GoBackSpaces_spaceFunctionality();
+        this.ShowCardInfo("",false);
     },
 });
 module.exports= DecksData;

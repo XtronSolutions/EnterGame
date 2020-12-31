@@ -521,6 +521,30 @@ var MultiplayerController=cc.Class({
   },
 
     /**
+    @summary Send backrupt data
+    @method SendBankruptData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendBankruptData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending bankrupcy data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(9, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+
+    /**
     @summary Send Player Data over network
     @method SendData
     @param {Object} _data
@@ -605,6 +629,30 @@ var MultiplayerController=cc.Class({
         console.log(_data);
             try {
                 PhotonRef.raiseEvent(3, { DiceCount: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.All});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+
+   /**
+    @summary send go back spaces data
+    @method SendGoBackSpaceData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendGoBackSpaceData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("send go back spaces data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(10, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
             }
             catch (err) {
                 console.error("error: " + err.message);
@@ -1090,6 +1138,24 @@ var MultiplayerController=cc.Class({
                     var senderID = content.senderID;
                     
                     MultiplayerController.Instance.CallRecieveEvent(8,senderName,senderID,_data);
+
+                    break;
+                case 9: //receive bankrupt data
+                    console.log("received bankrupt data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(9,senderName,senderID,_data);
+
+                    break;
+                case 10: //receive backspace data
+                    console.log("received backspace data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(10,senderName,senderID,_data);
 
                     break;
                 default:

@@ -320,10 +320,24 @@ var DecksData = cc.Class({
       this.CompleteTurnWithToast("msg", 2100);
     }
   },
-  SpaceGoBackSpaces: function SpaceGoBackSpaces(_isOwner, _index) {
-    this.ShowCardInfo("You have landed on Go Back space.", true);
-    this.GoBackFunctionality();
-    this.ToggleButtons(_isOwner, false);
+  SpaceGoBackSpaces: function SpaceGoBackSpaces(_isOwner, _index, _isBot) {
+    var _this2 = this;
+
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.IsBotTurn = _isBot;
+    this.SpacesType = EnumSpaceType.GoBackSpaces;
+    this.ShowCardInfo("you will have to go back 3 spaces.", true);
+    this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "ACCEPT";
+    this.ToggleButtons(_isOwner, true, _isBot);
+
+    if (_isBot) {
+      setTimeout(function () {
+        _this2.CardFuntionalityButton();
+      }, 1000);
+    }
   },
   ShowCardInfo: function ShowCardInfo(message, _state) {
     if (_state) {
@@ -358,6 +372,8 @@ var DecksData = cc.Class({
       this.BuyOrSellFunctionality();
     } else if (this.SpacesType == EnumSpaceType.OneQuestion) {
       this.OneQuestionFunctionality();
+    } else if (this.SpacesType == EnumSpaceType.GoBackSpaces) {
+      this.GoBackFunctionality();
     }
   },
   CheckLoan: function CheckLoan() {
@@ -382,7 +398,7 @@ var DecksData = cc.Class({
     return Result;
   },
   CompleteTurnWithToast: function CompleteTurnWithToast(_msg, _time) {
-    var _this2 = this;
+    var _this3 = this;
 
     var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
@@ -392,7 +408,7 @@ var DecksData = cc.Class({
       var _delay = this.getRandom(1500, 2500);
 
       setTimeout(function () {
-        _this2.ShowCardInfo("", false);
+        _this3.ShowCardInfo("", false);
 
         _manager.ResetCardDisplay();
 
@@ -402,7 +418,7 @@ var DecksData = cc.Class({
       GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg, _time);
       this.ShowCardInfo("", false);
       setTimeout(function () {
-        _this2.ShowCardInfo("", false);
+        _this3.ShowCardInfo("", false);
 
         _manager.ResetCardDisplay();
 
@@ -954,7 +970,10 @@ var DecksData = cc.Class({
     GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableBuyOrSell_BuyOrSellSetupUI(true);
     this.ShowCardInfo("", false);
   },
-  GoBackFunctionality: function GoBackFunctionality() {}
+  GoBackFunctionality: function GoBackFunctionality() {
+    GamePlayReferenceManager.Instance.Get_GameManager().GoBackSpaces_spaceFunctionality();
+    this.ShowCardInfo("", false);
+  }
 });
 module.exports = DecksData;
 
