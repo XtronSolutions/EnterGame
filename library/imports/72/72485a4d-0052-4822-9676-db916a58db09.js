@@ -60,6 +60,13 @@ var BusinessInfo = cc.Class({
       serializable: true,
       tooltip: "ID of the partner with whom player has formed partnership"
     },
+    PartnerName: {
+      displayName: "PartnerName",
+      type: cc.Text,
+      "default": "",
+      serializable: true,
+      tooltip: "name of the partner with whom player has formed partnership"
+    },
     LocationsName: {
       displayName: "LocationsName",
       type: [cc.Text],
@@ -493,6 +500,20 @@ var GameManager = cc.Class({
   //#region public functions to get data (accessible from other classes)
   GetTurnNumber: function GetTurnNumber() {
     return this.TurnNumber;
+  },
+  GetMyIndex: function GetMyIndex() {
+    var myIndex = 0;
+    var _actor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    var _allActors = this.PlayerGameInfo;
+
+    for (var index = 0; index < _allActors.length; index++) {
+      if (_actor.PlayerUID == _allActors[index].PlayerUID) {
+        myIndex = index;
+        break;
+      }
+    }
+
+    return myIndex;
   },
   //#endregion
   //#region SpectateMode Code
@@ -1068,10 +1089,9 @@ var GameManager = cc.Class({
             RandomCard = valueIndex[index];
           } else if (_spaceID == 5) //landed on some losses cards
           {
-            // var valueIndex=[0,5,6,2];
-            // var index=this.getRandom(0,4);
-            // RandomCard=valueIndex[index];
-            RandomCard = 0;
+            var valueIndex = [0, 5, 6, 2];
+            var index = this.getRandom(0, 4);
+            RandomCard = valueIndex[index]; //RandomCard=0;
           } else if (_spaceID == 3) //landed on some marketing cards
           {
             var valueIndex = [0, 7, 3, 8, 13, 9];
@@ -1510,6 +1530,33 @@ var GameManager = cc.Class({
     this.PlayerGameInfo[this.TurnNumber].IsBankrupt = true;
     this.PlayerGameInfo[this.TurnNumber].BankruptAmount += 1;
     GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(true, false, this.SelectedMode, this.PlayerGameInfo[this.TurnNumber].IsBankrupt, this.PlayerGameInfo[this.TurnNumber].BankruptAmount);
+  },
+  SendProfit_Partner_TurnDecision: function SendProfit_Partner_TurnDecision(_amount, _uID) {
+    var _data = {
+      Data: {
+        Cash: _amount,
+        ID: _uID
+      }
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(13, _data);
+  },
+  ReceiveProfit_Partner_TurnDecision: function ReceiveProfit_Partner_TurnDecision(_data) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      var _amount = _data.Data.Cash;
+      var _iD = _data.Data.ID;
+
+      var _myIndex = this.GetMyIndex();
+
+      if (this.PlayerGameInfo[_myIndex].PlayerUID == _iD) {
+        if (this.PlayerGameInfo[_myIndex].isGameFinished == true) {
+          this.PlayerGameInfo[_myIndex].TotalScore += _amount;
+        }
+
+        this.PlayerGameInfo[_myIndex].Cash += _amount;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have received profit of $" + _amount + " from your partner.", 2800);
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+      }
+    }
   },
   //#endregion
   //#region Cards Rules

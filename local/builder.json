@@ -1,6 +1,6 @@
 {
-  "platform": "web-desktop",
-  "actualPlatform": "web-desktop",
+  "platform": "web-mobile",
+  "actualPlatform": "web-mobile",
   "template": "link",
   "buildPath": "C:\\Users\\GNG\\Desktop\\client\\Build",
   "debug": false,

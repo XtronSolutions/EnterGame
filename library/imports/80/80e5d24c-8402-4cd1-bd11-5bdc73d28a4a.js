@@ -7,7 +7,11 @@ cc._RF.push(module, '80e5dJMhAJM0b0RW9xz0opK', 'GameplayUIManager');
 var GameManager = null;
 var GamePlayReferenceManager = null;
 var businessDetailNodes = [];
-var oneQuestionNodes = []; //-------------------------------------------enumeration for amount of loan-------------------------//
+var oneQuestionNodes = [];
+var businessDetailPartnershipNodes = [];
+var PartnerShipData = null;
+var PartnerShipOfferReceived = false;
+var CancelledID = []; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -661,6 +665,81 @@ var OneQuestionUI = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for PartnershipUI-------------------------//
+
+var PartnershipUI = cc.Class({
+  name: "PartnershipUI",
+  properties: {
+    WaitingStatusScreen: {
+      displayName: "WaitingStatusScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference of the waiting screen node of partnership ui"
+    },
+    MainScreen: {
+      displayName: "MainScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    TitleName: {
+      displayName: "TitleName",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    PlayerName: {
+      displayName: "PlayerName",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    PlayerCash: {
+      displayName: "PlayerCash",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    PartnerShipPrefab: {
+      displayName: "PartnerShipPrefab",
+      type: cc.Prefab,
+      "default": null,
+      serializable: true
+    },
+    ScrollContent: {
+      displayName: "ScrollContent",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    DecisionScreen: {
+      displayName: "DecisionScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    DecisionPlayerName: {
+      displayName: "DecisionPlayerName",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    DecisionPlayerCash: {
+      displayName: "DecisionPlayerCash",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    DecisionDescription: {
+      displayName: "DecisionDescription",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for GameplayUIManager-------------------------//
 
 var PlayerDataIntance;
@@ -734,6 +813,12 @@ var GameplayUIManager = cc.Class({
       type: OneQuestionUI,
       serializable: true,
       tooltip: "reference of OneQuestionUI class"
+    },
+    PartnershipSetupUI: {
+      "default": {},
+      type: PartnershipUI,
+      serializable: true,
+      tooltip: "reference of PartnershipUI class"
     },
     PopUpUI: {
       "default": null,
@@ -831,15 +916,15 @@ var GameplayUIManager = cc.Class({
     this.StockSold = false;
   },
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
-    if (!GameManager || GameManager == null) GameManager = require('GameManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
+    if (!GameManager || GameManager == null) GameManager = require("GameManager");
   },
   onEnable: function onEnable() {
-    //events subscription to be called 
-    cc.systemEvent.on('SyncData', this.SyncData, this);
+    //events subscription to be called
+    cc.systemEvent.on("SyncData", this.SyncData, this);
   },
   onDisable: function onDisable() {
-    cc.systemEvent.off('SyncData', this.SyncData, this);
+    cc.systemEvent.off("SyncData", this.SyncData, this);
   },
   //#region Spectate UI Setup
   InitialScreen_SpectateMode: function InitialScreen_SpectateMode() {
@@ -910,7 +995,7 @@ var GameplayUIManager = cc.Class({
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
       this.BusinessSetupData.TimerNode.active = true;
-      PlayerDataIntance.Cash = 20000;
+      PlayerDataIntance.Cash = 100000;
     }
 
     this.ResetButtonStates_BusinessSetup();
@@ -1108,45 +1193,45 @@ var GameplayUIManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.push(PlayerDataIntance);
     }
 
-    if (_mode == 2) //for real players
-      {
-        //setting player current data in custom properties when his/her turn overs
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", PlayerDataIntance);
+    if (_mode == 2) {
+      //for real players
+      //setting player current data in custom properties when his/her turn overs
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", PlayerDataIntance);
 
-        if (!this.IsBankrupted) {
-          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1, PlayerDataIntance);
-          this.BusinessSetupData.WaitingStatusNode.active = true;
-        } else {
-          this.BusinessSetupData.WaitingStatusNode.active = false;
-          this.BusinessSetupNode.active = false;
-          this.GameplayUIScreen.active = true;
-          var _data = {
-            Data: {
-              bankrupted: true,
-              turn: GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber(),
-              PlayerDataMain: PlayerDataIntance
-            }
-          };
-          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(9, _data);
-          GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
-        }
-      } else if (_mode == 1) //for AI
-      {
-        if (!this.IsBankrupted) {
-          this.BusinessSetupData.WaitingStatusNode.active = true;
-          setTimeout(function () {
-            _this.BusinessSetupData.WaitingStatusNode.active = false;
-            _this.BusinessSetupNode.active = false;
-            _this.GameplayUIScreen.active = true;
-            GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
-          }, 1600);
-        } else {
-          this.BusinessSetupData.WaitingStatusNode.active = false;
-          this.BusinessSetupNode.active = false;
-          this.GameplayUIScreen.active = true;
-          GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
-        }
+      if (!this.IsBankrupted) {
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(1, PlayerDataIntance);
+        this.BusinessSetupData.WaitingStatusNode.active = true;
       } else {
+        this.BusinessSetupData.WaitingStatusNode.active = false;
+        this.BusinessSetupNode.active = false;
+        this.GameplayUIScreen.active = true;
+        var _data = {
+          Data: {
+            bankrupted: true,
+            turn: GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber(),
+            PlayerDataMain: PlayerDataIntance
+          }
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(9, _data);
+        GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
+      }
+    } else if (_mode == 1) {
+      //for AI
+      if (!this.IsBankrupted) {
+        this.BusinessSetupData.WaitingStatusNode.active = true;
+        setTimeout(function () {
+          _this.BusinessSetupData.WaitingStatusNode.active = false;
+          _this.BusinessSetupNode.active = false;
+          _this.GameplayUIScreen.active = true;
+          GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
+        }, 1600);
+      } else {
+        this.BusinessSetupData.WaitingStatusNode.active = false;
+        this.BusinessSetupNode.active = false;
+        this.GameplayUIScreen.active = true;
+        GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
+      }
+    } else {
       console.error("no mode selected");
     }
   },
@@ -1166,8 +1251,8 @@ var GameplayUIManager = cc.Class({
       if (this.StartGame == true || this.IsBankrupted == true) {
         PlayerDataIntance.NoOfBusiness.push(PlayerBusinessDataIntance);
         if (InsideGameBusinessSetup != -1) //if start new business has not been called from inside game
-          this.StartNewSetup_DuringGame_BusinessSetup();else //if start new business has been called at start of game as initial setup
-          this.InitialSetup_BusinessSetup(); //prtinting all values to console
+          this.StartNewSetup_DuringGame_BusinessSetup(); //if start new business has been called at start of game as initial setup
+        else this.InitialSetup_BusinessSetup(); //prtinting all values to console
 
         for (var i = 0; i < GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length; i++) {
           console.log("player name: " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[i].PlayerName);
@@ -1349,8 +1434,10 @@ var GameplayUIManager = cc.Class({
     }
   },
   OnPartnershipClicked_TurnDecision: function OnPartnershipClicked_TurnDecision() {
-    console.log("go into partner ship");
-    this.ShowToast("work in progress, coming soon...");
+    console.log("go into partner ship"); // this.ShowToast("work in progress, coming soon...");
+    // var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    this.EnablePartnership_PartnerShipSetup();
   },
   OnRollDiceClicked_TurnDecision: function OnRollDiceClicked_TurnDecision() {
     console.log("roll the dice");
@@ -1358,6 +1445,251 @@ var GameplayUIManager = cc.Class({
     GamePlayReferenceManager.Instance.Get_GameManager().RollDice();
   },
   PrintDiceValue_TurnDecision: function PrintDiceValue_TurnDecision(value) {//this.TempDiceText.string=value;
+  },
+  //#endregion
+  //#region Partnership setup
+  ToggleScreen_PartnerShipSetup: function ToggleScreen_PartnerShipSetup(_state) {
+    this.PartnershipSetupUI.MainScreen.active = _state;
+  },
+  ToggleWaitingScreen_PartnerShipSetup: function ToggleWaitingScreen_PartnerShipSetup(_state) {
+    this.PartnershipSetupUI.WaitingStatusScreen.active = _state;
+  },
+  ToggleDecisionScreen_PartnerShipSetup: function ToggleDecisionScreen_PartnerShipSetup(_state) {
+    this.PartnershipSetupUI.DecisionScreen.active = _state;
+  },
+  EnablePartnership_PartnerShipSetup: function EnablePartnership_PartnerShipSetup() {
+    CancelledID = [];
+    this.Reset_PartnerShipSetup();
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    var _tempData = _manager.PlayerGameInfo[_playerIndex];
+    this.ToggleScreen_PartnerShipSetup(true);
+    this.PartnershipSetupUI.PlayerName.string = _tempData.PlayerName;
+    this.PartnershipSetupUI.PlayerCash.string = "$" + _tempData.Cash;
+
+    for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
+      var node = cc.instantiate(this.PartnershipSetupUI.PartnerShipPrefab);
+      node.parent = this.PartnershipSetupUI.ScrollContent;
+      node.getComponent("BusinessDetail").CheckReferences();
+      node.getComponent("BusinessDetail").SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetBusinessIndex(index);
+      var _totalLocations = _tempData.NoOfBusiness[index].LocationsName.length;
+
+      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) {
+        node.getComponent("BusinessDetail").SetBusinessMode(1);
+        node.getComponent("BusinessDetail").SetMode("Home Based");
+        node.getComponent("BusinessDetail").SetBusinessValue(10000);
+        node.getComponent("BusinessDetail").SetFinalBusinessValue(10000);
+      } else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) {
+        node.getComponent("BusinessDetail").SetBusinessMode(2);
+        node.getComponent("BusinessDetail").SetMode("Brick & Mortar");
+
+        var _allLocationsAmount = _totalLocations * 25000;
+
+        var _finalAmount = 50000 + _allLocationsAmount;
+
+        node.getComponent("BusinessDetail").SetBusinessValue(_finalAmount);
+        node.getComponent("BusinessDetail").SetFinalBusinessValue(_finalAmount);
+      }
+
+      node.getComponent("BusinessDetail").SetBalance(_tempData.NoOfBusiness[index].LoanAmount);
+      node.getComponent("BusinessDetail").SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+
+      if (_tempData.NoOfBusiness[index].IsPartnership == true) {
+        node.getComponent("BusinessDetail").TogglePartnerShipButton(false);
+        node.getComponent("BusinessDetail").SetPartnerName(_tempData.NoOfBusiness[index].PartnerName);
+      } else {
+        node.getComponent("BusinessDetail").TogglePartnerShipButton(true);
+        node.getComponent("BusinessDetail").SetPartnerName("none");
+      }
+
+      businessDetailPartnershipNodes.push(node);
+    }
+  },
+  EnablePartnershipDecision_PartnerShipSetup: function EnablePartnershipDecision_PartnerShipSetup(_msg) {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    var _tempData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    this.ToggleDecisionScreen_PartnerShipSetup(true);
+    this.PartnershipSetupUI.DecisionPlayerName.string = _tempData.PlayerName;
+    this.PartnershipSetupUI.DecisionPlayerCash.string = "$" + _tempData.Cash;
+    this.PartnershipSetupUI.DecisionDescription.string = _msg;
+  },
+  Exit_PartnerShipSetup: function Exit_PartnerShipSetup() {
+    this.Reset_PartnerShipSetup();
+    this.ToggleScreen_PartnerShipSetup(false);
+  },
+  Reset_PartnerShipSetup: function Reset_PartnerShipSetup() {
+    for (var index = 0; index < businessDetailPartnershipNodes.length; index++) {
+      businessDetailPartnershipNodes[index].destroy();
+    }
+
+    businessDetailPartnershipNodes = [];
+  },
+  ReceiveEvent_PartnershipSetup: function ReceiveEvent_PartnershipSetup(_data) {
+    PartnerShipOfferReceived = true;
+    PartnerShipData = _data;
+
+    var _actor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor();
+
+    var _turn = _data.Data.Turn;
+    var _playerData = _data.Data.PlayerData;
+    var _SelectedBusinessIndex = _data.Data.SelectedBusinsessIndex;
+    var _businessValue = _data.Data.BusValue;
+
+    var _payAmount = _businessValue / 2;
+
+    var _businessMode = "";
+    if (_playerData.NoOfBusiness[_SelectedBusinessIndex].BusinessType == 1) _businessMode = "Home Based";else if (_playerData.NoOfBusiness[_SelectedBusinessIndex].BusinessType == 2) _businessMode = "Brick & Mortar";
+
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      var _msg = "you have received partnership offer by " + _playerData.PlayerName + " , following are the details of business: " + "\n" + "\n" + "Business Name: " + _playerData.NoOfBusiness[_SelectedBusinessIndex].BusinessName + "\n" + "Business Mode: " + _businessMode + "\n" + "Business Value: $" + _businessValue + "\n" + "Cash Payment: $" + _payAmount + "\n" + "\n" + "if offer is accepted you will receive 50% share of that particular business and will receive profit/lose on that particular business.";
+
+      this.EnablePartnershipDecision_PartnerShipSetup(_msg);
+    }
+  },
+  AcceptOffer_PartnershipSetup: function AcceptOffer_PartnershipSetup() {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _allActors = GamePlayReferenceManager.Instance.Get_MultiplayerController().RoomActors();
+
+    var _actor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    var _data = PartnerShipData;
+    var _turn = _data.Data.Turn;
+    var _playerData = _data.Data.PlayerData;
+    var _SelectedBusinessIndex = _data.Data.SelectedBusinsessIndex;
+    var _businessValue = _data.Data.BusValue;
+
+    var _payAmount = _businessValue / 2;
+
+    var _businessMode = "";
+
+    var myIndex = _manager.GetMyIndex();
+
+    if (PartnerShipOfferReceived == true) {
+      if (_manager.PlayerGameInfo[myIndex].Cash >= _payAmount) {
+        _manager.PlayerGameInfo[myIndex].Cash -= _payAmount;
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", _manager.PlayerGameInfo[myIndex]);
+        this.RaiseEventDecisionAnswer_PartnershipSetup(true, _payAmount, false, _manager.PlayerGameInfo[myIndex].PlayerUID, _manager.PlayerGameInfo[myIndex], _SelectedBusinessIndex);
+        this.ToggleDecisionScreen_PartnerShipSetup(false);
+        this.ShowToast("congratulations! you have started business partnership", 1800);
+      } else {
+        this.ShowToast("Not enough cash.", 500);
+      }
+    } else {
+      this.ShowToast("Offer has been accepted by other player.");
+      this.ToggleDecisionScreen_PartnerShipSetup(false);
+    }
+  },
+  CancelOffer_PartnershipSetup: function CancelOffer_PartnershipSetup() {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _data = PartnerShipData;
+    var _SelectedBusinessIndex = _data.Data.SelectedBusinsessIndex;
+
+    var myIndex = _manager.GetMyIndex();
+
+    console.log(_manager.PlayerGameInfo[myIndex].PlayerUID);
+
+    if (PartnerShipOfferReceived == true) {
+      this.RaiseEventDecisionAnswer_PartnershipSetup(false, 0, true, _manager.PlayerGameInfo[myIndex].PlayerUID, _manager.PlayerGameInfo[myIndex], _SelectedBusinessIndex);
+      this.ToggleDecisionScreen_PartnerShipSetup(false);
+      this.ShowToast("you have cancelled the offer.", 1200);
+    } else {
+      this.ToggleDecisionScreen_PartnerShipSetup(false);
+      this.ShowToast("you have cancelled the offer.", 1200);
+    }
+  },
+  RaiseEventDecisionAnswer_PartnershipSetup: function RaiseEventDecisionAnswer_PartnershipSetup(_isAccepted, _payment, _isCancelled, _uID, _data, _businessIndex) {
+    if (_isAccepted === void 0) {
+      _isAccepted = false;
+    }
+
+    if (_payment === void 0) {
+      _payment = 0;
+    }
+
+    if (_isCancelled === void 0) {
+      _isCancelled = false;
+    }
+
+    if (_uID === void 0) {
+      _uID = "";
+    }
+
+    if (_data === void 0) {
+      _data = null;
+    }
+
+    if (_businessIndex === void 0) {
+      _businessIndex = 0;
+    }
+
+    var _mainData = {
+      Data: {
+        Accepted: _isAccepted,
+        CashPayment: _payment,
+        Cancelled: _isCancelled,
+        PlayerID: _uID,
+        PlayerData: _data,
+        BusinessIndex: _businessIndex
+      }
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(12, _mainData);
+  },
+  ReceiveEventDecisionAnswer_PartnershipSetup: function ReceiveEventDecisionAnswer_PartnershipSetup(_data) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+      var _playerIndex = _manager.GetTurnNumber();
+
+      console.log(_data);
+      var _accepted = _data.Data.Accepted;
+      var _cash = _data.Data.CashPayment;
+      var _cancelled = _data.Data.Cancelled;
+      var _uid = _data.Data.PlayerID;
+      var _playerData = _data.Data.PlayerData;
+      var _businessIndex = _data.Data.BusinessIndex;
+      console.log("answer received");
+
+      if (_manager.PlayerGameInfo[_playerIndex].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+        if (_accepted) {
+          this.ToggleScreen_PartnerShipSetup(false);
+          this.ToggleWaitingScreen_PartnerShipSetup(false);
+          _manager.PlayerGameInfo[_playerIndex].Cash += _cash;
+          _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].IsPartnership = true;
+          _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].PartnerID = _uid;
+          _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].PartnerName = _playerData.PlayerName;
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", _manager.PlayerGameInfo[_playerIndex]);
+          console.log("offer accepted");
+          this.ShowToast("your partnership offer has been accepted by " + _playerData.PlayerName + ", cash $" + _cash + " has been added to your account.", 2800);
+          this.UpdateCash_TurnDecision();
+        } else if (_cancelled) {
+          if (CancelledID.includes(_uid) == false) CancelledID.push(_uid);
+          console.log(CancelledID);
+
+          if (CancelledID.length == _manager.PlayerGameInfo.length - 1) {
+            this.ToggleScreen_PartnerShipSetup(false);
+            this.ToggleWaitingScreen_PartnerShipSetup(false);
+            this.ShowToast("your partnership offer has been cancelled by all other users.", 2800);
+          }
+
+          console.log("offer rejected");
+        }
+      } else {
+        if (_accepted) {
+          PartnerShipOfferReceived = false;
+          this.ShowToast("Offer has been accepted by other player.", 1800);
+          this.ToggleDecisionScreen_PartnerShipSetup(false);
+        } else if (_cancelled) {}
+      }
+    }
   },
   //#endregion
   //#region Invest and sell moddule
@@ -1633,29 +1965,59 @@ var GameplayUIManager = cc.Class({
       HomeBasedPaymentCompleted = true;
       this.PayDaySetupUI.HomeBasedBtn.getComponent(cc.Button).interactable = false;
 
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
       var HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
 
       var _dice = GamePlayReferenceManager.Instance.Get_GameManager().RollOneDice();
 
-      if (!DoublePayDay) TotalPayDayAmount = HMAmount * _dice * 1000;else TotalPayDayAmount = 2 * (HMAmount * _dice) * 1000;
+      var _tempData = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness;
+      var _amountToBeSend = 0;
+      var _amountToBeAdjusted = 0;
+      var _multiplier = 1; //partnership code
+
+      if (DoublePayDay) _multiplier = 2;
+
+      for (var index = 0; index < _tempData.length; index++) {
+        if (_tempData[index].BusinessType == 1) {
+          if (_tempData[index].IsPartnership) {
+            var _payment = _multiplier * _dice * 1000;
+
+            _amountToBeSend = _payment / 2;
+
+            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+
+            _amountToBeAdjusted += _amountToBeSend;
+          }
+        }
+      }
+
+      if (_amountToBeAdjusted > 0) {
+        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", 2000);
+      } //partnership code
+
+
+      if (!DoublePayDay) TotalPayDayAmount = HMAmount * _dice * 1000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (HMAmount * _dice) * 1000 - _amountToBeAdjusted;
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = HMAmount;
-      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = _dice + "*" + HMAmount + "*" + "1000=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = _dice + "*" + HMAmount + "*" + "1000*2=" + TotalPayDayAmount;
+      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
       }
     }
   },
-  OnBMPaymentClicked_PayDay: function OnBMPaymentClicked_PayDay() //brick and mortar
-  {
+  OnBMPaymentClicked_PayDay: function OnBMPaymentClicked_PayDay() {
+    //brick and mortar
     if (!BrickMortarPaymentCompleted) {
       this.ToggleResultPanelScreen_PayDay(true);
       if (!DoublePayDay) this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";else this.PayDaySetupUI.ResultScreenTitleLabel.string = "DoublePayDay";
       BrickMortarPaymentCompleted = true;
       this.PayDaySetupUI.BMBtn.getComponent(cc.Button).interactable = false;
+
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
@@ -1667,18 +2029,44 @@ var GameplayUIManager = cc.Class({
 
       var _dice = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
 
-      if (!DoublePayDay) TotalPayDayAmount = _amount * _dice * 2000;else TotalPayDayAmount = 2 * (_amount * _dice) * 2000;
+      var _tempData = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness;
+      var _amountToBeSend = 0;
+      var _amountToBeAdjusted = 0;
+      var _multiplier = 1;
+      if (DoublePayDay) _multiplier = 2;
+
+      for (var index = 0; index < _tempData.length; index++) {
+        if (_tempData[index].BusinessType == 2) {
+          if (_tempData[index].IsPartnership) {
+            var _locations = _tempData[index].LocationsName.length + 1;
+
+            var _payment = _locations * _multiplier * _dice * 2000;
+
+            _amountToBeSend = _payment / 2;
+
+            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+
+            _amountToBeAdjusted += _amountToBeSend;
+          }
+        }
+      }
+
+      if (_amountToBeAdjusted > 0) {
+        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", 2000);
+      }
+
+      if (!DoublePayDay) TotalPayDayAmount = _amount * _dice * 2000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (_amount * _dice) * 2000 - _amountToBeAdjusted;
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = _amount;
-      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = _dice + "*" + _amount + "*" + "2000=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = _dice + "*" + _amount + "*" + "2000*2=" + TotalPayDayAmount;
+      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
       }
     }
   },
-  OnLoanPaymentClicked_PayDay: function OnLoanPaymentClicked_PayDay() //brick and mortar
-  {
+  OnLoanPaymentClicked_PayDay: function OnLoanPaymentClicked_PayDay() {
+    //brick and mortar
     if (!LoanPayed) {
       var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
@@ -1724,10 +2112,10 @@ var GameplayUIManager = cc.Class({
       }
     }
   },
-  ReceivePayment_PayDay: function ReceivePayment_PayDay() //all
-  {
+  ReceivePayment_PayDay: function ReceivePayment_PayDay() {
     var _this5 = this;
 
+    //all
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
     GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + TotalPayDayAmount;
@@ -1770,10 +2158,10 @@ var GameplayUIManager = cc.Class({
   ExitLoanScreen_PayDay: function ExitLoanScreen_PayDay() {
     this.PayDaySetupUI.LoanResultPanelNode.active = false;
   },
-  StartNewGame_PayDay: function StartNewGame_PayDay() //if bankrupted you can start new game
-  {
+  StartNewGame_PayDay: function StartNewGame_PayDay() {
     var _this6 = this;
 
+    //if bankrupted you can start new game
     this.ShowToast("You will lose all progress and start new game from the start.", 3000);
     setTimeout(function () {
       _this6.ExitLoanScreen_PayDay();
@@ -1824,23 +2212,23 @@ var GameplayUIManager = cc.Class({
     for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
       var node = cc.instantiate(this.SellBusinessSetupUI.BusinessSellPrefab);
       node.parent = this.SellBusinessSetupUI.ScrollContentNode;
-      node.getComponent('BusinessDetail').CheckReferences();
-      node.getComponent('BusinessDetail').SetName(_tempData.NoOfBusiness[index].BusinessName);
-      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
-      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
-      node.getComponent('BusinessDetail').SetBusinessIndex(index);
+      node.getComponent("BusinessDetail").CheckReferences();
+      node.getComponent("BusinessDetail").SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetBusinessIndex(index);
 
       if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) {
-        node.getComponent('BusinessDetail').SetBusinessMode(1);
-        node.getComponent('BusinessDetail').SetMode("Home Based");
+        node.getComponent("BusinessDetail").SetBusinessMode(1);
+        node.getComponent("BusinessDetail").SetMode("Home Based");
       } else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) {
-        node.getComponent('BusinessDetail').SetBusinessMode(2);
-        node.getComponent('BusinessDetail').SetMode("Brick & Mortar");
+        node.getComponent("BusinessDetail").SetBusinessMode(2);
+        node.getComponent("BusinessDetail").SetMode("Brick & Mortar");
       }
 
-      node.getComponent('BusinessDetail').SetBalance(_tempData.NoOfBusiness[index].Amount);
-      node.getComponent('BusinessDetail').SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
-      if (_tempData.NoOfBusiness[index].LocationsName.length == 0) node.getComponent('BusinessDetail').ToggleSellLocationButton(false);else node.getComponent('BusinessDetail').ToggleSellLocationButton(true);
+      node.getComponent("BusinessDetail").SetBalance(_tempData.NoOfBusiness[index].Amount);
+      node.getComponent("BusinessDetail").SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+      if (_tempData.NoOfBusiness[index].LocationsName.length == 0) node.getComponent("BusinessDetail").ToggleSellLocationButton(false);else node.getComponent("BusinessDetail").ToggleSellLocationButton(true);
       businessDetailNodes.push(node);
     }
   },
@@ -1975,29 +2363,29 @@ var GameplayUIManager = cc.Class({
 
     if (_modeIndex == 2) {
       for (var index = 0; index < _actorsData.length; index++) {
-        if (_actorsData[index].customProperties.RoomEssentials.IsSpectate == false) //check if player is spectate or not, dont add any spectates
-          {
-            if (_myData.PlayerUID != _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
-              var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
-              node.parent = this.OneQuestionSetupUI.ScrollContent;
-              node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
-              node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
-              oneQuestionNodes.push(node);
-            }
-          }
-      }
-    } else if (_modeIndex == 1) //for bot
-      {
-        for (var _index = 0; _index < _actorsData.length; _index++) {
-          if (_myData.PlayerUID != _actorsData[_index].PlayerUID) {
+        if (_actorsData[index].customProperties.RoomEssentials.IsSpectate == false) {
+          //check if player is spectate or not, dont add any spectates
+          if (_myData.PlayerUID != _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
             var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
             node.parent = this.OneQuestionSetupUI.ScrollContent;
-            node.getComponent("PlayerDetails").setPlayerName(_actorsData[_index].PlayerName);
-            node.getComponent("PlayerDetails").setPlayerUID(_actorsData[_index].PlayerUID);
+            node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
+            node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
             oneQuestionNodes.push(node);
           }
         }
       }
+    } else if (_modeIndex == 1) {
+      //for bot
+      for (var _index = 0; _index < _actorsData.length; _index++) {
+        if (_myData.PlayerUID != _actorsData[_index].PlayerUID) {
+          var node = cc.instantiate(this.OneQuestionSetupUI.DetailsPrefab);
+          node.parent = this.OneQuestionSetupUI.ScrollContent;
+          node.getComponent("PlayerDetails").setPlayerName(_actorsData[_index].PlayerName);
+          node.getComponent("PlayerDetails").setPlayerUID(_actorsData[_index].PlayerUID);
+          oneQuestionNodes.push(node);
+        }
+      }
+    }
 
     if (_isTurnOver) {
       this.OneQuestionSetupUI.ExitButton.active = false;

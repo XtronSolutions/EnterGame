@@ -590,6 +590,30 @@ var MultiplayerController=cc.Class({
     {
         console.log("you are not in room.");
     }
+    },
+  
+  /**
+    @summary Send profit or loss to your pasrtner
+    @method SendPartnerProfitLoss
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendPartnerProfitLoss (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending one question data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(13, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
   },
 
   /**
@@ -653,6 +677,54 @@ var MultiplayerController=cc.Class({
         console.log(_data);
             try {
                 PhotonRef.raiseEvent(10, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+
+  /**
+    @summary sending open invitation to all players for partner ship
+    @method SendPartnerShipOfferData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendPartnerShipOfferData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending partner ship offer");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(11, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+    },
+  
+  /**
+    @summary sending partner answer data (accept or reject)
+    @method SendPartnerShipAnswerData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendPartnerShipAnswerData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending partenrship answer data");
+        console.log(_data);
+            try {
+                PhotonRef.raiseEvent(12, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.Others});
             }
             catch (err) {
                 console.error("error: " + err.message);
@@ -1156,6 +1228,33 @@ var MultiplayerController=cc.Class({
                     var senderID = content.senderID;
                     
                     MultiplayerController.Instance.CallRecieveEvent(10,senderName,senderID,_data);
+
+                    break;
+                case 11: //receiveing partnership offer
+                    console.log("received partnership offer data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(11,senderName,senderID,_data);
+
+                    break;
+                 case 12: //receiveing partnership answer data
+                    console.log("received partnership anwser data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(12,senderName,senderID,_data);
+
+                    break;
+                case 13: //receiving profit/loss data for partner
+                    console.log("received partnership anwser data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.CallRecieveEvent(13,senderName,senderID,_data);
 
                     break;
                 default:

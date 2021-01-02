@@ -9,7 +9,7 @@
   "packageName": "org.cocos2d.helloworld",
   "startScene": "9b99da6f-5ede-45d4-8b21-00d870554558",
   "title": "The_Entrepreneur_Game",
-  "webOrientation": "landscape",
+  "webOrientation": "auto",
   "inlineSpriteFrames": true,
   "inlineSpriteFrames_native": true,
   "mainCompressionType": "default",
