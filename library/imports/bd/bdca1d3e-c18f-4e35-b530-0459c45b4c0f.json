@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "number_bar",
+    "texture": "e8681e7c-be24-40da-b114-f8a4fee2418d",
+    "atlas": "",
+    "rect": [
+      1,
+      1,
+      660,
+      99
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      662,
+      101
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

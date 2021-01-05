@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "businessSelection",
+    "texture": "8a25dfa4-3f7f-4651-aba9-2217c69e76cf",
+    "atlas": "",
+    "rect": [
+      3,
+      3,
+      579,
+      320
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      585,
+      326
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

@@ -826,6 +826,12 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for pop up screen"
     },
+    PopUpUILabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true,
+      tooltip: "label reference for pop up screen"
+    },
     BusinessSetupNode: {
       "default": null,
       type: cc.Node,
@@ -995,7 +1001,7 @@ var GameplayUIManager = cc.Class({
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
       this.BusinessSetupData.TimerNode.active = true;
-      PlayerDataIntance.Cash = 100000;
+      PlayerDataIntance.Cash = 20000;
     }
 
     this.ResetButtonStates_BusinessSetup();
@@ -1039,8 +1045,8 @@ var GameplayUIManager = cc.Class({
     PlayerBusinessDataIntance.BusinessName = name;
   },
   ResetButtonStates_BusinessSetup: function ResetButtonStates_BusinessSetup() {
-    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[0].active = false;
-    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[0].active = false;
+    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[1].active = false;
+    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[1].active = false;
     this.BusinessSetupData.BusinessTypeLabel.string = "";
     this.BusinessSetupData.BusinessNameLabel.string = "";
     this.BusinessSetupData.BusinessNameTextUI = "";
@@ -1048,13 +1054,13 @@ var GameplayUIManager = cc.Class({
     PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.none;
   },
   OnHomeBasedSelected_BusinessSetup: function OnHomeBasedSelected_BusinessSetup() {
-    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[0].active = true;
-    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[0].active = false;
+    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[1].active = true;
+    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[1].active = false;
     PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.HomeBased;
   },
   OnBrickMortarSelected_BusinessSetup: function OnBrickMortarSelected_BusinessSetup() {
-    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[0].active = false;
-    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[0].active = true;
+    this.BusinessSetupData.HomeBasedNodeUI.children[0].children[1].active = false;
+    this.BusinessSetupData.BrickAndMortarNodeUI.children[0].children[1].active = true;
     PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.brickAndmortar;
   },
   OnChangeCash_BusinessSetup: function OnChangeCash_BusinessSetup(amount) {
@@ -2423,7 +2429,7 @@ var GameplayUIManager = cc.Class({
     }
 
     this.PopUpUI.active = true;
-    this.PopUpUI.children[2].children[1].getComponent(cc.Label).string = message;
+    this.PopUpUILabel.string = message;
     var SelfToast = this;
     setTimeout(function () {
       SelfToast.PopUpUI.active = false;

@@ -1,7 +1,8 @@
 import Tweeen from 'TweenManager';
 var GamePlayReferenceManager=null;
 var TweenRef;
-var TotalRoom=[];
+var TotalRoom = [];
+var Roles=["Student", "Teacher","ProgramAmbassador","SchoolAdmin","ProgramDirector"];
 //-------------------------------------------class for Profile UI-------------------------//
 var ProfileUI=cc.Class({
     name:"ProfileUI",
@@ -89,10 +90,154 @@ var ProfileUI=cc.Class({
             default: null,
             type: cc.EditBox,
             serializable: true,
-            tooltip: "reference to PlayerCountInput of profile",},
+            tooltip: "reference to PlayerCountInput of profile",
+        },
+        DistrictLabel: {
+            displayName:"DistrictLabel",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to DistrictLabel of profile",
+        },
+        PlayGameButton: {
+            displayName:"PlayGameButton",
+            default: null,
+            type: cc.Node,
+            serializable: true,
+            tooltip: "reference to PlayGameButton of profile",
+        },
+        SpectateButton: {
+            displayName:"SpectateButton",
+            default: null,
+            type: cc.Node,
+            serializable: true,
+            tooltip: "reference to SpectateButton of profile",
+        },
+        CashNode: {
+            displayName:"CashNode",
+            default: null,
+            type: cc.Node,
+            serializable: true,
+            tooltip: "reference to CashNode of profile",},
+    },
+});
+//-------------------------------------------class for teacher Profile UI-------------------------//
+var TeacherProfileUI=cc.Class({
+    name:"TeacherProfileUI",
+    properties: {   
+        NameLabel: {
+            displayName:"Name",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to name label of profile",},
+         EmailAddressLabel: {
+            displayName:"EmailAddress",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference for email address label of profile ", },
+         ClassTaught: {
+            displayName:"ClassTaught",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to ClassTaught label of profile",},
+         SchoolNameLabel: {
+            displayName:"SchoolName",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to SchoolName label of profile",},
+         ContactLabel: {
+            displayName:"Contact",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to Contact label of profile",} 
     },
 });
 
+//-------------------------------------------class for Mentor Profile UI-------------------------//
+var MentorProfileUI=cc.Class({
+    name:"MentorProfileUI",
+    properties: {   
+        NameLabel: {
+            displayName:"Name",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to name label of profile",},
+         EmailAddressLabel: {
+            displayName:"EmailAddress",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference for email address label of profile ", },
+         Addresslabel: {
+            displayName:"Address",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to Address label of profile",},
+         ContactLabel: {
+            displayName:"Contact",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to Contact label of profile",} 
+    },
+});
+
+//-------------------------------------------class for Admin Profile UI-------------------------//
+var AdminProfileUI=cc.Class({
+    name:"AdminProfileUI",
+    properties: {   
+        NameLabel: {
+            displayName:"Name",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to name label of profile",},
+         EmailAddressLabel: {
+            displayName:"EmailAddress",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference for email address label of profile ", },
+         SchoolNameLabel: {
+            displayName:"SchoolName",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to SchoolName label of profile",},
+         ContactLabel: {
+            displayName:"Contact",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to Contact label of profile",} 
+    },
+});
+
+//-------------------------------------------class for director Profile UI-------------------------//
+var DirectorProfileUI=cc.Class({
+    name:"DirectorProfileUI",
+    properties: {   
+        NameLabel: {
+            displayName:"Name",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference to name label of profile",},
+         EmailAddressLabel: {
+            displayName:"EmailAddress",
+            default: null,
+            type: cc.Label,
+            serializable: true,
+            tooltip: "reference for email address label of profile ", },
+    },
+});
 //-------------------------------------------class for SpectateUI-------------------------//
 var SpectateUI=cc.Class({
     name:"SpectateUI",
@@ -135,7 +280,40 @@ var UIManager=cc.Class({
             default: null,
             type: ProfileUI,
             serializable: true,
-            tooltip: "reference to ProfileUI class intance",},  
+            tooltip: "reference to ProfileUI class intance",
+        },  
+        TeacherUIProfile: {
+            displayName:"TeacherUIProfile",
+            default: null,
+            type: TeacherProfileUI,
+            serializable: true,
+            tooltip: "reference to TeacherProfileUI class intance",
+        },  
+
+        MentorUIProfile: {
+            displayName:"MentorUIProfile",
+            default: null,
+            type: MentorProfileUI,
+            serializable: true,
+            tooltip: "reference to MentorProfileUI class intance",
+        },  
+
+        AdminUIProfile: {
+            displayName:"AdminUIProfile",
+            default: null,
+            type: AdminProfileUI,
+            serializable: true,
+            tooltip: "reference to AdminProfileUI class intance",
+        },  
+
+        DirectorUIProfile: {
+            displayName:"DirectorUIProfile",
+            default: null,
+            type: DirectorProfileUI,
+            serializable: true,
+            tooltip: "reference to DirectorProfileUI class intance",
+        },  
+        
         ScreenNodes: {
             displayName:"ScreenNodes",
             default: [],
@@ -183,7 +361,14 @@ var UIManager=cc.Class({
             default: null,
             type: SpectateUI,
             serializable: true,
-            tooltip: "reference to SpectateUI class intance",},   
+            tooltip: "reference to SpectateUI class intance",
+        },   
+        UIContainer: {
+            displayName:"UIContainer",
+            default: [],
+            type: [cc.Node],
+            serializable: true,
+            tooltip: "reference to UIContainer nodes",},   
     },
 
     statics: { //creating static instance of the class
@@ -206,6 +391,8 @@ var UIManager=cc.Class({
     onLoad () {
         this.ReferenceManagerRef=this.ReferenceManagerRef.getComponent("GamePlayReferenceManager");
 
+        this.SelectedRole = Roles[0];
+        this.SelectedRoleIndex = 0;
         UIManager.Instance=this;
         TotalRoom=[];
         //Private Variables
@@ -220,6 +407,16 @@ var UIManager=cc.Class({
         this.SlideInLoginComponents();
         this.RepeatLogoAnimation();
         this.CheckReferences();
+    },
+
+    TogglePlayButton(_state)
+    {
+        this.UIProfile.PlayGameButton.active = _state;
+    },
+
+    ToggleSpectateButton(_state)
+    {
+        this.UIProfile.SpectateButton.active = _state;
     },
 
     CheckReferences()
@@ -387,13 +584,21 @@ var UIManager=cc.Class({
             this.ToggleLoadingNode(true);
             var anim = this.LoadingNode.children[0].children[1].getComponent(cc.Animation);
             anim.play('loading');
-            GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText,this.PasswordText,"Student");
+            GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText,this.PasswordText,this.SelectedRole);
         }
         else
         {
             this.ToggleLoadingNode(false);
             this.ShowToast("Email or password invalid or empty.");
         }
+    },
+
+    OnRoleToggled(_val)
+    {
+        //console.log(_val);
+        console.log(_val.node.name.split("_")[1]);
+        this.SelectedRoleIndex = _val.node.name.split("_")[1];
+        this.SelectedRole = Roles[this.SelectedRoleIndex];
     },
 
     SetEmailText:function(text)
@@ -406,25 +611,84 @@ var UIManager=cc.Class({
         this.PasswordText=text;
     },
 
-    AssignProfileData:function()
+    ToggleUIContainer()
+    {
+        for (let index = 0; index < this.UIContainer.length; index++) {
+            if (this.SelectedRoleIndex == index)
+                this.UIContainer[index].active = true;
+            else
+                this.UIContainer[index].active = false;
+            
+        }
+    },
+    AssignProfileData:function(_isStudent=false,_isTeacher=false,_isMentor=false,_isAdmin=false,_isDirector=false)
     {
         if(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType)==1) //means successful
         {
             this.ChangePanelScreen(true,false,"");
+            this.ToggleUIContainer();
 
-            console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
-            this.UIProfile.NameLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
-            this.UIProfile.EmailAddressLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.emailAddress;
-            this.UIProfile.DOBLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.dOB;
-            this.UIProfile.GradeLevelLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gradeLevel;
-            this.UIProfile.TeacherNameLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.teacherName;
-            this.UIProfile.GamesWonLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon;
-            this.UIProfile.FBPageLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.facebookPage;
-            this.UIProfile.TestTakenLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testsTaken;
-            this.UIProfile.TestingAvgLabel.string=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testingAverage;
-            this.UIProfile.CashLabel.string="$ "+GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gameCash;
+            if (_isStudent) {
+                this.TogglePlayButton(true);
+                this.ToggleSpectateButton(false);
+                this.UIProfile.CashNode.active = true;
+                console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
+                this.UIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
+                this.UIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.emailAddress;
+                this.UIProfile.DOBLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.dOB;
+                this.UIProfile.GradeLevelLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gradeLevel;
+                this.UIProfile.TeacherNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.teacherName;
+                this.UIProfile.GamesWonLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon;
+                this.UIProfile.FBPageLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.facebookPage;
+                this.UIProfile.TestTakenLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testsTaken;
+                this.UIProfile.TestingAvgLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testingAverage;
+                this.UIProfile.CashLabel.string = "$ " + GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gameCash;
 
-            this.ToggleLoadingNode(false);
+                this.ToggleLoadingNode(false);
+            }
+            else if (_isTeacher) {
+                this.TogglePlayButton(false);
+                this.ToggleSpectateButton(true);
+                this.UIProfile.CashNode.active = false;
+                console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData);
+                this.TeacherUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.name;
+                this.TeacherUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.emailAddress;
+                this.TeacherUIProfile.ClassTaught.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.classTaught;
+                this.TeacherUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.school;
+                this.TeacherUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.contactNumber;
+                this.ToggleLoadingNode(false);
+            }
+            else if (_isMentor) {
+                this.TogglePlayButton(false);
+                this.ToggleSpectateButton(true);
+                this.UIProfile.CashNode.active = false;
+                console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData);
+                this.MentorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.name;
+                this.MentorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.emailAddress;
+                this.MentorUIProfile.Addresslabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.address;
+                this.MentorUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.contactNumber;
+                this.ToggleLoadingNode(false);
+            }
+            else if (_isAdmin) {
+                this.TogglePlayButton(false);
+                this.ToggleSpectateButton(true);
+                this.UIProfile.CashNode.active = false;
+                console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData);
+                this.AdminUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.name;
+                this.AdminUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.emailAddress;
+                this.AdminUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.schoolName;
+                this.AdminUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.contactNumber;
+                this.ToggleLoadingNode(false);
+            }
+            else if (_isDirector) {
+                this.TogglePlayButton(false);
+                this.ToggleSpectateButton(true);
+                this.UIProfile.CashNode.active = false;
+                console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData);
+                this.DirectorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.name;
+                this.DirectorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.emailAddress;
+                this.ToggleLoadingNode(false);
+            }
         }
         else if(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType)==2) //user not found
         {
@@ -503,7 +767,7 @@ var UIManager=cc.Class({
     ShowToast:function(msg,_time=2000)
     {
         this.ToastNode.active=true;
-        this.ToastNode.children[0].children[0].getComponent(cc.Label).string=msg;
+        this.ToastNode.children[1].children[1].getComponent(cc.Label).string=msg;
         var SelfToast=this;
         setTimeout(function(){  SelfToast.ToastNode.active=false; }, _time);
     },

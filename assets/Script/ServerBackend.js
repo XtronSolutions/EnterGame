@@ -60,6 +60,9 @@ var Teacher = cc.Class({
         classTaught: 0,
         emailAddress: "",
         contactNumber: "",
+        AccessToken:"",
+        UpdatedAt: 0,
+        userID:""
     },
     //Default and Parametrized constructor
     ctor: function
@@ -67,13 +70,19 @@ var Teacher = cc.Class({
             _school = "none",
             _classTaught = 0,
             _emailAddress = "none",
-            _contactNumber = "none"
+            _contactNumber = "none",
+            _accessToken = "",
+            _updatedAt = 0,
+            _userID=""
         ) {
         this.name = _name;
         this.school = _school;
         this.classTaught = _classTaught;
         this.emailAddress = _emailAddress;
         this.contactNumber = _contactNumber;
+        this.AccessToken = _accessToken;
+        this.UpdatedAt = _updatedAt;
+        this.userID = _userID;
     }
 });
 
@@ -85,18 +94,27 @@ var ProgramAmbassadors = cc.Class({
         emailAddress: "",
         contactNumber: "",
         address: "",
+        AccessToken:"",
+        UpdatedAt: 0,
+        userID:""
     },
     //Deafult and Parametrized constructor
     ctor: function
         (_name = "none",
             _emailAddress = "none",
             _contactNumber = "none",
-            _address = "none"
+            _address = "none",
+            _accessToken = "",
+            _updatedAt = 0,
+            _userID=""
         ) {
         this.name = _name;
         this.emailAddress = _emailAddress;
         this.contactNumber = _contactNumber;
         this.address = _address;
+        this.AccessToken = _accessToken;
+        this.UpdatedAt = _updatedAt;
+        this.userID = _userID;
     }
 });
 
@@ -108,18 +126,27 @@ var SchoolAdministrators = cc.Class({
         schoolName: "",
         contactNumber: "",
         emailAddress: "",
+        AccessToken:"",
+        UpdatedAt: 0,
+        userID:""
     },
     //Default and Parametrized constructor
     ctor: function
         (_name = "none",
             _schoolName = "none",
             _emailAddress = "none",
-            _contactNumber = "none"
+            _contactNumber = "none",
+            _accessToken = "",
+            _updatedAt = 0,
+            _userID=""
         ) {
         this.name = _name;
         this.schoolName = _schoolName;
         this.contactNumber = _contactNumber;
         this.emailAddress = _emailAddress;
+        this.AccessToken = _accessToken;
+        this.UpdatedAt = _updatedAt;
+        this.userID = _userID;
     }
 });
 
@@ -129,15 +156,24 @@ var ProgramDirectors = cc.Class({
     properties: {
         name: "",
         emailAddress: "",
+        AccessToken:"",
+        UpdatedAt: 0,
+        userID:""
     },
     //Default and Parametrized constructor
     ctor: function
-        (_name = "none",
-            _emailAddress = "none"
+        (   _name = "none",
+            _emailAddress = "none",
+            _accessToken = "",
+            _updatedAt = 0,
+            _userID=""
         )
     {
         this.name = _name;
         this.emailAddress = _emailAddress;
+        this.AccessToken = _accessToken;
+        this.UpdatedAt = _updatedAt;
+        this.userID = _userID;
     }
 });
 
@@ -151,6 +187,31 @@ var ServerBackend=cc.Class({
             type: Student,
             serializable: true,
             tooltip: "current logged in student data"
+        },
+
+        TeacherData: {
+            default: null,                
+            type: Teacher,
+            serializable: true,
+            tooltip: "current logged in teacher data"
+        },
+        MentorData: {
+            default: null,                
+            type: ProgramAmbassadors,
+            serializable: true,
+            tooltip: "current logged in Mentor / ProgramAmbassadors  data"
+        },
+        AdminData: {
+            default: null,                
+            type: SchoolAdministrators,
+            serializable: true,
+            tooltip: "current logged in SchoolAdministrators  data"
+        },
+        DirectorData: {
+            default: null,                
+            type: ProgramDirectors,
+            serializable: true,
+            tooltip: "current logged in ProgramDirectors  data"
         },
         ResponseType:{
             displayName:"Response",
@@ -261,11 +322,31 @@ var ServerBackend=cc.Class({
                         {
                             ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
                             ServerBackend.Instance.AssignStudentData(MainData,true);
-                            cc.systemEvent.emit("AssignProfileData");
+                            cc.systemEvent.emit("AssignProfileData",true,false,false,false,false);
                         }
                         else if(MainData.data.roleType.includes("Teacher"))
                         {
-                            
+                            ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                            ServerBackend.Instance.AssignTeacherData(MainData,true);
+                            cc.systemEvent.emit("AssignProfileData",false,true,false,false,false);
+                        }
+                        else if(MainData.data.roleType.includes("ProgramAmbassador"))
+                        {
+                            ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                            ServerBackend.Instance.AssignMentorData(MainData,true);
+                            cc.systemEvent.emit("AssignProfileData",false,false,true,false,false);
+                        }
+                        else if(MainData.data.roleType.includes("SchoolAdmin"))
+                        {
+                            ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                            ServerBackend.Instance.AssignAdminData(MainData,true);
+                            cc.systemEvent.emit("AssignProfileData",false,false,false,true,false);
+                        }
+                        else if(MainData.data.roleType.includes("ProgramDirector"))
+                        {
+                            ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                            ServerBackend.Instance.AssignDirectorData(MainData,true);
+                            cc.systemEvent.emit("AssignProfileData",false,false,false,false,true);
                         }
                     }
                     else  if(MainData.message.includes("wrong") ||MainData.message.includes("characters"))
@@ -276,6 +357,10 @@ var ServerBackend=cc.Class({
                     else if(MainData.message.includes("Data not Found!"))
                     {
                         ServerBackend.Instance.ResponseType=ResponseTypeEnum.UserNotFound;
+                        cc.systemEvent.emit("AssignProfileData");
+                    }else if(MainData.message.includes("Password should contain atleast one Integer"))
+                    {
+                        ServerBackend.Instance.ResponseType=ResponseTypeEnum.InvalidEmailPassword;
                         cc.systemEvent.emit("AssignProfileData");
                     }
                 }
@@ -334,6 +419,71 @@ var ServerBackend=cc.Class({
         console.log(this.StudentData);
     },
 
+    AssignTeacherData(DataResponse,isLoggedIn)
+    {
+        this.TeacherData.name=DataResponse.data.name;
+        this.TeacherData.school=DataResponse.data.schoolName;
+        this.TeacherData.classTaught=DataResponse.data.classTaught;
+        this.TeacherData.emailAddress=DataResponse.data.SK;
+        this.TeacherData.contactNumber = DataResponse.data.contactNumber;
+        this.TeacherData.userID=DataResponse.data.userID;
+
+        if(isLoggedIn)
+        {
+            this.TeacherData.AccessToken=DataResponse.data.userToken;
+            this.TeacherData.UpdatedAt=DataResponse.data.updatedAt; 
+        }
+
+        console.log(this.TeacherData);
+    },
+
+    AssignMentorData(DataResponse,isLoggedIn)
+    {
+        this.MentorData.name=DataResponse.data.name;
+        this.MentorData.emailAddress=DataResponse.data.SK;
+        this.MentorData.contactNumber = DataResponse.data.contactNumber;
+        this.MentorData.userID = DataResponse.data.userID;
+        this.MentorData.address=DataResponse.data.address;
+
+        if(isLoggedIn)
+        {
+            this.MentorData.AccessToken=DataResponse.data.userToken;
+            this.MentorData.UpdatedAt=DataResponse.data.updatedAt; 
+        }
+
+        console.log(this.MentorData);
+    },
+
+    AssignAdminData(DataResponse,isLoggedIn)
+    {
+        this.AdminData.name=DataResponse.data.name;
+        this.AdminData.emailAddress=DataResponse.data.SK;
+        this.AdminData.contactNumber = DataResponse.data.contactNumber;
+        this.AdminData.userID = DataResponse.data.userID;
+        this.AdminData.schoolName=DataResponse.data.schoolName;
+
+        if(isLoggedIn)
+        {
+            this.AdminData.AccessToken=DataResponse.data.userToken;
+            this.AdminData.UpdatedAt=DataResponse.data.updatedAt; 
+        }
+
+        console.log(this.AdminData);
+    },
+
+    AssignDirectorData(DataResponse,isLoggedIn)
+    {
+        this.DirectorData.name=DataResponse.data.name;
+        this.DirectorData.emailAddress=DataResponse.data.SK;
+
+        if(isLoggedIn)
+        {
+            this.DirectorData.AccessToken=DataResponse.data.userToken;
+            this.DirectorData.UpdatedAt=DataResponse.data.updatedAt; 
+        }
+
+        console.log(this.DirectorData);
+    },
     start () {},
 });
 
@@ -381,7 +531,8 @@ var Data = cc.Class({
         testTaken:"",
         PK:"",
         testingAverage:"",
-        userID:""
+        userID: "",
+        address:""
     },
 });
 

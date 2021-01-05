@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "pressed",
+    "texture": "244b3bc2-1baf-4001-ad16-9f109c3eb66a",
+    "atlas": "",
+    "rect": [
+      0,
+      0,
+      360,
+      69
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      360,
+      69
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

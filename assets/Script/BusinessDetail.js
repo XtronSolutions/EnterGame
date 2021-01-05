@@ -335,7 +335,6 @@ var BusinessDetail = cc.Class({
     } else
     {
       console.log("game being played by bot");
-        
     }
   },
 });

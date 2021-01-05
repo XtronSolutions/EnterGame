@@ -272,7 +272,7 @@ var DecksData=cc.Class({
       this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Invest;
       this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.",true);
-      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="Execute";
       this.ToggleButtons(_isOwner,true,_isBot);
 
       if(_isBot)
@@ -302,7 +302,7 @@ var DecksData=cc.Class({
         this.IsBotTurn=_isBot;
         this.SpacesType=EnumSpaceType.OneQuestion;
         this.ShowCardInfo("You can ask one question to any other player, if player is unable to answer they will pay you some cash amount.",true);
-        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="Execute";
         this.ToggleButtons(_isOwner,true,_isBot);
         if(_isBot)
         {
@@ -315,7 +315,7 @@ var DecksData=cc.Class({
       this.IsBotTurn=_isBot;
       this.SpacesType=EnumSpaceType.Sell;
       this.ShowCardInfo("You can sell any one of your business or can skip turn.",true);
-      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+      this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="Execute";
       this.ToggleButtons(_isOwner,true,_isBot);
       if(_isBot)
         {
@@ -328,7 +328,7 @@ var DecksData=cc.Class({
         this.IsBotTurn=_isBot;
         this.SpacesType=EnumSpaceType.BuyOrSell;
         this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.",true);
-        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="Execute";
         this.ToggleButtons(_isOwner,true,_isBot);
         if(_isBot)
         {
@@ -341,7 +341,7 @@ var DecksData=cc.Class({
         this.IsBotTurn=_isBot;
         this.SpacesType=EnumSpaceType.GoBackSpaces;
         this.ShowCardInfo("you will have to go back 3 spaces.",true);
-        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="ACCEPT";
+        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string="Execute";
         this.ToggleButtons(_isOwner,true,_isBot);
         if(_isBot)
         {

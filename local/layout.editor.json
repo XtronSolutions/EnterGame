@@ -18,23 +18,23 @@
                 "children": [
                   "hierarchy"
                 ],
-                "height": 383.1125183105469,
+                "height": 382.1000061035156,
                 "type": "panel",
-                "width": 301.875
+                "width": 345.0874938964844
               },
               {
                 "active": 0,
                 "children": [
                   "assets"
                 ],
-                "height": 322.0874938964844,
+                "height": 323.0874938964844,
                 "type": "panel",
-                "width": 301.875
+                "width": 345.0874938964844
               }
             ],
             "height": 708.2000122070312,
             "type": "dock-v",
-            "width": 301.875
+            "width": 345.0874938964844
           },
           {
             "children": [
@@ -43,9 +43,9 @@
                 "children": [
                   "scene"
                 ],
-                "height": 316.0874938964844,
+                "height": 315.0874938964844,
                 "type": "panel",
-                "width": 585.7625122070312
+                "width": 625.1625366210938
               },
               {
                 "active": 2,
@@ -54,14 +54,14 @@
                   "timeline",
                   "game-window"
                 ],
-                "height": 389.1125183105469,
+                "height": 390.1125183105469,
                 "type": "panel",
-                "width": 585.7625122070312
+                "width": 625.1625366210938
               }
             ],
             "height": 708.2000122070312,
             "type": "dock-v",
-            "width": 585.7625122070312
+            "width": 625.1625366210938
           },
           {
             "active": 0,
@@ -72,7 +72,7 @@
             ],
             "height": 708.2000122070312,
             "type": "panel",
-            "width": 628.75
+            "width": 546.1500244140625
           }
         ],
         "type": "dock-h"
@@ -89,8 +89,7 @@
         "node-library"
       ]
     },
-    "window-1609560931980": {},
-    "worker": {}
+    "window-1609829667812": {}
   },
   "panels": {
     "preferences": {
