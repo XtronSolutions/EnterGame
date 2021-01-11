@@ -4,8 +4,11 @@ cc._RF.push(module, '72485pNAFJIIpZ225FqWNsJ', 'GameManager');
 
 "use strict";
 
-//#region superclasses and enumerations
+var _isTest = false;
+var _diceinput1 = "";
+var _diceinput2 = ""; //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
+
 var EnumBusinessType = cc.Enum({
   None: 0,
   HomeBased: 1,
@@ -421,6 +424,16 @@ var GameManager = cc.Class({
     BusinessInfo: BusinessInfo,
     EnumBusinessType: EnumBusinessType,
     Instance: null
+  },
+  InputTestDice1: function InputTestDice1(_val) {
+    if (_isTest) {
+      _diceinput1 = _val;
+    }
+  },
+  InputTestDice2: function InputTestDice2(_val) {
+    if (_isTest) {
+      _diceinput2 = _val;
+    }
   },
   //#region All Functions of GameManager
 
@@ -1050,9 +1063,21 @@ var GameManager = cc.Class({
     }
   },
   RollDice: function RollDice() {
-    var Dice1 = this.getRandom(1, 7);
-    var Dice2 = this.getRandom(1, 7); // var Dice1=20;
+    var Dice1;
+    var Dice2;
+
+    if (_isTest && this.PlayerGameInfo[this.TurnNumber].IsBot == false) {
+      Dice1 = parseInt(_diceinput1);
+      Dice2 = parseInt(_diceinput2);
+    } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
+      Dice1 = 1;
+      Dice2 = 1;
+    } else {
+      Dice1 = this.getRandom(1, 7);
+      Dice2 = this.getRandom(1, 7);
+    } // var Dice1=20;
     // var Dice2=1;
+
 
     DiceRoll = Dice1 + Dice2;
     var _newRoll = {
@@ -1089,15 +1114,15 @@ var GameManager = cc.Class({
             RandomCard = valueIndex[index];
           } else if (_spaceID == 5) //landed on some losses cards
           {
-            var valueIndex = [0, 5, 6, 2];
-            var index = this.getRandom(0, 4);
-            RandomCard = valueIndex[index]; //RandomCard=0;
+            var valueIndex = [0, 1, 5, 6, 2, 7, 3, 4, 8, 9];
+            var index = this.getRandom(0, 10);
+            RandomCard = valueIndex[index]; //RandomCard = 9;
           } else if (_spaceID == 3) //landed on some marketing cards
           {
             var valueIndex = [0, 7, 3, 8, 13, 9];
             var index = this.getRandom(0, 6);
             RandomCard = valueIndex[index];
-          } else if (_spaceID == 1) //landed on some marketing cards
+          } else if (_spaceID == 1) //landed on some wild cards
           {
             var valueIndex = [0, 1, 6, 10];
             var index = this.getRandom(0, 4);

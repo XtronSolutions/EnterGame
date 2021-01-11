@@ -11,7 +11,8 @@ var oneQuestionNodes = [];
 var businessDetailPartnershipNodes = [];
 var PartnerShipData = null;
 var PartnerShipOfferReceived = false;
-var CancelledID = []; //-------------------------------------------enumeration for amount of loan-------------------------//
+var CancelledID = [];
+var StartGameCash = 100000; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -892,6 +893,12 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for OneQuestionDecision screen"
     },
+    InsufficientBalanceScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for InsufficientBalanceScreen screen"
+    },
     TempDiceText: {
       "default": null,
       type: cc.Label,
@@ -931,6 +938,12 @@ var GameplayUIManager = cc.Class({
   },
   onDisable: function onDisable() {
     cc.systemEvent.off("SyncData", this.SyncData, this);
+  },
+  ToggleScreen_InsufficientBalance: function ToggleScreen_InsufficientBalance(_state) {
+    this.InsufficientBalanceScreen.active = _state;
+  },
+  Exit___InsufficientBalance: function Exit___InsufficientBalance() {
+    this.ToggleScreen_InsufficientBalance(false);
   },
   //#region Spectate UI Setup
   InitialScreen_SpectateMode: function InitialScreen_SpectateMode() {
@@ -1001,7 +1014,7 @@ var GameplayUIManager = cc.Class({
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
       this.BusinessSetupData.TimerNode.active = true;
-      PlayerDataIntance.Cash = 20000;
+      PlayerDataIntance.Cash = StartGameCash;
     }
 
     this.ResetButtonStates_BusinessSetup();
@@ -2174,6 +2187,9 @@ var GameplayUIManager = cc.Class({
 
       _this6.TogglePayDayScreen_PayDay(false);
 
+      _this6.Exit___InsufficientBalance();
+
+      cc.systemEvent.emit("ShowCard", "", false);
       HomeBasedPaymentCompleted = false;
       BrickMortarPaymentCompleted = false;
       LoanPayed = false;

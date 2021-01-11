@@ -6,6 +6,7 @@ var businessDetailPartnershipNodes = [];
 var PartnerShipData = null;
 var PartnerShipOfferReceived = false;
 var CancelledID = [];
+var StartGameCash = 100000;
 //-------------------------------------------enumeration for amount of loan-------------------------//
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -924,6 +925,12 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for OneQuestionDecision screen",
     },
+    InsufficientBalanceScreen: {
+      default: null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for InsufficientBalanceScreen screen",
+    },
     TempDiceText: {
       default: null,
       type: cc.Label,
@@ -974,6 +981,15 @@ var GameplayUIManager = cc.Class({
     cc.systemEvent.off("SyncData", this.SyncData, this);
   },
 
+  ToggleScreen_InsufficientBalance(_state)
+  {
+    this.InsufficientBalanceScreen.active = _state;
+  },
+
+  Exit___InsufficientBalance()
+  {
+    this.ToggleScreen_InsufficientBalance(false);
+  },
   //#region Spectate UI Setup
   InitialScreen_SpectateMode() {
     this.BusinessSetupData.WaitingStatusNode.active = true;
@@ -1035,7 +1051,7 @@ var GameplayUIManager = cc.Class({
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
       this.BusinessSetupData.TimerNode.active = true;
-      PlayerDataIntance.Cash = 20000;
+      PlayerDataIntance.Cash = StartGameCash;
     }
 
     this.ResetButtonStates_BusinessSetup();
@@ -2637,22 +2653,15 @@ var GameplayUIManager = cc.Class({
     setTimeout(() => {
       this.ExitLoanScreen_PayDay();
       this.TogglePayDayScreen_PayDay(false);
+      this.Exit___InsufficientBalance();
+      cc.systemEvent.emit("ShowCard", "", false);
       HomeBasedPaymentCompleted = false;
       BrickMortarPaymentCompleted = false;
       LoanPayed = false;
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(
-        false
-      );
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(
-        false
-      );
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(
-        false
-      );
-      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(
-        false,
-        false
-      );
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
+      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false,false);
       GamePlayReferenceManager.Instance.Get_GameManager().Bankrupt_TurnDecision();
     }, 3010);
   },

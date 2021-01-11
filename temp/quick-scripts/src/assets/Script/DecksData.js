@@ -4,7 +4,8 @@ cc._RF.push(module, '58172YL+tVMTY9FLVSAy/Ur', 'DecksData');
 
 "use strict";
 
-var GamePlayReferenceManager = null; //-------------------------------------------Spaces Data-------------------------//
+var GamePlayReferenceManager = null;
+var LossesData = null; //-------------------------------------------Spaces Data-------------------------//
 
 var EnumSpaceType = cc.Enum({
   None: 0,
@@ -45,12 +46,40 @@ var CardData = cc.Class({
       serializable: true,
       tooltip: "if this card should have interaction button"
     },
+    HasTwoButtons: {
+      displayName: "HasTwoButtons",
+      type: cc["boolean"],
+      "default": false,
+      serializable: true,
+      tooltip: "if this card should have two interaction button"
+    },
+    HasThreeButtons: {
+      displayName: "HasThreeButtons",
+      type: cc["boolean"],
+      "default": false,
+      serializable: true,
+      tooltip: "if this card should have three interaction button"
+    },
     ButtonName: {
       displayName: "ButtonName",
       type: cc.Text,
       "default": "",
       serializable: true,
       tooltip: "button name to show on screen"
+    },
+    SecondButtonName: {
+      displayName: "SecondButtonName",
+      type: cc.Text,
+      "default": "",
+      serializable: true,
+      tooltip: "Second button name to show on screen"
+    },
+    ThirdButtonName: {
+      displayName: "SecondButtonName",
+      type: cc.Text,
+      "default": "",
+      serializable: true,
+      tooltip: "Second button name to show on screen"
     }
   },
   ctor: function ctor() {//constructor
@@ -87,6 +116,20 @@ var CardUI = cc.Class({
       "default": null,
       serializable: true,
       tooltip: "interaction Button reference for node"
+    },
+    InteractionTwoButtonsNode: {
+      displayName: "InteractionTwoButtonsNode",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "two interaction Button reference for node"
+    },
+    InteractionThreeButtonsNode: {
+      displayName: "InteractionThreeButtonsNode",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "three interaction Button reference for node"
     }
   },
   ctor: function ctor() {//constructor
@@ -143,10 +186,18 @@ var DecksData = cc.Class({
     this.CheckReferences();
     this.SelectedCardIndex = -1;
     this.CardSelected = -1;
-    this.IsBotTurn = false; //this.BigBusinessCardFunctionality("1");
+    this.IsBotTurn = false;
+    this.isOwner = false; //this.BigBusinessCardFunctionality("1");
     //for testing
     // this.Counter=0;
     // this.GenerateRandomBigBusinessCard(this.Counter);
+  },
+  onEnable: function onEnable() {
+    //events subscription to be called
+    cc.systemEvent.on("ShowCard", this.ShowCardInfo, this);
+  },
+  onDisable: function onDisable() {
+    cc.systemEvent.off("ShowCard", this.ShowCardInfo, this);
   },
   CheckReferences: function CheckReferences() {
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
@@ -154,7 +205,7 @@ var DecksData = cc.Class({
   getRandom: function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; // min included and max excluded
   },
-  ToggleButtons: function ToggleButtons(_isOwner, _hasButton, _isBot) {
+  ToggleButtons: function ToggleButtons(_isOwner, _hasButton, _isBot, _hasTwoButton) {
     var _this = this;
 
     if (_hasButton === void 0) {
@@ -165,20 +216,27 @@ var DecksData = cc.Class({
       _isBot = false;
     }
 
+    if (_hasTwoButton === void 0) {
+      _hasTwoButton = false;
+    }
+
     if (_isOwner && _hasButton) {
       this.MainUI.ButtonNode.active = false;
       this.MainUI.InteractionButtonNode.active = true;
+      if (_hasTwoButton) this.MainUI.InteractionTwoButtonsNode.active = true;else this.MainUI.InteractionTwoButtonsNode.active = false;
     } else if (_isOwner && !_hasButton) {
       this.MainUI.ButtonNode.active = true;
       this.MainUI.InteractionButtonNode.active = false;
+      this.MainUI.InteractionTwoButtonsNode.active = false;
     } else {
       this.MainUI.InteractionButtonNode.active = false;
       this.MainUI.ButtonNode.active = false;
+      this.MainUI.InteractionTwoButtonsNode.active = false;
 
       if (_isBot == false) {
         setTimeout(function () {
           _this.ExitCardInfo();
-        }, 2500);
+        }, 3200);
       }
     }
   },
@@ -189,6 +247,7 @@ var DecksData = cc.Class({
 
     this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.BigBusiness;
+    this.isOwner = _isOwner;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.BigBusiness[this.SelectedCardIndex].ID;
     if (this.BigBusiness[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.BigBusiness[this.SelectedCardIndex].ButtonName;
@@ -206,6 +265,7 @@ var DecksData = cc.Class({
 
     this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.Marketing;
+    this.isOwner = _isOwner;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.Marketing[this.SelectedCardIndex].ID;
     if (this.Marketing[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.Marketing[this.SelectedCardIndex].ButtonName;
@@ -221,13 +281,16 @@ var DecksData = cc.Class({
       _isBot = false;
     }
 
+    LossesData = null;
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.Losses;
     this.SelectedCardIndex = _randomValue;
     this.CardSelected = this.Losses[this.SelectedCardIndex].ID;
     this.ShowCardInfo(this.Losses[this.SelectedCardIndex].Description, true);
     if (this.Losses[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.Losses[this.SelectedCardIndex].ButtonName;
-    this.ToggleButtons(_isOwner, this.Losses[this.SelectedCardIndex].HasButton, _isBot);
+    if (this.Losses[this.SelectedCardIndex].HasTwoButtons) this.MainUI.InteractionTwoButtonsNode.children[0].children[0].getComponent(cc.Label).string = this.Losses[this.SelectedCardIndex].SecondButtonName;
+    this.ToggleButtons(_isOwner, this.Losses[this.SelectedCardIndex].HasButton, _isBot, this.Losses[this.SelectedCardIndex].HasTwoButtons);
 
     if (_isBot) {
       this.CardFuntionalityButton();
@@ -241,6 +304,7 @@ var DecksData = cc.Class({
     this.IsBotTurn = _isBot;
     this.SpacesType = EnumSpaceType.WildCard;
     this.SelectedCardIndex = _randomValue;
+    this.isOwner = _isOwner;
     this.CardSelected = this.WildCards[this.SelectedCardIndex].ID;
     if (this.WildCards[this.SelectedCardIndex].HasButton) this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.WildCards[this.SelectedCardIndex].ButtonName;
     this.ShowCardInfo(this.WildCards[this.SelectedCardIndex].Description, true);
@@ -256,6 +320,7 @@ var DecksData = cc.Class({
     }
 
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.Invest;
     this.ShowCardInfo("You can invest one more time in Gold or stocks this turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Execute";
@@ -281,6 +346,7 @@ var DecksData = cc.Class({
     }
 
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.OneQuestion;
     this.ShowCardInfo("You can ask one question to any other player, if player is unable to answer they will pay you some cash amount.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Execute";
@@ -296,6 +362,7 @@ var DecksData = cc.Class({
     }
 
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.Sell;
     this.ShowCardInfo("You can sell any one of your business or can skip turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Execute";
@@ -311,6 +378,7 @@ var DecksData = cc.Class({
     }
 
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.BuyOrSell;
     this.ShowCardInfo("You can Buy or sell Gold or stocks one more time in this turn.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Execute";
@@ -328,6 +396,7 @@ var DecksData = cc.Class({
     }
 
     this.IsBotTurn = _isBot;
+    this.isOwner = _isOwner;
     this.SpacesType = EnumSpaceType.GoBackSpaces;
     this.ShowCardInfo("you will have to go back 3 spaces.", true);
     this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Execute";
@@ -355,11 +424,24 @@ var DecksData = cc.Class({
     // this.Counter++;
     // this.GenerateRandomBigBusinessCard(this.Counter);
   },
-  CardFuntionalityButton: function CardFuntionalityButton() {
+  TwoButtonsFunctionality: function TwoButtonsFunctionality() {
+    this.CardFuntionalityButton(null, 1);
+  },
+  CardFuntionalityButton: function CardFuntionalityButton(event, _type) {
+    if (event === void 0) {
+      event = null;
+    }
+
+    if (_type === void 0) {
+      _type = 0;
+    }
+
     if (this.SpacesType == EnumSpaceType.BigBusiness) {
       this.BigBusinessCardFunctionality(this.CardSelected);
-    } else if (this.SpacesType == EnumSpaceType.Losses) {
-      this.LossesCardFunctionality(this.CardSelected);
+    } else if (this.SpacesType == EnumSpaceType.Losses && LossesData == null) {
+      this.LossesCardFunctionality(this.CardSelected, true, _type);
+    } else if (this.SpacesType == EnumSpaceType.Losses && LossesData != null) {
+      this.LossesCardFunctionality(this.CardSelected, false, _type);
     } else if (this.SpacesType == EnumSpaceType.Marketing) {
       this.MarketingCardFunctionality(this.CardSelected);
     } else if (this.SpacesType == EnumSpaceType.WildCard) {
@@ -405,7 +487,7 @@ var DecksData = cc.Class({
     if (this.IsBotTurn) {
       console.log(_msg);
 
-      var _delay = this.getRandom(1500, 2500);
+      var _delay = this.getRandom(2500, 3500);
 
       setTimeout(function () {
         _this3.ShowCardInfo("", false);
@@ -423,7 +505,7 @@ var DecksData = cc.Class({
         _manager.ResetCardDisplay();
 
         _manager.RaiseEventTurnComplete();
-      }, _time + 100);
+      }, _time + 1000);
     }
   },
   BigBusinessCardFunctionality: function BigBusinessCardFunctionality(_id) {
@@ -710,7 +792,15 @@ var DecksData = cc.Class({
         break;
     }
   },
-  LossesCardFunctionality: function LossesCardFunctionality(_id) {
+  LossesCardFunctionality: function LossesCardFunctionality(_id, _hasTwoScreens, _type) {
+    if (_hasTwoScreens === void 0) {
+      _hasTwoScreens = false;
+    }
+
+    if (_type === void 0) {
+      _type = 0;
+    }
+
     var Index = parseInt(_id);
     Index = Index - 1;
 
@@ -725,11 +815,73 @@ var DecksData = cc.Class({
 
         _manager.ToggleSkipNextTurn(true);
 
-        this.CompleteTurnWithToast("You will lose your next turn.", 2100);
+        LossesData = null;
+        this.CompleteTurnWithToast("You will lose your next turn.", 2400);
         break;
 
       case "2":
+        //Roll 2 dice, multiply by $5,000 and pay it to the Bank. If you have a lawyer you lose 50% of the total bill currently owed.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var DiceResult;
+        var CashMulitplier;
+        var TotalResult;
+
+        var _hiredLawyer;
+
+        if (_hasTwoScreens) {
+          DiceResult = _manager.RollTwoDices();
+          CashMulitplier = 5000;
+          TotalResult = DiceResult * CashMulitplier;
+          _hiredLawyer = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+          LossesData = {
+            Data: {
+              result: TotalResult,
+              lawyer: _hiredLawyer
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "\n" + "Dice Roll Result : " + DiceResult + "\n" + "\n" + "Total Bill Calculated : " + DiceResult + " * " + CashMulitplier + " = $" + TotalResult, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          console.log(LossesData);
+          TotalResult = LossesData.Data.result;
+          _hiredLawyer = LossesData.Data.lawyer;
+          if (_hiredLawyer) TotalResult = TotalResult / 2;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= TotalResult) {
+            if (_hiredLawyer) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= TotalResult;
+              _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+              this.CompleteTurnWithToast("you had hired lawyer, half bill $" + TotalResult + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= TotalResult;
+              this.CompleteTurnWithToast("you have not hired any lawyer, bill $" + TotalResult + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            }
+          } else {
+            console.log("not enough cash");
+
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              console.log("its bot and has no cash,skipping");
+              LossesData = null;
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
+
         break;
 
       case "3":
@@ -740,17 +892,156 @@ var DecksData = cc.Class({
 
         var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
+        LossesData = null;
+
         _manager.ToggleSkipPayDay_Whole(true);
 
-        this.CompleteTurnWithToast("you will lose all your business profits on next Pay Day.", 2100);
+        this.CompleteTurnWithToast("you will lose all your business profits on next Pay Day.", 2400);
         break;
 
       case "4":
+        //Yearly business insurance premium is due. Pay $2,000 to the Bank for each Home-Based business, $5,000 for each Brick & Mortar business.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var homeBasedBusiness = _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount;
+        var brickAndMortarBusiness = _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+        var homeMultiplier = 2000;
+        var brickMuliplier = 5000;
+        var totalAmount = homeBasedBusiness * homeMultiplier + brickAndMortarBusiness * brickMuliplier;
+
+        if (_hasTwoScreens) {
+          LossesData = {
+            Data: {
+              result: totalAmount
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "Home Based Amount : " + homeBasedBusiness + " * $" + homeMultiplier + " = $" + homeBasedBusiness * homeMultiplier + "\n" + "\n" + "Brick & Mortar Amount : " + brickAndMortarBusiness + " * $" + brickMuliplier + " = $" + brickAndMortarBusiness * brickMuliplier + "\n" + "\n" + "Total Amount : " + homeBasedBusiness * homeMultiplier + " + " + brickAndMortarBusiness * brickMuliplier + " = $" + totalAmount, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          totalAmount = LossesData.Data.result;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= totalAmount) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= totalAmount;
+            this.CompleteTurnWithToast("Total amount $" + totalAmount + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+            LossesData = null;
+          } else {
+            console.log("not enough cash");
+
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              LossesData = null;
+              console.log("its bot and has no money, skipping");
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
+
         break;
 
       case "5":
+        //Your employee claims you sexually harassed them, but you did not. You can either;  1 - Settle out of court and pay them $50,000. 2 - Take your chances in court. Roll 2 dice and pay $10,000 times the number rolled.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _courtSettlementFees = 50000;
+        var DiceResult;
+        var CashMulitplier = 10000;
+        var totalAmount;
+
+        if (_hasTwoScreens) {
+          if (_type == 0) {
+            //first button
+            LossesData = {
+              Data: {
+                result: _courtSettlementFees,
+                Type: _type
+              }
+            };
+
+            if (!this.IsBotTurn) {
+              this.ShowCardInfo("\n" + "Payable amount : $" + _courtSettlementFees, true);
+              this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+              this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+            } else {
+              this.CardFuntionalityButton();
+            }
+          } else if (_type == 1) {
+            //2nd button
+            DiceResult = _manager.RollTwoDices();
+            totalAmount = DiceResult * CashMulitplier;
+            LossesData = {
+              Data: {
+                result: DiceResult,
+                TotalAmount: totalAmount,
+                Type: _type
+              }
+            };
+
+            if (!this.IsBotTurn) {
+              this.ShowCardInfo("\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Total Amount : " + DiceResult + " * " + CashMulitplier + " = $" + totalAmount, true);
+              this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+              this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+            } else {
+              this.CardFuntionalityButton();
+            }
+          }
+        } else {
+          var tempType = LossesData.Data.Type;
+
+          if (tempType == 0) {
+            _courtSettlementFees = LossesData.Data.result;
+
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= _courtSettlementFees) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= _courtSettlementFees;
+              this.CompleteTurnWithToast("Total amount $" + _courtSettlementFees + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              console.log("not enough cash");
+
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                LossesData = null;
+                console.log("it was bot and had not enough money");
+                this.CompleteTurnWithToast("", 1200);
+              }
+            }
+          } else if (tempType == 1) {
+            DiceResult = LossesData.Data.result;
+            totalAmount = LossesData.Data.TotalAmount;
+
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= totalAmount) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= totalAmount;
+              this.CompleteTurnWithToast("Total amount $" + totalAmount + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              console.log("not enough cash");
+
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                console.log("it was bot and had not enough money");
+                LossesData = null;
+                this.CompleteTurnWithToast("", 1200);
+              }
+            }
+          }
+        }
+
         break;
 
       case "6":
@@ -767,17 +1058,29 @@ var DecksData = cc.Class({
           {
             if (_manager.PlayerGameInfo[_playerIndex].Cash >= 5000) {
               _manager.PlayerGameInfo[_playerIndex].Cash -= 5000;
-              this.CompleteTurnWithToast("You payed $5000 insurance on your first home based business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 2100);
+              this.CompleteTurnWithToast("You payed $5000 insurance on your first home based business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
             } else {
-              this.CompleteTurnWithToast("you don't have enough money.", 1800);
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                LossesData = null;
+                console.log("it was bot and had not enough money");
+                this.CompleteTurnWithToast("", 1200);
+              }
             }
           } else if (_businessType == 2) //first busioness was brick & mortar
           {
             if (_manager.PlayerGameInfo[_playerIndex].Cash >= 10000) {
               _manager.PlayerGameInfo[_playerIndex].Cash -= 10000;
-              this.CompleteTurnWithToast("You payed $10000 insurance on your first brick & mortar business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 2100);
+              this.CompleteTurnWithToast("You payed $10000 insurance on your first brick & mortar business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
             } else {
-              this.CompleteTurnWithToast("you don't have enough money.", 1800);
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                LossesData = null;
+                console.log("it was bot and had not enough money");
+                this.CompleteTurnWithToast("", 1200);
+              }
             }
           }
 
@@ -791,21 +1094,195 @@ var DecksData = cc.Class({
 
         var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
+        LossesData = null;
+
         _manager.ToggleSkipPayDay_HomeBased(true);
 
-        this.CompleteTurnWithToast("you will lose your next Pay Day for all of your home-based businesses.", 2100);
+        this.CompleteTurnWithToast("you will lose your next Pay Day for all of your home-based businesses.", 2400);
         break;
 
       case "8":
+        //You are fined 50% of your current liquid cash. If you have a lawyer, your fine is reduced to 20% of your current liquid cash.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var TotalResult;
+
+        var _hiredLawyer;
+
+        if (_hasTwoScreens) {
+          TotalResult = _manager.PlayerGameInfo[_playerIndex].Cash;
+          _hiredLawyer = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+          LossesData = {
+            Data: {
+              result: TotalResult,
+              lawyer: _hiredLawyer
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "\n" + "Total Cash : $" + TotalResult + "\n" + "\n" + "50% of Total Cash : $" + TotalResult / 2, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          console.log(LossesData);
+          TotalResult = LossesData.Data.result;
+          _hiredLawyer = LossesData.Data.lawyer;
+          if (_hiredLawyer) TotalResult = TotalResult * 20 / 100;else TotalResult = TotalResult * 50 / 100;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= TotalResult) {
+            if (_hiredLawyer) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= TotalResult;
+              _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+              this.CompleteTurnWithToast("you had hired lawyer, reduced fine $" + TotalResult + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= TotalResult;
+              this.CompleteTurnWithToast("you have not hired any lawyer, fine $" + TotalResult + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            }
+          } else {
+            console.log("not enough cash");
+
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              console.log("it was bot and had no money, skipping");
+              this.CompleteTurnWithToast("", 800);
+              LossesData = null;
+            }
+          }
+        }
+
         break;
 
       case "9":
+        //A customer is injured at one of your business locations. You can either; 1 - Settle out of court and pay them $25,000 , 2 - Take your chances in court. Roll 2 dice and pay $5,000 times the number rolled.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _courtSettlementFees = 25000;
+        var DiceResult;
+        var CashMulitplier = 5000;
+        var totalAmount;
+
+        if (_hasTwoScreens) {
+          if (_type == 0) {
+            //first button
+            LossesData = {
+              Data: {
+                result: _courtSettlementFees,
+                Type: _type
+              }
+            };
+
+            if (!this.IsBotTurn) {
+              this.ShowCardInfo("\n" + "Payable amount : $" + _courtSettlementFees, true);
+              this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+              this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+            } else {
+              this.CardFuntionalityButton();
+            }
+          } else if (_type == 1) {
+            //2nd button
+            DiceResult = _manager.RollTwoDices();
+            totalAmount = DiceResult * CashMulitplier;
+            LossesData = {
+              Data: {
+                result: DiceResult,
+                TotalAmount: totalAmount,
+                Type: _type
+              }
+            };
+
+            if (!this.IsBotTurn) {
+              this.ShowCardInfo("\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Total Amount : " + DiceResult + " * " + CashMulitplier + " = $" + totalAmount, true);
+              this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+              this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+            } else {
+              this.CardFuntionalityButton();
+            }
+          }
+        } else {
+          var tempType = LossesData.Data.Type;
+
+          if (tempType == 0) {
+            _courtSettlementFees = LossesData.Data.result;
+
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= _courtSettlementFees) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= _courtSettlementFees;
+              this.CompleteTurnWithToast("Total amount $" + _courtSettlementFees + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              console.log("not enough cash");
+
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                LossesData = null;
+                console.log("it was bot and had not enough money");
+                this.CompleteTurnWithToast("", 1200);
+              }
+            }
+          } else if (tempType == 1) {
+            DiceResult = LossesData.Data.result;
+            totalAmount = LossesData.Data.TotalAmount;
+
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= totalAmount) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= totalAmount;
+              this.CompleteTurnWithToast("Total amount $" + totalAmount + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+              LossesData = null;
+            } else {
+              console.log("not enough cash");
+
+              if (!this.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                console.log("it was bot and had not enough money");
+                LossesData = null;
+                this.CompleteTurnWithToast("", 1200);
+              }
+            }
+          }
+        }
+
         break;
 
       case "10":
+        //Your computer has been hacked! You catch it in time, but you must buy more security for your business records. Pay $20,000 to the Bank.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var bill = 20000;
+
+        if (_manager.PlayerGameInfo[_playerIndex].Cash >= bill) {
+          _manager.PlayerGameInfo[_playerIndex].Cash -= bill;
+          this.CompleteTurnWithToast("Total amount $" + bill + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+          LossesData = null;
+        } else {
+          console.log("not enough cash");
+
+          if (!this.IsBotTurn) {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+          } else {
+            console.log("it was bot and had not enough money");
+            LossesData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+        }
+
         break;
 
       case "11":
