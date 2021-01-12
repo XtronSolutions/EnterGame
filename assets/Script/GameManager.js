@@ -1230,7 +1230,7 @@ var GameManager=cc.Class({
         else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest)
         {
             Dice1 = 1;
-            Dice2 = 1;
+            Dice2 = 2;
         }
         else
         {
@@ -1287,16 +1287,18 @@ var GameManager=cc.Class({
             }
             else if(_spaceID==3) //landed on some marketing cards
             {
-                var valueIndex=[0,7,3,8,13,9];
-                var index=this.getRandom(0,6);
+                var valueIndex=[0,7,3,8,13,9,1,2,4,5];
+                var index=this.getRandom(0,10);
                 RandomCard=valueIndex[index];
+                //RandomCard = 5;
             }
 
             else if(_spaceID==1) //landed on some wild cards
             {
-                var valueIndex=[0,1,6,10];
-                var index=this.getRandom(0,4);
+                var valueIndex=[0,1,6,10,2,3,4];
+                var index=this.getRandom(0,7);
                 RandomCard=valueIndex[index];
+                //RandomCard = 4;
             }
 
             IsTweening=false;

@@ -1071,7 +1071,7 @@ var GameManager = cc.Class({
       Dice2 = parseInt(_diceinput2);
     } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
       Dice1 = 1;
-      Dice2 = 1;
+      Dice2 = 2;
     } else {
       Dice1 = this.getRandom(1, 7);
       Dice2 = this.getRandom(1, 7);
@@ -1119,14 +1119,14 @@ var GameManager = cc.Class({
             RandomCard = valueIndex[index]; //RandomCard = 9;
           } else if (_spaceID == 3) //landed on some marketing cards
           {
-            var valueIndex = [0, 7, 3, 8, 13, 9];
-            var index = this.getRandom(0, 6);
-            RandomCard = valueIndex[index];
+            var valueIndex = [0, 7, 3, 8, 13, 9, 1, 2, 4, 5];
+            var index = this.getRandom(0, 10);
+            RandomCard = valueIndex[index]; //RandomCard = 5;
           } else if (_spaceID == 1) //landed on some wild cards
           {
-            var valueIndex = [0, 1, 6, 10];
-            var index = this.getRandom(0, 4);
-            RandomCard = valueIndex[index];
+            var valueIndex = [0, 1, 6, 10, 2, 3, 4];
+            var index = this.getRandom(0, 7);
+            RandomCard = valueIndex[index]; //RandomCard = 4;
           }
 
         IsTweening = false;

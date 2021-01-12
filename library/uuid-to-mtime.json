@@ -170,8 +170,8 @@
     "relativePath": "Texture\\0001.jpg"
   },
   "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
-    "asset": 1610404190436,
-    "meta": 1610404190472,
+    "asset": 1610491733372,
+    "meta": 1610491733410,
     "relativePath": "Scene\\MainMenu.fire"
   },
   "c777b981-3153-4016-a387-f25f3fab74b3": {
@@ -950,18 +950,18 @@
     "relativePath": "Script\\GameplayUIManager.js"
   },
   "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1610404003981,
-    "meta": 1610404004182,
+    "asset": 1610491326360,
+    "meta": 1610491326621,
     "relativePath": "Scene\\GamePlay.fire"
   },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
-    "asset": 1610403868413,
-    "meta": 1610403870747,
+    "asset": 1610491403022,
+    "meta": 1610491405378,
     "relativePath": "Script\\DecksData.js"
   },
   "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1610404092343,
-    "meta": 1610404098259,
+    "asset": 1610491730662,
+    "meta": 1610491732702,
     "relativePath": "Script\\GameManager.js"
   }
 }

@@ -1,5 +1,8 @@
 var GamePlayReferenceManager=null;
 var LossesData = null;
+var MarketingData = null;
+var WildCardData = null;
+var BigBusinessData = null;
 //-------------------------------------------Spaces Data-------------------------//
 var EnumSpaceType = cc.Enum({
     None:0,
@@ -272,6 +275,7 @@ var DecksData = cc.Class({
     },
 
     GenerateRandomMarketingCard(_isOwner, _randomValue, _isBot = false) {
+        MarketingData = null;
         this.IsBotTurn = _isBot;
         this.SpacesType = EnumSpaceType.Marketing;
         this.isOwner = _isOwner;
@@ -313,6 +317,7 @@ var DecksData = cc.Class({
     },
 
     GenerateRandomWildCard(_isOwner, _randomValue, _isBot = false) {
+        WildCardData = null;
         this.IsBotTurn = _isBot;
         this.SpacesType = EnumSpaceType.WildCard;
         this.SelectedCardIndex = _randomValue;
@@ -322,8 +327,11 @@ var DecksData = cc.Class({
         if (this.WildCards[this.SelectedCardIndex].HasButton)
             this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.WildCards[this.SelectedCardIndex].ButtonName;
  
+        if (this.WildCards[this.SelectedCardIndex].HasTwoButtons)
+            this.MainUI.InteractionTwoButtonsNode.children[0].children[0].getComponent(cc.Label).string = this.WildCards[this.SelectedCardIndex].SecondButtonName;
+        
         this.ShowCardInfo(this.WildCards[this.SelectedCardIndex].Description, true);
-        this.ToggleButtons(_isOwner, this.WildCards[this.SelectedCardIndex].HasButton, _isBot);
+        this.ToggleButtons(_isOwner, this.WildCards[this.SelectedCardIndex].HasButton, _isBot,this.WildCards[this.SelectedCardIndex].HasTwoButtons);
 
         if (_isBot) {
             this.CardFuntionalityButton();
@@ -436,17 +444,23 @@ var DecksData = cc.Class({
     CardFuntionalityButton(event=null,_type=0) {
         if (this.SpacesType == EnumSpaceType.BigBusiness) {
             this.BigBusinessCardFunctionality(this.CardSelected);
-        } else if (this.SpacesType == EnumSpaceType.Losses && LossesData==null) {
-            this.LossesCardFunctionality(this.CardSelected,true,_type);
-        }
-        else if (this.SpacesType == EnumSpaceType.Losses && LossesData!=null) {
-            this.LossesCardFunctionality(this.CardSelected,false,_type);
-        }   
+        } else if (this.SpacesType == EnumSpaceType.Losses) {
+            if(LossesData==null)
+                this.LossesCardFunctionality(this.CardSelected, true, _type);
+            else
+                this.LossesCardFunctionality(this.CardSelected,false,_type);     
+        } 
         else if (this.SpacesType == EnumSpaceType.Marketing) {
-            this.MarketingCardFunctionality(this.CardSelected);
+            if(MarketingData==null)
+                this.MarketingCardFunctionality(this.CardSelected, true, _type);
+            else
+                this.MarketingCardFunctionality(this.CardSelected, false, _type); 
         }
         else if (this.SpacesType == EnumSpaceType.WildCard) {
-            this.WildCardFunctionality(this.CardSelected);
+            if(WildCardData==null)
+                this.WildCardFunctionality(this.CardSelected, true, _type);
+            else
+                this.WildCardFunctionality(this.CardSelected, false, _type);
         }
         else if (this.SpacesType == EnumSpaceType.Sell) {
             this.SellFunctionality();
@@ -511,7 +525,7 @@ var DecksData = cc.Class({
         }
     },
 
-    BigBusinessCardFunctionality(_id) {
+    BigBusinessCardFunctionality(_id, _hasTwoScreens = false,_type=0) {
         var Index = parseInt(_id);
         Index = Index - 1;
 
@@ -646,7 +660,7 @@ var DecksData = cc.Class({
 
     },
 
-    MarketingCardFunctionality(_id) {
+    MarketingCardFunctionality(_id, _hasTwoScreens = false,_type=0) {
         var Index = parseInt(_id);
         Index = Index - 1;
 
@@ -655,20 +669,143 @@ var DecksData = cc.Class({
                 console.log(this.Marketing[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _loseAmount = _manager.LoseAllMarketingMoney();
-
+                MarketingData = null;
                 if (_loseAmount > 0)
-                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2100);
+                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2400);
                 else
-                    this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
                 break;
-            case "2":
+            case "2"://You put an ad on Facebook for your business. Roll the dice: 1 - If you roll a 6 or lower, you lose all of the money in your marketing account 2 - If you roll a 7 or higher, your ad nets you 800% of the total money currently in your marketing account
                 console.log(this.Marketing[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _marketingAmount =_manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+                var _diceResult;
+                var _multiplier = 800;
+                if (_marketingAmount <= 0) {
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
+                    return;
+                }
+                    
+                if (_hasTwoScreens) {
+                    _diceResult = _manager.RollTwoDices();
+
+                    MarketingData = { Data: { result: _diceResult } };
+
+                    if (!this.IsBotTurn) {
+
+                        if (_diceResult <= 6)
+                        {
+                            this.ShowCardInfo("\n" + "\n" + "Dice Roll Result : " + _diceResult + "\n" + "\n" +
+                            "Total dice result is less than or equal to six, so you will lose all your current marketing amount.", true);
+                        
+                            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Done";
+
+                        }
+                        else if (_diceResult >= 7)
+                        {
+                            this.ShowCardInfo("\n" + "\n" + "Dice Roll Result : " + _diceResult + "\n" + "\n" +
+                            "Total dice result is greater than or equal to seven, so you will get 800% profit on current marketing amount.", true);
+                        
+                            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Receive Amount"; 
+                        }
+
+                        this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                    } else
+                    {
+                        this.CardFuntionalityButton();
+                    }
+                }
+                else
+                {
+                    _diceResult = MarketingData.Data.result;
+
+                    if (_diceResult <= 6) {
+                        var _loseAmount = _manager.LoseAllMarketingMoney();
+
+                        if (_loseAmount > 0)
+                            this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2400);
+                        else
+                            this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
+                        
+                        MarketingData = null;
+                    }else if (_diceResult >= 7) {
+                        
+                        var _result = (_marketingAmount * _multiplier / 100) + _marketingAmount;
+                        _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+                        _manager.PlayerGameInfo[_playerIndex].Cash += _result;
+
+                        this.CompleteTurnWithToast("Total profit of $" + _result+" has been added to your cash amount.", 2400);
+                        MarketingData = null;
+                    }
+                   
+                }
                 break;
-            case "3":
+            case "3"://Your ad contains false claims and result in a government investigation. You lose your entire Marketing Account, plus pay lawyer fees of $3,000 per business to the bank. If you have a lawyer, you do not have to pay the extra $3,000 in fees, per business.
                 console.log(this.Marketing[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _marketingAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+                var _lawyerStatus = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+                var _businessAmount = _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount + _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+                var _hasMarketingAmount = false;
+                var _multiplier = 3000;
+                var _totalAmount = _multiplier * _businessAmount;
+                if (_hasTwoScreens)
+                {
+                    if (_marketingAmount > 0)
+                        _hasMarketingAmount = true;
+
+                    if (_lawyerStatus)
+                         _totalAmount = 0;
+
+                    MarketingData = { Data: { result: _totalAmount } };
+
+                    if (!this.IsBotTurn) {
+                        this.ShowCardInfo("Marketing Amount : $" + _marketingAmount + "\n" + "\n" +
+                        "Lawyer Hired : " + _lawyerStatus + "\n" + "\n" +
+                        "Total Number of business : " + _businessAmount + "\n" + "\n" +
+                        "Fees : "+_businessAmount+" * "+_multiplier+" = $"+_totalAmount, true);
+                
+                        this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Done";
+
+                        this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                    } else
+                    {
+                        this.CardFuntionalityButton();
+                    }
+                }
+                else
+                {
+                    _totalAmount = MarketingData.Data.result;
+                    _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+                    
+                    if (_manager.PlayerGameInfo[_playerIndex].Cash >= _totalAmount) {
+                        if (_lawyerStatus) {
+                            _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+                            this.CompleteTurnWithToast("you had hired lawyer, you only lost your marketing amount of $"+_marketingAmount, 4200);
+                            MarketingData = null;
+                        } else {
+                             _manager.PlayerGameInfo[_playerIndex].Cash -= _totalAmount;
+                            this.CompleteTurnWithToast("you have not hired any lawyer, bill $" + _totalAmount + " was successfully paid along with marketing amount, remaining cash $"+_manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+                             MarketingData = null;
+                        }
+                        } else {
+                            console.log("not enough cash");
+                            if (!this.IsBotTurn) {
+                                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+                            } else
+                            {
+                                console.log("its bot and has no cash,skipping");
+                                MarketingData = null;
+                                this.CompleteTurnWithToast("", 1200);
+                            }
+                    }
+                }
                 break;
             case "4"://Your Marketing Account triples, but you must leave it in the account.
                 console.log(this.Marketing[Index].Description);
+                MarketingData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
                 var _marketAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
@@ -679,43 +816,137 @@ var DecksData = cc.Class({
                     this.CompleteTurnWithToast("Marketing Amount: $" + _marketAmount + "\n" + "\n" +
                         "Total: " + _marketAmount + " * " + _multiplier + " = " + _increaseAmount + "\n" + "\n" + "\n" +
                         "your marketing amount has been sucessfully increase to $" + _increaseAmount
-                        , 3100);
+                        , 3600);
                 }
                 else {
-                    this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
                 }
                 break;
-            case "5":
+            case "5"://You hire a Marketing Firm to market your business but it yields no results. You lose your entire marketing account to the Bank. Plus pay $5,000 for their services.
                 console.log(this.Marketing[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var bill = 5000;
+                MarketingData = null;
+
+                if (_manager.PlayerGameInfo[_playerIndex].Cash >= bill) {
+                        var _loseAmount = _manager.LoseAllMarketingMoney();
+                        _manager.PlayerGameInfo[_playerIndex].Cash -= bill;
+                        this.CompleteTurnWithToast("Fees $" + bill + " was successfully paid along with marketing amount, remaining cash $"+_manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+                        MarketingData = null;
+                    } else {
+                        console.log("not enough cash");
+                        if (!this.IsBotTurn) {
+                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+                        } else
+                        {
+                            console.log("its bot and has no cash,skipping");
+                            MarketingData = null;
+                            this.CompleteTurnWithToast("", 1200);
+                        }
+                }
                 break;
-            case "6":
+            case "6"://You begin a new marketing campaign. Roll 1 die. If it is an even number, your campaign is successful and you receive all of the money in your marketing account back plus 500%. If it is an odd number you lose all of the money in your marketing account.
                 console.log(this.Marketing[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _marketingAmount =_manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+                var _diceResult;
+                var _multiplier = 500;
+                var isEven = false;
+
+                if (_marketingAmount <= 0) {
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
+                    return;
+                }
+                    
+                if (_hasTwoScreens) {
+                    _diceResult = _manager.RollOneDice();
+
+                    if (_diceResult % 2 == 0)
+                        isEven = true;
+                    
+                    MarketingData = { Data: { result: _diceResult,IsEven:isEven } };
+
+                    if (!this.IsBotTurn) {
+
+                        if (_diceResult %2==1)
+                        {
+                            isEven = false;
+                            this.ShowCardInfo("\n" + "Dice Roll Result : " + _diceResult + "\n" + "\n" +
+                            "Total dice result is odd, so you will lose all your current marketing amount.", true);
+                        
+                            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Done";
+
+                        }
+                        else if (_diceResult %2==0)
+                        {
+                            isEven = true;
+                            this.ShowCardInfo("\n" + "\n" + "Dice Roll Result : " + _diceResult + "\n" + "\n" +
+                            "Total dice result is even, so you will get 500% profit on current marketing amount.", true);
+                        
+                            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Receive Amount"; 
+                        }
+
+                        this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                    } else
+                    {
+                        this.CardFuntionalityButton();
+                    }
+                }
+                else
+                {
+                    _diceResult = MarketingData.Data.result;
+                    isEven = MarketingData.Data.IsEven;
+
+                    if (!isEven) {
+                        var _loseAmount = _manager.LoseAllMarketingMoney();
+
+                        if (_loseAmount > 0)
+                            this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2400);
+                        else
+                            this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
+                        
+                        MarketingData = null;
+                    }else if (isEven) {
+                        
+                        var _result = (_marketingAmount * _multiplier / 100) + _marketingAmount;
+                        
+                        _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+                        _manager.PlayerGameInfo[_playerIndex].Cash += _result;
+
+                        this.CompleteTurnWithToast("Total profit of $" + _result+" has been added to your cash amount.", 2400);
+                        MarketingData = null;
+                    }
+                }
                 break;
             case "7":
                 console.log(this.Marketing[Index].Description);
                 break;
             case "8"://lose all your money in marketing account
                 console.log(this.Marketing[Index].Description);
+                MarketingData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _loseAmount = _manager.LoseAllMarketingMoney();
 
                 if (_loseAmount > 0)
-                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2100);
+                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2400);
                 else
-                    this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
                 break;
             case "9"://lose all your money in marketing account
                 console.log(this.Marketing[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _loseAmount = _manager.LoseAllMarketingMoney();
-
+                MarketingData = null;
                 if (_loseAmount > 0)
-                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2100);
+                    this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2400);
                 else
-                    this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
                 break;
             case "10"://Receive all of your Marketing Budget back, plus 700% profit.
                 console.log(this.Marketing[Index].Description);
+                MarketingData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
                 var _marketAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
@@ -729,7 +960,7 @@ var DecksData = cc.Class({
                         , 4000);
                 }
                 else {
-                    this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
+                    this.CompleteTurnWithToast("You don't have any marketing amount", 2400);
                 }
                 break;
             case "11":
@@ -745,7 +976,7 @@ var DecksData = cc.Class({
                 console.log(this.Marketing[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _loseAmount = _manager.LoseAllMarketingMoney();
-
+                MarketingData = null;
                 if (_loseAmount > 0)
                     this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2100);
                 else
@@ -1193,7 +1424,7 @@ var DecksData = cc.Class({
 
     },
 
-    WildCardFunctionality(_id)
+    WildCardFunctionality(_id, _hasTwoScreens = false,_type=0)
     {
       var Index=parseInt(_id);
       Index=Index-1;
@@ -1202,12 +1433,13 @@ var DecksData = cc.Class({
          case "1"://doubles your income on the next Pay Day.
              console.log(this.WildCards[Index].Description);
              var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
-
+              WildCardData = null;
              _manager.ToggleDoublePayNextTurn(true);
-             this.CompleteTurnWithToast("You will receive double profits on next payday.",1800);
+             this.CompleteTurnWithToast("You will receive double profits on next payday.",2400);
              break;
          case "2"://Roll 1 die, multiply result by $5,000 and receive your advance from the Bank.
              console.log(this.WildCards[Index].Description);
+             WildCardData = null;
              var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
              var _playerIndex=GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
              
@@ -1222,14 +1454,120 @@ var DecksData = cc.Class({
                 ,4000);
 
              break;
-         case "3":
-             console.log(this.WildCards[Index].Description);
+         case "3"://You go to an Estate Auction and buy a painting that turns out to be valuable. You can sell it now, roll both dice, multiply result by $10,000 and receive profits from the Bank.
+               console.log(this.WildCards[Index].Description);
+               WildCardData = null;
+               var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
+               var _playerIndex=GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+               
+               var DiceResult=_manager.RollTwoDices();
+               var CashMulitplier=10000;
+               var TotalResult=DiceResult*CashMulitplier;
+  
+               _manager.PlayerGameInfo[_playerIndex].Cash+=TotalResult;
+               this.CompleteTurnWithToast("Dice Result: "+DiceResult+"\n"+"\n"+
+                  "Total: "+DiceResult+" * "+CashMulitplier+" = "+TotalResult+"\n"+"\n"+
+                  "Amount $"+TotalResult+" has been added into your cash."
+                  ,5200);
              break;
-         case "4":
-             console.log(this.WildCards[Index].Description);
+         case "4"://Your business is audited by the IRS and you have not been keeping very good records of the income and expenses for your business. They fine you $30,000. If you have a lawyer, your fine is $15,000.
+               console.log(this.WildCards[Index].Description);
+               var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+               var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+               var _fine = 30000;
+               var _lawyerStatus = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+               if (_hasTwoScreens)
+               {
+
+                   if (_lawyerStatus)
+                       _fine = _fine / 2;
+                       
+                   WildCardData = { Data: { result: _fine } };
+                   
+                   if (!this.IsBotTurn) {
+
+                    this.ShowCardInfo("\n" + "Lawyer Hired : " + _lawyerStatus + "\n" + "\n" +
+                    "Total fine $"+_fine, true);
+                    
+                    this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+                    this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                    } else
+                    {
+                        this.CardFuntionalityButton();
+                    }
+               }
+               else
+               {
+                   _fine = WildCardData.Data.result;
+                   if (_manager.PlayerGameInfo[_playerIndex].Cash >= _fine) {
+                    _manager.PlayerGameInfo[_playerIndex].Cash -= _fine;
+                    _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+                    this.CompleteTurnWithToast("Fees $" + _fine + " was successfully paid, remaining cash $"+_manager.PlayerGameInfo[_playerIndex].Cash, 2800);
+                    WildCardData = null;
+                    } else {
+                    console.log("not enough cash");
+                    if (!this.IsBotTurn) {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+                    } else
+                    {
+                        console.log("its bot and has no cash,skipping");
+                        WildCardData = null;
+                        this.CompleteTurnWithToast("", 1200);
+                    }
+                    }
+                }
              break;
-         case "5":
-             console.log(this.WildCards[Index].Description);
+         case "5"://You can become a vendor at a local Jazz Festival for a vending fee of $20,000. If you accept, pay the Bank $20,000 and roll two die; multiply the result by $5,000 and receive your vending income from the Bank.
+               console.log(this.WildCards[Index].Description);
+               var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+               var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+               var _fees = 20000;
+               var _multiplier = 5000;
+               var _diceResult;
+               var _result;
+
+               if (_hasTwoScreens)
+               {
+                   if (_type == 0)
+                   {
+                        _diceResult = _manager.RollTwoDices();
+                       _result = _diceResult * _multiplier;
+                       
+                       WildCardData = { Data: { result: _result, Dice: _diceResult } };
+                       
+                       if (_manager.PlayerGameInfo[_playerIndex].Cash >= _fees)
+                       {
+                           _manager.PlayerGameInfo[_playerIndex].Cash -= _fees;
+
+                           if (!this.IsBotTurn) {
+
+                            this.ShowCardInfo("\n" + "Dice Result: " + _diceResult + "\n" + "\n" +
+                            "Total Amount : "+_diceResult+" * "+_multiplier+" = $"+_result, true);
+                            
+                            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Receive Amount";
+                            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                            } else
+                            {
+                                this.CardFuntionalityButton();
+                            }
+                       } else
+                       {
+                            WildCardData = null;
+                            this.CompleteTurnWithToast("you don't have enough cash.",2400);
+                       }
+                   } else if (_type == 1)
+                   {
+                        WildCardData = null;
+                        this.CompleteTurnWithToast("skipping turn now.",1800);
+                   }
+               } else
+               {
+                   _diceResult = WildCardData.Data.Dice;
+                   _result = WildCardData.Data.result;
+                   _manager.PlayerGameInfo[_playerIndex].Cash += _result;
+                    WildCardData = null;
+                    this.CompleteTurnWithToast("Cash amount $"+_result+" has been successfully added.",3000);
+                   }
              break;
          case "6":
              console.log(this.WildCards[Index].Description);
@@ -1237,7 +1575,7 @@ var DecksData = cc.Class({
          case "7"://pay off your loan for your Brick & Mortar Business. If you have no loan outstanding, receive $50,000.
              var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
              var _playerIndex=GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
-             
+             WildCardData = null;
              var _loanReset=false;
              for (let index = 0; index < _manager.PlayerGameInfo[_playerIndex].NoOfBusiness.length; index++) {
                 var _type=parseInt(_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[index].BusinessType);
@@ -1252,11 +1590,11 @@ var DecksData = cc.Class({
 
             if(_loanReset)
             {
-                this.CompleteTurnWithToast("your outstanding loan has been payed off.",2800);
+                this.CompleteTurnWithToast("your outstanding loan has been payed off.",3200);
             }else
             {
                 _manager.PlayerGameInfo[_playerIndex].Cash+=50000;
-                this.CompleteTurnWithToast("you had no loan, amount $50000 has been added to your cash",2800);
+                this.CompleteTurnWithToast("you had no loan, amount $50000 has been added to your cash",3200);
             }
 
              console.log(this.WildCards[Index].Description);
@@ -1273,9 +1611,9 @@ var DecksData = cc.Class({
          case "11":// receive double your business profits on all of your businesses.
              console.log(this.WildCards[Index].Description);
              var _manager=GamePlayReferenceManager.Instance.Get_GameManager();
-
+             WildCardData = null;
              _manager.ToggleDoublePayNextTurn(true);
-             this.CompleteTurnWithToast("You will receive double profits on next payday.",1800);
+             this.CompleteTurnWithToast("You will receive double profits on next payday.",2400);
              break;
          case "12":
              console.log(this.WildCards[Index].Description);
