@@ -169,11 +169,6 @@
     "meta": 1608404668141,
     "relativePath": "Texture\\0001.jpg"
   },
-  "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
-    "asset": 1610491733372,
-    "meta": 1610491733410,
-    "relativePath": "Scene\\MainMenu.fire"
-  },
   "c777b981-3153-4016-a387-f25f3fab74b3": {
     "asset": 1589737457894,
     "meta": 1609016587239,
@@ -679,11 +674,6 @@
     "meta": 1609800313401,
     "relativePath": "Script\\DiceController.js"
   },
-  "940bc6ea-27a0-4f17-a6e1-d634e8840ada": {
-    "asset": 1608070511220,
-    "meta": 1609800313445,
-    "relativePath": "Script\\ExpandBusinessHandler.js"
-  },
   "3ada7710-a963-411f-9f58-eb5f1e272119": {
     "asset": 1608269429599,
     "meta": 1609800313841,
@@ -723,11 +713,6 @@
     "asset": 1609278612750,
     "meta": 1609800314391,
     "relativePath": "Script\\PlayerDetails.js"
-  },
-  "5bf9b335-95ee-48cc-8448-694e673205eb": {
-    "asset": 1609021121826,
-    "meta": 1609800314433,
-    "relativePath": "Script\\PlayerProfileManager.js"
   },
   "761a5891-8992-4cda-a3c2-76bddc2f718e": {
     "asset": 1609365382857,
@@ -934,34 +919,54 @@
     "meta": 1609821817489,
     "relativePath": "Texture\\Gameplay\\number_bar.png"
   },
-  "fb8a5654-0491-4540-9b5a-68953ec8ab0a": {
-    "asset": 1609829371542,
-    "meta": 1609829373652,
-    "relativePath": "Script\\BusinessDetail.js"
-  },
   "5cea08ea-872c-4f5e-9880-b668ed0bbf94": {
     "asset": 1609962171163,
     "meta": 1609962239567,
     "relativePath": "Script\\MultiplayerController.js"
   },
+  "179d13b6-2f74-4c24-a2a1-d8b9d94a9348": {
+    "asset": 1610571864788,
+    "meta": 1610571864806,
+    "relativePath": "Prefabs\\BusinessManipulate.prefab"
+  },
+  "fb8a5654-0491-4540-9b5a-68953ec8ab0a": {
+    "asset": 1610586253967,
+    "meta": 1610586255105,
+    "relativePath": "Script\\BusinessDetail.js"
+  },
+  "940bc6ea-27a0-4f17-a6e1-d634e8840ada": {
+    "asset": 1610587777445,
+    "meta": 1610588068016,
+    "relativePath": "Script\\ExpandBusinessHandler.js"
+  },
   "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
-    "asset": 1609962513798,
-    "meta": 1609962517395,
+    "asset": 1610589616902,
+    "meta": 1610589701675,
     "relativePath": "Script\\GameplayUIManager.js"
   },
   "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1610491326360,
-    "meta": 1610491326621,
+    "asset": 1610590299570,
+    "meta": 1610590299833,
     "relativePath": "Scene\\GamePlay.fire"
   },
+  "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
+    "asset": 1610593892325,
+    "meta": 1610593892357,
+    "relativePath": "Scene\\MainMenu.fire"
+  },
+  "5bf9b335-95ee-48cc-8448-694e673205eb": {
+    "asset": 1610592878227,
+    "meta": 1610592892807,
+    "relativePath": "Script\\PlayerProfileManager.js"
+  },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
-    "asset": 1610491403022,
-    "meta": 1610491405378,
+    "asset": 1610593879914,
+    "meta": 1610593882703,
     "relativePath": "Script\\DecksData.js"
   },
   "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1610491730662,
-    "meta": 1610491732702,
+    "asset": 1610593842843,
+    "meta": 1610593883184,
     "relativePath": "Script\\GameManager.js"
   }
 }

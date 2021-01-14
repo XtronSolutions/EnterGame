@@ -23,6 +23,21 @@ var ExpandBusinessHandler = cc.Class({
       "default": null,
       type: cc.EditBox,
       serializable: true
+    },
+    IsCardFunctionality: {
+      "default": false,
+      type: cc.Boolean,
+      serializable: true
+    },
+    GivenCash: {
+      "default": 0,
+      type: cc.integer,
+      serializable: true
+    },
+    StartAnyBusinessWithoutCash: {
+      "default": false,
+      type: cc.Boolean,
+      serializable: true
     }
   },
   // LIFE-CYCLE CALLBACKS:
@@ -42,6 +57,15 @@ var ExpandBusinessHandler = cc.Class({
   SetBusinessIndex: function SetBusinessIndex(_index) {
     this.BusinessIndex = _index;
   },
+  SetCardFunctionality: function SetCardFunctionality(_state) {
+    this.IsCardFunctionality = _state;
+  },
+  SetGivenCash: function SetGivenCash(_amount) {
+    this.GivenCash = _amount;
+  },
+  SetStartAnyBusinessWithoutCash: function SetStartAnyBusinessWithoutCash(_state) {
+    this.StartAnyBusinessWithoutCash = _state;
+  },
   ResetEditBox: function ResetEditBox() {
     this.LocationEditBox.string = "";
   },
@@ -51,8 +75,15 @@ var ExpandBusinessHandler = cc.Class({
     if (this.LocationText == "") {
       GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("please enter new location name for this business.", 2000);
     } else {
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
-      GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000, this.BusinessIndex, this.LocationText);
+      if (this.IsCardFunctionality) {
+        if (this.StartAnyBusinessWithoutCash) {} else {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
+          GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000, this.BusinessIndex, this.LocationText, this.IsCardFunctionality, this.GivenCash, this.StartAnyBusinessWithoutCash);
+        }
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
+        GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000, this.BusinessIndex, this.LocationText);
+      }
     }
   } // update (dt) {},
 

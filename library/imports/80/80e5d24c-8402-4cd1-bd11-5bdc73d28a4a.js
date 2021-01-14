@@ -12,7 +12,17 @@ var businessDetailPartnershipNodes = [];
 var PartnerShipData = null;
 var PartnerShipOfferReceived = false;
 var CancelledID = [];
-var StartGameCash = 100000; //-------------------------------------------enumeration for amount of loan-------------------------//
+var StartGameCash = 100000;
+var SelectedBusinessPayDay = false;
+var HMAmount = 0;
+var BMAmount = 0;
+var BMLocations = 0;
+var SelectedBusinessIndex = 0;
+var TurnOverForInvest = false;
+var BusinessSetupCardFunctionality = false;
+var GivenCashBusiness = 0;
+var StartAnyBusinessWithoutCash = false;
+var PreviousCash = 0; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -336,6 +346,13 @@ var SellBusinessUI = cc.Class({
       "default": null,
       serializable: true,
       tooltip: "UI reference to the prefab of BusinessSellPrefab of Sell node"
+    },
+    BusinessManipulationPrefab: {
+      displayName: "BusinessManipulationPrefab",
+      type: cc.Prefab,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the prefab of BusinessManipulationPrefab of Sell node"
     },
     ExitButton: {
       displayName: "ExitButton",
@@ -970,7 +987,7 @@ var GameplayUIManager = cc.Class({
   //#endregion
   //#region BusinessSetup with loan
   //Business setup ui//------------------------
-  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _BankruptAmount) {
+  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _BankruptAmount, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash) {
     if (insideGame === void 0) {
       insideGame = false;
     }
@@ -987,9 +1004,24 @@ var GameplayUIManager = cc.Class({
       _BankruptAmount = 0;
     }
 
+    if (_isCardFunctionality === void 0) {
+      _isCardFunctionality = false;
+    }
+
+    if (_GivenCash === void 0) {
+      _GivenCash = 0;
+    }
+
+    if (_StartAnyBusinessWithoutCash === void 0) {
+      _StartAnyBusinessWithoutCash = false;
+    }
+
     //called first time form GameManager onload function
     this.CheckReferences();
     this.BusinessSetupNode.active = true;
+    BusinessSetupCardFunctionality = _isCardFunctionality;
+    GivenCashBusiness = _GivenCash;
+    StartAnyBusinessWithoutCash = _StartAnyBusinessWithoutCash;
     this.IsBankrupted = _isBankrupted;
     this.BankruptedAmount = _BankruptAmount;
     if (_isBankrupted) this.ResetTurnVariable();
@@ -1027,9 +1059,26 @@ var GameplayUIManager = cc.Class({
         if (GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.userID == GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerUID) {
           InsideGameBusinessSetup = index;
           PlayerDataIntance = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index];
-          this.OnChangeName_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerName);
-          this.OnChangeUID_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerUID);
-          this.OnChangeCash_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].Cash);
+
+          if (BusinessSetupCardFunctionality) {
+            if (StartAnyBusinessWithoutCash) {
+              PreviousCash = PlayerDataIntance.Cash;
+              PlayerDataIntance.Cash = 0;
+              this.OnChangeName_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerName);
+              this.OnChangeUID_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerUID);
+              this.OnChangeCash_BusinessSetup(PlayerDataIntance.Cash);
+            } else {
+              PreviousCash = PlayerDataIntance.Cash;
+              PlayerDataIntance.Cash = GivenCashBusiness;
+              this.OnChangeName_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerName);
+              this.OnChangeUID_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerUID);
+              this.OnChangeCash_BusinessSetup(PlayerDataIntance.Cash);
+            }
+          } else {
+            this.OnChangeName_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerName);
+            this.OnChangeUID_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].PlayerUID);
+            this.OnChangeCash_BusinessSetup(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[index].Cash);
+          }
         }
       }
     } else {
@@ -1084,33 +1133,41 @@ var GameplayUIManager = cc.Class({
     var _loanTaken = false;
     var _businessIndex = 0;
 
-    for (var index = 0; index < PlayerDataIntance.NoOfBusiness.length; index++) {
-      if (PlayerDataIntance.NoOfBusiness[index].LoanTaken) {
-        _loanTaken = true;
-        _businessIndex = index;
-        break;
+    if (!BusinessSetupCardFunctionality) {
+      for (var index = 0; index < PlayerDataIntance.NoOfBusiness.length; index++) {
+        if (PlayerDataIntance.NoOfBusiness[index].LoanTaken) {
+          _loanTaken = true;
+          _businessIndex = index;
+          break;
+        }
       }
-    }
 
-    if (_loanTaken) {
-      this.ShowToast("You have already taken loan of $" + PlayerDataIntance.NoOfBusiness[_businessIndex].LoanAmount);
-    } else {
-      if (PlayerDataIntance.Cash >= amount) {
-        this.ShowToast("You do not need loan, you have enough cash to buy current selected business.");
+      if (_loanTaken) {
+        this.ShowToast("You have already taken loan of $" + PlayerDataIntance.NoOfBusiness[_businessIndex].LoanAmount);
       } else {
-        this.BusinessSetupData.LoanSetupNode.active = true;
-        RequiredCash = Math.abs(parseInt(PlayerDataIntance.Cash) - amount);
-        this.BusinessSetupData.LoanAmountLabel[0].children[1].children[0].getComponent(cc.Label).string = "$" + RequiredCash;
+        if (PlayerDataIntance.Cash >= amount) {
+          this.ShowToast("You do not need loan, you have enough cash to buy current selected business.");
+        } else {
+          this.BusinessSetupData.LoanSetupNode.active = true;
+          RequiredCash = Math.abs(parseInt(PlayerDataIntance.Cash) - amount);
+          this.BusinessSetupData.LoanAmountLabel[0].children[1].children[0].getComponent(cc.Label).string = "$" + RequiredCash;
+        }
       }
+    } else {
+      this.ShowToast("You cannot take loan for current business setup");
     }
   },
   OnLoanButtonClicked_BusinessSetup: function OnLoanButtonClicked_BusinessSetup(event) {
-    if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.brickAndmortar) {
-      this.CalculateLoan_BusinessSetup(50000);
-    } else if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.HomeBased) {
-      this.CalculateLoan_BusinessSetup(10000);
+    if (!BusinessSetupCardFunctionality) {
+      if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.brickAndmortar) {
+        this.CalculateLoan_BusinessSetup(50000);
+      } else if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.HomeBased) {
+        this.CalculateLoan_BusinessSetup(10000);
+      } else {
+        this.ShowToast("please select business between Home Based and brick & mortar.");
+      }
     } else {
-      this.ShowToast("please select business between Home Based and brick & mortar. ");
+      this.ShowToast("You cannot take loan for current business setup");
     }
   },
   OnLoanBackButtonClicked_BusinessSetup: function OnLoanBackButtonClicked_BusinessSetup(event) {
@@ -1168,13 +1225,16 @@ var GameplayUIManager = cc.Class({
     }
   },
   PurchaseBusiness: function PurchaseBusiness(_amount, _businessName, _isHomeBased) {
-    if (PlayerDataIntance.Cash < _amount) {
+    if (PlayerDataIntance.Cash < _amount && !StartAnyBusinessWithoutCash) {
       this.ShowToast("You have not enough cash to buy this " + _businessName + " business.");
     } else {
       if (_isHomeBased) {
         if (PlayerDataIntance.HomeBasedAmount < 3) {
-          PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
-          this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
+          if (!StartAnyBusinessWithoutCash) {
+            PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
+            this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
+          }
+
           this.StartGame = true;
           PlayerDataIntance.HomeBasedAmount++;
         } else {
@@ -1182,21 +1242,34 @@ var GameplayUIManager = cc.Class({
           this.ShowToast("You cannot own more than three Home based businesses");
         }
       } else {
-        PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
-        this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
+        if (!StartAnyBusinessWithoutCash) {
+          PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
+          this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
+        }
+
         this.StartGame = true;
         PlayerDataIntance.BrickAndMortarAmount++;
       }
     }
   },
   Exit_BusinessSetup: function Exit_BusinessSetup() {
-    this.BusinessSetupNode.active = false;
+    if (!BusinessSetupCardFunctionality) {
+      this.BusinessSetupNode.active = false;
 
-    if (PlayerBusinessDataIntance.LoanTaken) {
-      PlayerBusinessDataIntance.LoanTaken = false;
-      PlayerDataIntance.Cash = PlayerDataIntance.Cash - PlayerBusinessDataIntance.LoanAmount;
-      PlayerBusinessDataIntance.LoanAmount = 0;
-      this.ShowToast("Reverting back loan amount.", 500);
+      if (PlayerBusinessDataIntance.LoanTaken) {
+        PlayerBusinessDataIntance.LoanTaken = false;
+        PlayerDataIntance.Cash = PlayerDataIntance.Cash - PlayerBusinessDataIntance.LoanAmount;
+        PlayerBusinessDataIntance.LoanAmount = 0;
+        this.ShowToast("Reverting back loan amount.", 500);
+      }
+    } else {
+      PlayerDataIntance.Cash = PreviousCash;
+      this.BusinessSetupNode.active = false;
+      InsideGameBusinessSetup = -1;
+      BusinessSetupCardFunctionality = false;
+      GivenCashBusiness = 0;
+      StartAnyBusinessWithoutCash = false;
+      GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
     }
   },
   InitialSetup_BusinessSetup: function InitialSetup_BusinessSetup() {
@@ -1255,10 +1328,21 @@ var GameplayUIManager = cc.Class({
     }
   },
   StartNewSetup_DuringGame_BusinessSetup: function StartNewSetup_DuringGame_BusinessSetup() {
-    GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[InsideGameBusinessSetup] = PlayerDataIntance;
-    this.BusinessSetupNode.active = false;
-    InsideGameBusinessSetup = -1;
-    this.ToggleDecision_TurnDecision(true);
+    if (!BusinessSetupCardFunctionality) {
+      GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[InsideGameBusinessSetup] = PlayerDataIntance;
+      this.BusinessSetupNode.active = false;
+      InsideGameBusinessSetup = -1;
+      this.ToggleDecision_TurnDecision(true);
+    } else {
+      PlayerDataIntance.Cash = PreviousCash;
+      GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[InsideGameBusinessSetup] = PlayerDataIntance;
+      this.BusinessSetupNode.active = false;
+      InsideGameBusinessSetup = -1;
+      BusinessSetupCardFunctionality = false;
+      GivenCashBusiness = 0;
+      StartAnyBusinessWithoutCash = false;
+      GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+    }
   },
   PayAmountToPlayGame: function PayAmountToPlayGame() {
     this.StartGame = false;
@@ -1269,9 +1353,15 @@ var GameplayUIManager = cc.Class({
 
       if (this.StartGame == true || this.IsBankrupted == true) {
         PlayerDataIntance.NoOfBusiness.push(PlayerBusinessDataIntance);
-        if (InsideGameBusinessSetup != -1) //if start new business has not been called from inside game
-          this.StartNewSetup_DuringGame_BusinessSetup(); //if start new business has been called at start of game as initial setup
-        else this.InitialSetup_BusinessSetup(); //prtinting all values to console
+
+        if (InsideGameBusinessSetup != -1) {
+          //if start new business has not been called from inside game
+          this.StartNewSetup_DuringGame_BusinessSetup();
+        } //if start new business has been called at start of game as initial setup
+        else {
+            this.InitialSetup_BusinessSetup();
+          } //prtinting all values to console
+
 
         for (var i = 0; i < GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length; i++) {
           console.log("player name: " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[i].PlayerName);
@@ -1347,28 +1437,59 @@ var GameplayUIManager = cc.Class({
   onLocationNameChanged_ExpandBusiness_TurnDecision: function onLocationNameChanged_ExpandBusiness_TurnDecision(_name) {
     LocationName = _name;
   },
-  OnExpandButtonClicked_TurnDecision: function OnExpandButtonClicked_TurnDecision() {
+  OnExpandButtonClicked_TurnDecision: function OnExpandButtonClicked_TurnDecision(event, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash) {
     var _this2 = this;
+
+    if (event === void 0) {
+      event = null;
+    }
+
+    if (_isCardFunctionality === void 0) {
+      _isCardFunctionality = false;
+    }
+
+    if (_GivenCash === void 0) {
+      _GivenCash = 0;
+    }
+
+    if (_StartAnyBusinessWithoutCash === void 0) {
+      _StartAnyBusinessWithoutCash = false;
+    }
 
     //if player has brick and mortar business he could expand it
     console.log("expand business");
+    BusinessSetupCardFunctionality = _isCardFunctionality;
+    GivenCashBusiness = _GivenCash;
+    StartAnyBusinessWithoutCash = _StartAnyBusinessWithoutCash;
     this.TurnDecisionSetupUI.ExpandBusinessNode.active = true;
-    var generatedLength = GamePlayReferenceManager.Instance.Get_GameManager().GenerateExpandBusiness_Prefabs_TurnDecision();
+    var generatedLength = GamePlayReferenceManager.Instance.Get_GameManager().GenerateExpandBusiness_Prefabs_TurnDecision(BusinessSetupCardFunctionality, GivenCashBusiness, StartAnyBusinessWithoutCash);
 
     if (generatedLength == 0) {
-      this.ShowToast("You have no brick and mortar business to expand.", 1500);
+      this.ShowToast("You have no brick and mortar business to expand.", 1550);
       setTimeout(function () {
         _this2.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
       }, 1600);
     }
   },
   OnExpandButtonExitClicked_TurnDecision: function OnExpandButtonExitClicked_TurnDecision() {
-    this.UpdateCash_TurnDecision();
-    this.CheckReferences();
-    LocationName = "";
-    console.log("expand business exit called");
-    GamePlayReferenceManager.Instance.Get_GameManager().DestroyGeneratedNodes();
-    this.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+    if (!BusinessSetupCardFunctionality) {
+      this.UpdateCash_TurnDecision();
+      this.CheckReferences();
+      LocationName = "";
+      console.log("expand business exit called");
+      GamePlayReferenceManager.Instance.Get_GameManager().DestroyGeneratedNodes();
+      this.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+    } else {
+      this.CheckReferences();
+      LocationName = "";
+      console.log("expand business exit called");
+      GamePlayReferenceManager.Instance.Get_GameManager().DestroyGeneratedNodes();
+      this.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+      BusinessSetupCardFunctionality = false;
+      GivenCashBusiness = 0;
+      StartAnyBusinessWithoutCash = false;
+      GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+    }
   },
   OnNewBusinessButtonClicked_TurnDecision: function OnNewBusinessButtonClicked_TurnDecision() {
     console.log("starting new business");
@@ -1394,8 +1515,20 @@ var GameplayUIManager = cc.Class({
   OnStockBusinessNameChanged_TurnDecision: function OnStockBusinessNameChanged_TurnDecision(name) {
     StockBusinessName = name;
   },
-  OnStockDiceClicked_TurnDecision: function OnStockDiceClicked_TurnDecision() {
-    if (!this.StockInvested) {
+  OnStockDiceClicked_TurnDecision: function OnStockDiceClicked_TurnDecision(event, _isTurnOver) {
+    if (event === void 0) {
+      event = null;
+    }
+
+    if (_isTurnOver === void 0) {
+      _isTurnOver = false;
+    }
+
+    TurnOverForInvest = _isTurnOver;
+    console.error(_isTurnOver);
+    if (TurnOverForInvest) StockBusinessName = "Friend's Business";
+
+    if (!this.StockInvested || TurnOverForInvest) {
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
       if (StockBusinessName == "") {
@@ -1406,7 +1539,7 @@ var GameplayUIManager = cc.Class({
         EnterBuySellAmount = "";
         this.ToggleInvestSellScreen_InvestSell(true);
         this.InvestSellSetupUI.InvestState = InvestEnum.StockInvest;
-        DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();
+        if (!TurnOverForInvest) DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollTwoDices();else DiceResult = GamePlayReferenceManager.Instance.Get_GameManager().RollOneDice();
         OnceOrShare = DiceResult * 1000;
         this.AssignData_InvestSell("Invest in Stock", DiceResult, "Each Share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
       }
@@ -1768,11 +1901,11 @@ var GameplayUIManager = cc.Class({
         var _TotalAmount = OnceOrShare * _amount;
 
         if (_TotalAmount <= GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash) {
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - _TotalAmount;
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount + _amount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash -= _TotalAmount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount += _amount;
           this.ShowToast("You have successfully bought " + _amount + " ounces of GOLD", 1400);
           setTimeout(function () {
-            _this3.ToggleInvestSellScreen_InvestSell(false);
+            _this3.ExitButton_InvestSell();
           }, 1500);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -1786,11 +1919,11 @@ var GameplayUIManager = cc.Class({
         if (_amount <= GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount) {
           var _TotalAmount = OnceOrShare * _amount;
 
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + _TotalAmount;
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount - _amount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash += _TotalAmount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount -= _amount;
           this.ShowToast("You have successfully sold " + _amount + " ounces of GOLD for  $" + _TotalAmount, 1400);
           setTimeout(function () {
-            _this3.ToggleInvestSellScreen_InvestSell(false);
+            _this3.ExitButton_InvestSell();
           }, 1500);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -1804,12 +1937,12 @@ var GameplayUIManager = cc.Class({
         var _TotalAmount = OnceOrShare * _amount;
 
         if (_TotalAmount <= GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash) {
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - _TotalAmount;
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount + _amount; //can add multiple stocks with business name in object if required
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash -= _TotalAmount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount += _amount; //can add multiple stocks with business name in object if required
 
           this.ShowToast("You have successfully bought " + _amount + " shares of business " + StockBusinessName, 1400);
           setTimeout(function () {
-            _this3.ToggleInvestSellScreen_InvestSell(false);
+            _this3.ExitButton_InvestSell();
           }, 1500);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -1823,11 +1956,11 @@ var GameplayUIManager = cc.Class({
         if (_amount <= GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount) {
           var _TotalAmount = OnceOrShare * _amount;
 
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + _TotalAmount;
-          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount - _amount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash += _TotalAmount;
+          GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount -= _amount;
           this.ShowToast("You have successfully sold " + _amount + " shares of stock for  $" + _TotalAmount, 1400);
           setTimeout(function () {
-            _this3.ToggleInvestSellScreen_InvestSell(false);
+            _this3.ExitButton_InvestSell();
           }, 1500);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -1840,6 +1973,11 @@ var GameplayUIManager = cc.Class({
   },
   ExitButton_InvestSell: function ExitButton_InvestSell() {
     this.ToggleInvestSellScreen_InvestSell(false);
+
+    if (TurnOverForInvest) {
+      GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+      TurnOverForInvest = false;
+    }
   },
   //#endregion
   //#region Payday or Double pay Day
@@ -1890,7 +2028,7 @@ var GameplayUIManager = cc.Class({
 
     return _loan;
   },
-  AssignData_PayDay: function AssignData_PayDay(_title, _isDoublePayDay, _skipHM, _skipBM, _isBot) {
+  AssignData_PayDay: function AssignData_PayDay(_title, _isDoublePayDay, _skipHM, _skipBM, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, _hMAmount, _bmAmount, _bmLocation) {
     var _this4 = this;
 
     if (_isDoublePayDay === void 0) {
@@ -1909,29 +2047,56 @@ var GameplayUIManager = cc.Class({
       _isBot = false;
     }
 
+    if (_forSelectedBusiness === void 0) {
+      _forSelectedBusiness = false;
+    }
+
+    if (_SelectedBusinessIndex === void 0) {
+      _SelectedBusinessIndex = 0;
+    }
+
+    if (_hMAmount === void 0) {
+      _hMAmount = 0;
+    }
+
+    if (_bmAmount === void 0) {
+      _bmAmount = 0;
+    }
+
+    if (_bmLocation === void 0) {
+      _bmLocation = 0;
+    }
+
     this.IsBotTurn = _isBot;
     DoublePayDay = _isDoublePayDay;
     this.TogglePayDayScreen_PayDay(true);
     this.PayDaySetupUI.TitleLabel.string = _title;
     var _time = 1800;
+    SelectedBusinessPayDay = _forSelectedBusiness;
+    SelectedBusinessIndex = _SelectedBusinessIndex;
+    HMAmount = _hMAmount;
+    BMAmount = _bmAmount;
+    BMLocations = _bmLocation;
 
-    if (_isBot == false) {
-      //check skip payday variables
-      if (_skipHM && _skipBM) this.ShowToast("your payday on home based and brick & mortar businessess will be skipped.", _time);else if (_skipHM) this.ShowToast("your payday on home based businessess will be skipped.", _time);else if (_skipBM) this.ShowToast("your payday on brick & mortar businessess will be skipped.", _time);
-    } else {
-      //check skip payday variables
-      if (_skipHM && _skipBM) console.log("your payday on home based and brick & mortar businessess will be skipped.");else if (_skipHM) console.log("your payday on home based businessess will be skipped.");else if (_skipBM) console.log("your payday on brick & mortar businessess will be skipped.");
+    if (!SelectedBusinessPayDay) {
+      if (_isBot == false) {
+        //check skip payday variables
+        if (_skipHM && _skipBM) this.ShowToast("your payday on home based and brick & mortar businessess will be skipped.", _time);else if (_skipHM) this.ShowToast("your payday on home based businessess will be skipped.", _time);else if (_skipBM) this.ShowToast("your payday on brick & mortar businessess will be skipped.", _time);
+      } else {
+        //check skip payday variables
+        if (_skipHM && _skipBM) console.log("your payday on home based and brick & mortar businessess will be skipped.");else if (_skipHM) console.log("your payday on home based businessess will be skipped.");else if (_skipBM) console.log("your payday on brick & mortar businessess will be skipped.");
+      }
     }
 
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
     this.UpdateCash_PayDay(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
 
-    var HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
-
-    var BMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
-
-    var BMLocations = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+    if (!SelectedBusinessPayDay) {
+      HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
+      BMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+      BMLocations = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+    }
 
     var _loanTaken = false;
     var _businessIndex = 0;
@@ -1944,7 +2109,12 @@ var GameplayUIManager = cc.Class({
       }
     }
 
-    var loanTaken = _loanTaken;
+    var loanTaken = false;
+
+    if (!SelectedBusinessPayDay) {
+      loanTaken = _loanTaken;
+    }
+
     this.PayDaySetupUI.HomeBasedNumberLabel.string = HMAmount;
     this.PayDaySetupUI.BMNumberLabel.string = BMAmount;
     this.PayDaySetupUI.BMNumberLocationLabel.string = BMLocations;
@@ -1980,7 +2150,15 @@ var GameplayUIManager = cc.Class({
   OnHomeBasedPaymentClicked_PayDay: function OnHomeBasedPaymentClicked_PayDay() {
     if (!HomeBasedPaymentCompleted) {
       this.ToggleResultPanelScreen_PayDay(true);
-      if (!DoublePayDay) this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";else this.PayDaySetupUI.ResultScreenTitleLabel.string = "DoublePayDay";
+      var _doublePayDay = DoublePayDay;
+
+      if (!SelectedBusinessPayDay) {
+        if (!_doublePayDay) this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";else this.PayDaySetupUI.ResultScreenTitleLabel.string = "DoublePayDay";
+      } else {
+        _doublePayDay = false;
+        this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";
+      }
+
       HomeBasedPaymentCompleted = true;
       this.PayDaySetupUI.HomeBasedBtn.getComponent(cc.Button).interactable = false;
 
@@ -1988,7 +2166,9 @@ var GameplayUIManager = cc.Class({
 
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-      var HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
+      if (!SelectedBusinessPayDay) {
+        HMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].HomeBasedAmount;
+      }
 
       var _dice = GamePlayReferenceManager.Instance.Get_GameManager().RollOneDice();
 
@@ -1997,16 +2177,30 @@ var GameplayUIManager = cc.Class({
       var _amountToBeAdjusted = 0;
       var _multiplier = 1; //partnership code
 
-      if (DoublePayDay) _multiplier = 2;
+      if (_doublePayDay) _multiplier = 2;
 
-      for (var index = 0; index < _tempData.length; index++) {
-        if (_tempData[index].BusinessType == 1) {
-          if (_tempData[index].IsPartnership) {
+      if (!SelectedBusinessPayDay) {
+        for (var index = 0; index < _tempData.length; index++) {
+          if (_tempData[index].BusinessType == 1) {
+            if (_tempData[index].IsPartnership) {
+              var _payment = _multiplier * _dice * 1000;
+
+              _amountToBeSend = _payment / 2;
+
+              _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+
+              _amountToBeAdjusted += _amountToBeSend;
+            }
+          }
+        }
+      } else {
+        if (_tempData[SelectedBusinessIndex].BusinessType == 1) {
+          if (_tempData[SelectedBusinessIndex].IsPartnership) {
             var _payment = _multiplier * _dice * 1000;
 
             _amountToBeSend = _payment / 2;
 
-            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[SelectedBusinessIndex].PartnerID);
 
             _amountToBeAdjusted += _amountToBeSend;
           }
@@ -2018,10 +2212,10 @@ var GameplayUIManager = cc.Class({
       } //partnership code
 
 
-      if (!DoublePayDay) TotalPayDayAmount = HMAmount * _dice * 1000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (HMAmount * _dice) * 1000 - _amountToBeAdjusted;
+      if (!_doublePayDay) TotalPayDayAmount = HMAmount * _dice * 1000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (HMAmount * _dice) * 1000 - _amountToBeAdjusted;
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = HMAmount;
-      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
+      if (!_doublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + HMAmount + "*" + "1000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
@@ -2032,7 +2226,15 @@ var GameplayUIManager = cc.Class({
     //brick and mortar
     if (!BrickMortarPaymentCompleted) {
       this.ToggleResultPanelScreen_PayDay(true);
-      if (!DoublePayDay) this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";else this.PayDaySetupUI.ResultScreenTitleLabel.string = "DoublePayDay";
+      var _doublePayDay = DoublePayDay;
+
+      if (!SelectedBusinessPayDay) {
+        if (!_doublePayDay) this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";else this.PayDaySetupUI.ResultScreenTitleLabel.string = "DoublePayDay";
+      } else {
+        _doublePayDay = false;
+        this.PayDaySetupUI.ResultScreenTitleLabel.string = "PayDay";
+      }
+
       BrickMortarPaymentCompleted = true;
       this.PayDaySetupUI.BMBtn.getComponent(cc.Button).interactable = false;
 
@@ -2040,9 +2242,10 @@ var GameplayUIManager = cc.Class({
 
       var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-      var BMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
-
-      var BMLocations = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+      if (!SelectedBusinessPayDay) {
+        BMAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+        BMLocations = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+      }
 
       var _amount = BMAmount + BMLocations;
 
@@ -2052,18 +2255,34 @@ var GameplayUIManager = cc.Class({
       var _amountToBeSend = 0;
       var _amountToBeAdjusted = 0;
       var _multiplier = 1;
-      if (DoublePayDay) _multiplier = 2;
+      if (_doublePayDay) _multiplier = 2;
 
-      for (var index = 0; index < _tempData.length; index++) {
-        if (_tempData[index].BusinessType == 2) {
-          if (_tempData[index].IsPartnership) {
-            var _locations = _tempData[index].LocationsName.length + 1;
+      if (!SelectedBusinessPayDay) {
+        for (var index = 0; index < _tempData.length; index++) {
+          if (_tempData[index].BusinessType == 2) {
+            if (_tempData[index].IsPartnership) {
+              var _locations = _tempData[index].LocationsName.length + 1;
+
+              var _payment = _locations * _multiplier * _dice * 2000;
+
+              _amountToBeSend = _payment / 2;
+
+              _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+
+              _amountToBeAdjusted += _amountToBeSend;
+            }
+          }
+        }
+      } else {
+        if (_tempData[SelectedBusinessIndex].BusinessType == 2) {
+          if (_tempData[SelectedBusinessIndex].IsPartnership) {
+            var _locations = _tempData[SelectedBusinessIndex].LocationsName.length + 1;
 
             var _payment = _locations * _multiplier * _dice * 2000;
 
             _amountToBeSend = _payment / 2;
 
-            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
+            _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[SelectedBusinessIndex].PartnerID);
 
             _amountToBeAdjusted += _amountToBeSend;
           }
@@ -2074,10 +2293,10 @@ var GameplayUIManager = cc.Class({
         this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", 2000);
       }
 
-      if (!DoublePayDay) TotalPayDayAmount = _amount * _dice * 2000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (_amount * _dice) * 2000 - _amountToBeAdjusted;
+      if (!_doublePayDay) TotalPayDayAmount = _amount * _dice * 2000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (_amount * _dice) * 2000 - _amountToBeAdjusted;
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = _amount;
-      if (!DoublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
+      if (!_doublePayDay) this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;else this.PayDaySetupUI.TotalAmountLabel.string = "(" + _dice + "*" + _amount + "*" + "2000*2)-" + _amountToBeAdjusted + "=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
@@ -2206,15 +2425,20 @@ var GameplayUIManager = cc.Class({
 
       console.log("all payday done");
       this.TogglePayDayScreen_PayDay(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
-      GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
+
+      if (!SelectedBusinessPayDay) {
+        GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
+        GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
+        GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
+        GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
+        GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+      }
     }
   },
   //#endregion
-  //#region Sell Business UI
+  //#region Sell & manipulate Business UI
   ToggleSellBusinessScreen_SellBusinessUISetup: function ToggleSellBusinessScreen_SellBusinessUISetup(_state) {
     this.SellBusinessScreen.active = _state;
   },
@@ -2254,6 +2478,58 @@ var GameplayUIManager = cc.Class({
       businessDetailNodes.push(node);
     }
   },
+  SetBusinessUI_BusinessManipulationUISetup: function SetBusinessUI_BusinessManipulationUISetup(_isBot) {
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    this.Reset_SellBusinessUISetup();
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    var _tempData = _manager.PlayerGameInfo[_playerIndex];
+
+    if (!_isBot) {
+      this.SellBusinessSetupUI.TitleLabel.string = "BUSINESS";
+      this.SellBusinessSetupUI.CashLabel.string = _manager.PlayerGameInfo[_playerIndex].Cash;
+      this.SellBusinessSetupUI.PlayerNameLabel.string = _manager.PlayerGameInfo[_playerIndex].PlayerName;
+      this.SellBusinessSetupUI.BusinessCountLabel.string = "No of Businesses : " + _manager.PlayerGameInfo[_playerIndex].NoOfBusiness.length;
+    }
+
+    for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
+      var node = cc.instantiate(this.SellBusinessSetupUI.BusinessManipulationPrefab);
+      node.parent = this.SellBusinessSetupUI.ScrollContentNode;
+      node.getComponent("BusinessDetail").CheckReferences();
+      node.getComponent("BusinessDetail").SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetBusinessIndex(index);
+
+      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) {
+        node.getComponent("BusinessDetail").SetBusinessMode(1);
+        node.getComponent("BusinessDetail").SetMode("Home Based");
+      } else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) {
+        node.getComponent("BusinessDetail").SetBusinessMode(2);
+        node.getComponent("BusinessDetail").SetMode("Brick & Mortar");
+      }
+
+      node.getComponent("BusinessDetail").SetBalance(_tempData.NoOfBusiness[index].Amount);
+      node.getComponent("BusinessDetail").SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+
+      if (_isBot) {
+        node.getComponent("BusinessDetail").SelectBusinessforPayDay();
+        break;
+      } // if (_tempData.NoOfBusiness[index].LocationsName.length == 0)
+      //   node.getComponent("BusinessDetail").ToggleSellLocationButton(false);
+      // else
+      //   node.getComponent("BusinessDetail").ToggleSellLocationButton(true);
+
+
+      businessDetailNodes.push(node);
+    }
+  },
   Reset_SellBusinessUISetup: function Reset_SellBusinessUISetup() {
     for (var index = 0; index < businessDetailNodes.length; index++) {
       businessDetailNodes[index].destroy();
@@ -2276,6 +2552,26 @@ var GameplayUIManager = cc.Class({
 
     this.ToggleSellBusinessScreen_SellBusinessUISetup(true);
     this.SetBusinessUI_SellBusinessUISetup();
+  },
+  EnableManipilationScreen__BusinessManipulationUISetup: function EnableManipilationScreen__BusinessManipulationUISetup(_isTurnover, _isBot) {
+    if (_isTurnover === void 0) {
+      _isTurnover = false;
+    }
+
+    if (_isBot === void 0) {
+      _isBot = false;
+    }
+
+    if (_isTurnover) {
+      this.SellBusinessSetupUI.ExitButton.active = false;
+      this.SellBusinessSetupUI.TurnOverExitButton.active = true;
+    } else {
+      this.SellBusinessSetupUI.ExitButton.active = true;
+      this.SellBusinessSetupUI.TurnOverExitButton.active = false;
+    }
+
+    if (!_isBot) this.ToggleSellBusinessScreen_SellBusinessUISetup(true);
+    this.SetBusinessUI_BusinessManipulationUISetup(_isBot);
   },
   ExitSellScreen__SellBusinessUISetup: function ExitSellScreen__SellBusinessUISetup() {
     this.Reset_SellBusinessUISetup();

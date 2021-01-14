@@ -423,13 +423,13 @@ var GameManager=cc.Class({
             tooltip: "integer reference for game mode 1 means bot and 2 means real players",
         },  
     },
+
     statics: {
         PlayerData: PlayerData,
         BusinessInfo:BusinessInfo,
         EnumBusinessType:EnumBusinessType,
         Instance:null
     },
-
 
     InputTestDice1(_val)
     {
@@ -911,8 +911,8 @@ var GameManager=cc.Class({
         var _counter=_ind;
         console.log(this.PlayerGameInfo[_counter].PlayerUID);
         console.log(MyData.customProperties.PlayerSessionData.PlayerUID);
-        if(this.PlayerGameInfo[_counter].PlayerUID!=MyData.customProperties.PlayerSessionData.PlayerUID) //dont update my own data
-        {
+        //if(this.PlayerGameInfo[_counter].PlayerUID!=MyData.customProperties.PlayerSessionData.PlayerUID) //dont update my own data
+       // {
             for (let index = 0; index < MainSessionData.length; index++) {
                     if(this.PlayerGameInfo[_counter].PlayerUID==MainSessionData[index].customProperties.PlayerSessionData.PlayerUID)
                     {
@@ -929,19 +929,19 @@ var GameManager=cc.Class({
                         }
                     }
                 }
-        }
-        else
-            {
-                if(_counter<this.PlayerGameInfo.length-1)
-                    {
-                        _counter++;
-                        console.log("adding counter: "+_counter);
-                        this.SyncDataToPlayerGameInfo(_counter);
-                    }
-                else{
-                        console.log(this.PlayerGameInfo);
-                    }
-            }
+        //}
+       // else
+            // {
+            //     if(_counter<this.PlayerGameInfo.length-1)
+            //         {
+            //             _counter++;
+            //             console.log("adding counter: "+_counter);
+            //             this.SyncDataToPlayerGameInfo(_counter);
+            //         }
+            //     else{
+            //             console.log(this.PlayerGameInfo);
+            //         }
+            // }
     },  
 
     /**
@@ -1230,7 +1230,7 @@ var GameManager=cc.Class({
         else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest)
         {
             Dice1 = 1;
-            Dice2 = 2;
+            Dice2 = 0;
         }
         else
         {
@@ -1273,11 +1273,12 @@ var GameManager=cc.Class({
             var RandomCard=this.getRandom(0,15);
             
             //for testing only
-            if(_spaceID==2) //landed on some big buseinss
+            if(_spaceID==2) //landed on some big business
             {
-                var valueIndex=[0,1,7,10];
-                var index=this.getRandom(0,4);
+                var valueIndex=[0,1,7,10,2,3,4,5,6,8];
+                var index=this.getRandom(0,10);
                 RandomCard=valueIndex[index];
+                //RandomCard = 8;
             }else if(_spaceID==5) //landed on some losses cards
             {
                 var valueIndex=[0,1,5,6,2,7,3,4,8,9];
@@ -1742,26 +1743,40 @@ var GameManager=cc.Class({
         DoublePayDay=_St2;
     },
 
-    ExpandBusiness_TurnDecision(amount,_index,_locationName)
+    ExpandBusiness_TurnDecision(amount,_index,_locationName,_isCardFunctionality = false,_GivenCash = 0,_StartAnyBusinessWithoutCash=false)
     {
-        if(this.PlayerGameInfo[this.TurnNumber].Cash>=amount)
-        {
-            this.PlayerGameInfo[this.TurnNumber].Cash=this.PlayerGameInfo[this.TurnNumber].Cash-amount;
-            this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount=this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount+1;
-            this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.",1000);
-            setTimeout(() => {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
-            }, 1200);
+        if (!_isCardFunctionality) {
+            if (this.PlayerGameInfo[this.TurnNumber].Cash >= amount) {
+                this.PlayerGameInfo[this.TurnNumber].Cash = this.PlayerGameInfo[this.TurnNumber].Cash - amount;
+                this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
+                this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
+                setTimeout(() => {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
+                }, 1200);
+            }
+            else {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount);
+            }
         }
-        else
-        {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ "+amount);
+        else {
+            if (_GivenCash >= amount) {
+                _GivenCash = _GivenCash - amount;
+                this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
+                this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
+                setTimeout(() => {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
+                }, 1200);
+            }
+            else {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount+", Cash Given $"+_GivenCash);
+            }
         }
 
     },
 
-    GenerateExpandBusiness_Prefabs_TurnDecision()
+    GenerateExpandBusiness_Prefabs_TurnDecision(_isCardFunctionality = false,_GivenCash = 0,_StartAnyBusinessWithoutCash=false)
     {
         BusinessLocationNodes=[];
 
@@ -1773,6 +1788,9 @@ var GameManager=cc.Class({
                 node.parent = GamePlayReferenceManager.Instance.Get_GameplayUIManager().TurnDecisionSetupUI.ExpandBusinessScrollContent;
                 node.getComponent('ExpandBusinessHandler').SetBusinessIndex(i);
                 node.getComponent('ExpandBusinessHandler').SetName(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[i].BusinessName);
+                node.getComponent('ExpandBusinessHandler').SetCardFunctionality(_isCardFunctionality);
+                node.getComponent('ExpandBusinessHandler').SetGivenCash(_GivenCash);
+                node.getComponent('ExpandBusinessHandler').SetStartAnyBusinessWithoutCash(_StartAnyBusinessWithoutCash);
                 node.getComponent('ExpandBusinessHandler').ResetEditBox();
                 BusinessLocationNodes.push(node);
             } 
@@ -1802,40 +1820,43 @@ var GameManager=cc.Class({
         }
     },
 
-    ProcessPayDay_TurnDecision(_isDoublePayDay=false,_isBot=false)
+    ProcessPayDay_TurnDecision(_isDoublePayDay=false,_isBot=false,_forSelectedBusiness=false,_SelectedBusinessIndex=0,HBAmount=0,BMAmount=0,BMLocations=0)
     {
-        _skipNextPayday=this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextPayday;
-        _skipHMNextPayday=this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipHMNextPayday;
-        _skipBMNextPayday=this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipBMNextPayday;
-
-        if(_skipNextPayday) //if previously skip payday was stored by any card
-        {
-            this.ToggleSkipPayDay_Whole(false);
-
-            if(!_isBot)
-            {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping PayDay.",1600);
-                setTimeout(() => {
-                    this.callUponCard();
-                }, 1650);
-            }else
-            {
-                console.log("Skipping PayDay.");
-                setTimeout(() => {
-                    this.callUponCard();
-                }, 800);
-            }
+        if (_forSelectedBusiness) {
+            var _title = "PayDay";
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title,false, false, false, _isBot,_forSelectedBusiness,_SelectedBusinessIndex,HBAmount,BMAmount,BMLocations);
         }
-        else
-        {
-            var _title="";
+        else {
+            _skipNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextPayday;
+            _skipHMNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipHMNextPayday;
+            _skipBMNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipBMNextPayday;
 
-            if(_isDoublePayDay)
-                _title="DoublePayDay";
-            else
-                _title="PayDay";
+            if (_skipNextPayday) //if previously skip payday was stored by any card
+            {
+                this.ToggleSkipPayDay_Whole(false);
 
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title,_isDoublePayDay,_skipHMNextPayday,_skipBMNextPayday,_isBot);
+                if (!_isBot) {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Skipping PayDay.", 1600);
+                    setTimeout(() => {
+                        this.callUponCard();
+                    }, 1650);
+                } else {
+                    console.log("Skipping PayDay.");
+                    setTimeout(() => {
+                        this.callUponCard();
+                    }, 800);
+                }
+            }
+            else {
+                var _title = "";
+
+                if (_isDoublePayDay)
+                    _title = "DoublePayDay";
+                else
+                    _title = "PayDay";
+
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot);
+            }
         }
     },
 

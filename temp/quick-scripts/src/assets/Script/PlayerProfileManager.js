@@ -157,6 +157,11 @@ var PlayerProfileManager = cc.Class({
     this.PlayerTurnHighlighterNode.active = _state;
   },
   SeeProfileData: function SeeProfileData() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      //only for real players
+      GamePlayReferenceManager.Instance.Get_GameManager().SyncDataToPlayerGameInfo(0);
+    }
+
     this.PlayerInfoScreen.active = true;
     this.CheckReferences();
     businessDetailNodes = [];

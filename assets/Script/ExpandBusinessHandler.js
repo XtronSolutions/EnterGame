@@ -21,6 +21,22 @@ var ExpandBusinessHandler=cc.Class({
             type: cc.EditBox, 
             serializable: true,
         },
+
+        IsCardFunctionality: {
+            default: false,
+            type: cc.Boolean, 
+            serializable: true,
+        },
+        GivenCash: {
+            default: 0,
+            type: cc.integer, 
+            serializable: true,
+        },
+        StartAnyBusinessWithoutCash: {
+            default: false,
+            type: cc.Boolean, 
+            serializable: true,
+        },
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -28,7 +44,7 @@ var ExpandBusinessHandler=cc.Class({
     CheckReferences()
      {
         if(!GamePlayReferenceManager || GamePlayReferenceManager==null)
-        GamePlayReferenceManager=require('GamePlayReferenceManager');
+            GamePlayReferenceManager = require('GamePlayReferenceManager');
      },
     onLoad () {
         this.LocationText="";
@@ -50,6 +66,21 @@ var ExpandBusinessHandler=cc.Class({
         this.BusinessIndex=_index;
     },
 
+    SetCardFunctionality(_state)
+    {
+        this.IsCardFunctionality = _state;
+    },
+
+    SetGivenCash(_amount)
+    {
+        this.GivenCash = _amount;
+    },
+
+    SetStartAnyBusinessWithoutCash(_state)
+    {
+        this.StartAnyBusinessWithoutCash = _state;
+    },
+
     ResetEditBox()
     {
         this.LocationEditBox.string="";
@@ -66,8 +97,21 @@ var ExpandBusinessHandler=cc.Class({
         }
         else
         {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
-            GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000,this.BusinessIndex,this.LocationText);
+            if (this.IsCardFunctionality) {
+                if (this.StartAnyBusinessWithoutCash)
+                {
+                    
+                }
+                else
+                {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
+                    GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000, this.BusinessIndex, this.LocationText,this.IsCardFunctionality,this.GivenCash,this.StartAnyBusinessWithoutCash); 
+                }
+            }
+            else {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().onLocationNameChanged_ExpandBusiness_TurnDecision(this.LocationText);
+                GamePlayReferenceManager.Instance.Get_GameManager().ExpandBusiness_TurnDecision(25000, this.BusinessIndex, this.LocationText);
+            }
         }
     },
 

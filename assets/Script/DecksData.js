@@ -88,7 +88,6 @@ var CardData=cc.Class({
  }
 
 });
-
 //-------------------------------------------class for card UI-------------------------//
 var CardUI=cc.Class({
    name:"CardUI",
@@ -255,8 +254,8 @@ var DecksData = cc.Class({
         }
     },
 
-
     GenerateRandomBigBusinessCard(_isOwner, _randomValue, _isBot = false) {
+        BigBusinessData = null;
         this.IsBotTurn = _isBot;
         this.SpacesType = EnumSpaceType.BigBusiness;
         this.isOwner = _isOwner;
@@ -266,8 +265,11 @@ var DecksData = cc.Class({
         if (this.BigBusiness[this.SelectedCardIndex].HasButton)
             this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.BigBusiness[this.SelectedCardIndex].ButtonName;
 
+        if (this.BigBusiness[this.SelectedCardIndex].HasTwoButtons)
+            this.MainUI.InteractionTwoButtonsNode.children[0].children[0].getComponent(cc.Label).string = this.BigBusiness[this.SelectedCardIndex].SecondButtonName;
+        
         this.ShowCardInfo(this.BigBusiness[this.SelectedCardIndex].Description, true);
-        this.ToggleButtons(_isOwner, this.BigBusiness[this.SelectedCardIndex].HasButton, _isBot);
+        this.ToggleButtons(_isOwner, this.BigBusiness[this.SelectedCardIndex].HasButton, _isBot,this.BigBusiness[this.SelectedCardIndex].HasTwoButtons);
 
         if (_isBot) {
             this.CardFuntionalityButton();
@@ -285,8 +287,11 @@ var DecksData = cc.Class({
         if (this.Marketing[this.SelectedCardIndex].HasButton)
             this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = this.Marketing[this.SelectedCardIndex].ButtonName;
     
+        if (this.Marketing[this.SelectedCardIndex].HasTwoButtons)
+            this.MainUI.InteractionTwoButtonsNode.children[0].children[0].getComponent(cc.Label).string = this.Marketing[this.SelectedCardIndex].SecondButtonName;
+        
         this.ShowCardInfo(this.Marketing[this.SelectedCardIndex].Description, true);
-        this.ToggleButtons(_isOwner, this.Marketing[this.SelectedCardIndex].HasButton, _isBot);
+        this.ToggleButtons(_isOwner, this.Marketing[this.SelectedCardIndex].HasButton, _isBot,this.Marketing[this.SelectedCardIndex].HasTwoButtons);
 
         if (_isBot) {
             this.CardFuntionalityButton();
@@ -443,7 +448,10 @@ var DecksData = cc.Class({
 
     CardFuntionalityButton(event=null,_type=0) {
         if (this.SpacesType == EnumSpaceType.BigBusiness) {
-            this.BigBusinessCardFunctionality(this.CardSelected);
+            if (BigBusinessData == null)
+                this.BigBusinessCardFunctionality(this.CardSelected,true,_type);
+            else
+                this.BigBusinessCardFunctionality(this.CardSelected,false,_type);
         } else if (this.SpacesType == EnumSpaceType.Losses) {
             if(LossesData==null)
                 this.LossesCardFunctionality(this.CardSelected, true, _type);
@@ -532,6 +540,7 @@ var DecksData = cc.Class({
         switch (_id) {
             case "1"://receive 20000$ gift to payoff loan
                 console.log(this.BigBusiness[Index].Description);
+                BigBusinessData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
                 var _result = this.CheckLoan();
@@ -553,10 +562,11 @@ var DecksData = cc.Class({
                 }
 
                 break;
-            case "2": //hire lawyer
+            case "2"://hire lawyer
                 console.log(this.BigBusiness[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                BigBusinessData = null;
 
                 if (_manager.PlayerGameInfo[_playerIndex].LawyerStatus) {
                     this.CompleteTurnWithToast("You have already hired laywer, turn will skip now.", 1800);
@@ -567,22 +577,134 @@ var DecksData = cc.Class({
                 }
 
                 break;
-            case "3":
+            case "3"://You do a Trade Show for one of your businesses and get some new clients. Choose one of your businesses and roll a PayDay roll right now.
                 console.log(this.BigBusiness[Index].Description);
+                BigBusinessData = null;
+                if (!this.IsBotTurn) {
+                    this.ShowCardInfo("", false);
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableManipilationScreen__BusinessManipulationUISetup(true);
+                } else {
+                    setTimeout(() => {
+                        this.ShowCardInfo("", false);
+                    }, 2400);
+
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableManipilationScreen__BusinessManipulationUISetup(true,true);
+                }
                 break;
-            case "4":
+            case "4"://A friend gives you a suggestion on a stock to buy. Place your investment amount on the table and roll. The result, multiplied by $1,000, is the amount of each share of stock. You can buy this stock now if you would like.
                 console.log(this.BigBusiness[Index].Description);
+                BigBusinessData = null;
+                if (!this.IsBotTurn) {
+                    this.ShowCardInfo("", false);
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnStockDiceClicked_TurnDecision(null,true);
+                } else {
+                    this.CompleteTurnWithToast("", 1200);
+                }
                 break;
-            case "5":
+            case "5"://You reserve a private Yacht for a week long vacation. Roll both die, multiply the result by $3,000. Pay the Bank your vacation cost and lose your next turn basking in your private sun.
                 console.log(this.BigBusiness[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _diceResult;
+                var _multiplier = 3000;
+                var _result;
+
+                if (_hasTwoScreens)
+                {
+                    _diceResult = _manager.RollTwoDices();
+                    _result = _multiplier * _diceResult;
+                    BigBusinessData = { Data: { result: _result, Dice: _diceResult } };
+
+                   if (!this.IsBotTurn) {
+                       this.ShowCardInfo("\n" + "Dice Roll Result : " + _diceResult + "\n" + "\n" +
+                           "Total Cost Calculated : " + _diceResult + " * " + _multiplier + " = $" + _result, true);
+
+                       this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+                       this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+                   } else
+                   {
+                       this.CardFuntionalityButton();
+                   }
+                }
+                else
+                {
+                    _diceResult = BigBusinessData.Data.Dice;
+                    _result = BigBusinessData.Data.result;
+
+                    if (_manager.PlayerGameInfo[_playerIndex].Cash >= _result)
+                    {
+                        _manager.PlayerGameInfo[_playerIndex].Cash -= _result;
+                        _manager.ToggleSkipNextTurn(true);
+                        this.CompleteTurnWithToast("Cost $"+_result+" has been successfully paid, you will also lose your next turn, remaining cash $"+_manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+                        BigBusinessData = null;
+                    }else {
+                        console.log("not enough cash");
+                        if (!this.IsBotTurn) {
+                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+                        } else
+                        {
+                            console.log("its bot and has no cash,skipping");
+                            BigBusinessData = null;
+                            this.CompleteTurnWithToast("", 1200);
+                        }
+                    }
+
+                }
                 break;
-            case "6":
+            case "6"://Your parents give you $20,000 towards starting a new business or investing in your current business. Choose which and play according to the game rules.
                 console.log(this.BigBusiness[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var CashGiven = 20000;
+                BigBusinessData = null;
+
+                if (!this.IsBotTurn) {
+                    if (_type == 0)//start new business
+                    {
+                        this.ShowCardInfo("", false);
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, CashGiven, false);
+                    } else if (_type == 1)//invest in existing business
+                    {
+                        this.ShowCardInfo("", false);
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonClicked_TurnDecision(null, true,CashGiven,false); 
+                    }
+                } else
+                {
+                    console.log("is bot, so skipping turn");
+                    this.CompleteTurnWithToast("", 1200);
+                }
                 break;
-            case "7":
+            case "7"://You inherit a business from your Father. Decide the type of business it is, what the name of the business is, whether it is a home-based or brick & mortar business and include it into your game play. Pay a $20,000 transfer fee. If you do not have $20,000 in cash, you cannot have the business.
                 console.log(this.BigBusiness[Index].Description);
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var CashCost = 20000;
+                BigBusinessData = null;
+
+                if (!this.IsBotTurn) {
+                    if (_type == 0)//pay amount
+                    {
+                        if (_manager.PlayerGameInfo[_playerIndex].Cash >= CashCost) {
+                            _manager.PlayerGameInfo[_playerIndex].Cash -= CashCost;
+                            this.ShowCardInfo("", false);
+                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, 0, true);
+                        }
+                        else
+                        {
+                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Not enough cash.");
+                        }
+                    } else if (_type == 1)//skip
+                    {
+                        this.CompleteTurnWithToast("Skipping...", 1400);
+                    }
+                } else
+                {
+                    console.log("is bot, so skipping turn");
+                    this.CompleteTurnWithToast("", 1200);
+                }
                 break;
             case "8"://double pay day on next pay day
+                BigBusinessData = null;
                 console.log(this.BigBusiness[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
@@ -591,27 +713,62 @@ var DecksData = cc.Class({
                 this.CompleteTurnWithToast("You will receive double profits on next payday.", 1800);
 
                 break;
-            case "9":
+            case "9"://You buy a television station and convince every player in the game to market on your station one time. You receive 50% of all the marketing dollars currently on the board. Round to the nearest $1,000 if needed.
                 console.log(this.BigBusiness[Index].Description);
+                BigBusinessData = null;
+                var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+                var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _amount = 0;
+                var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+                for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {
+                        _amount = _amount + _manager.PlayerGameInfo[index].MarketingAmount;
+                }
+
+                _amount = _amount / 2;
+                console.log("value: " + _amount);
+                _amount = Math.round(_amount / 1000) * 1000;
+
+                console.log("Rounded value: " + _amount);
+
+                _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
+
+                if (mode==2) {
+                    var _actorsArray = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+                    var _data = null;
+                    for (let index = 0; index < _actorsArray.length; index++) {
+                        _data = _actorsArray[index].customProperties.PlayerSessionData;
+                        _data.MarketingAmount = Math.round(_data.MarketingAmount/ 2);
+                        _actorsArray[index].setCustomProperty("PlayerSessionData", _data);
+                    }
+
+                    console.log(_actorsArray);
+                } else
+                {
+                    for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {
+                        _manager.PlayerGameInfo[index].MarketingAmount =Math.round(_manager.PlayerGameInfo[index].MarketingAmount/ 2);
+                    }
+                }
+
+                this.CompleteTurnWithToast("Cash amount $"+_amount+" has successfully added, cash balance becomes $"+_manager.PlayerGameInfo[_playerIndex].Cash,4000);
+
                 break;
             case "10":
                 console.log(this.BigBusiness[Index].Description);
                 break;
             case "11"://roll dice twice, if result is >19 then take all money inside marketing.
                 console.log(this.BigBusiness[Index].Description);
+                BigBusinessData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
-             
+                var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+                
                 var Dice1Result = _manager.RollTwoDices();
                 var Dice2Result = _manager.RollTwoDices();
-
-                //  var Dice1Result=12;
-                //  var Dice2Result=12;
 
                 var TotalResult = Dice1Result + Dice2Result;
 
                 if (TotalResult >= 19) {
-                    var _mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
                     var _amount = 0;
                     for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {
                         _amount = _amount + _manager.PlayerGameInfo[index].MarketingAmount;
@@ -620,23 +777,30 @@ var DecksData = cc.Class({
                     _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
                     this.CompleteTurnWithToast("Dice 1 Result: " + Dice1Result + "\n" + "\n" +
                         "Dice 2 Result: " + Dice2Result + "\n" + "\n" +
-                        "Total: " + TotalResult + "\n" + "\n" + "\n" +
+                        "Total: " + TotalResult + "\n" + "\n" +
                         "Amount $" + _amount + " has successfully added in your cash from marketing amount on table."
                         , 4000);
 
 
-                    if (_mode == 2) {
+                    if (mode==2) {
                         var _actorsArray = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
-
-                        for (let index = 0; index < _actorsArray.length; index++) {
-                            _actorsArray[index].customProperties.PlayerSessionData.MarketingAmount = 0;
+                        var _data = null;
+                        for (let index = 0; index < _actorsArray.length; index++) {    
+                            _data = _actorsArray[index].customProperties.PlayerSessionData;
+                            _data.MarketingAmount = 0;
+                            _actorsArray[index].setCustomProperty("PlayerSessionData", _data);
+                        }
+                    } else
+                    {
+                        for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {    
+                            _manager.PlayerGameInfo[index].MarketingAmount = 0;
                         }
                     }
                 }
                 else {
                     this.CompleteTurnWithToast("Dice 1 Result: " + Dice1Result + "\n" + "\n" +
                         "Dice 2 Result: " + Dice2Result + "\n" + "\n" +
-                        "Total: " + TotalResult + "\n" + "\n" + "\n" +
+                        "Total: " + TotalResult + "\n" + "\n" +
                         "You ran out of luck, turn will skip now"
                         , 4000);
                 }
@@ -657,7 +821,6 @@ var DecksData = cc.Class({
             default:
                 break;
         }
-
     },
 
     MarketingCardFunctionality(_id, _hasTwoScreens = false,_type=0) {
@@ -988,7 +1151,6 @@ var DecksData = cc.Class({
             default:
                 break;
         }
-
     },
 
     LossesCardFunctionality(_id, _hasTwoScreens = false,_type=0)
@@ -1421,7 +1583,6 @@ var DecksData = cc.Class({
           default:
              break;
        }
-
     },
 
     WildCardFunctionality(_id, _hasTwoScreens = false,_type=0)
@@ -1630,7 +1791,6 @@ var DecksData = cc.Class({
           default:
              break;
        }
-
     },
 
     InvestFunctionality()
@@ -1638,29 +1798,35 @@ var DecksData = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableInvest_InvestSetupUI(true);
         this.ShowCardInfo("",false);
     },
+
     PayDayFunctionality()
     {
 
     },
+
     DoublePayDayFunctionality()
     {
 
     },
+
     OneQuestionFunctionality()
     {
         GamePlayReferenceManager.Instance.Get_GameManager().OneQuestionScreen_Space_OneQuestion(true);
         this.ShowCardInfo("",false);
     },
+
     SellFunctionality()
     {
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSellScreen__SellBusinessUISetup(true);
         this.ShowCardInfo("",false);
     },
+
     BuyOrSellFunctionality()
     {
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableBuyOrSell_BuyOrSellSetupUI(true);
         this.ShowCardInfo("",false);
     },
+
     GoBackFunctionality()
     {
         GamePlayReferenceManager.Instance.Get_GameManager().GoBackSpaces_spaceFunctionality();

@@ -93,11 +93,28 @@ var BusinessDetail = cc.Class({
       type: cc.Integer,
       serializable: true,
     },
+
+    SelectBusinessForPayDayRoll: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+
+    SelectBusinessButtonNode: {
+      default: null,
+      type: cc.Node,
+      serializable: true,
+    },
   },
 
   CheckReferences() {
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null)
       GamePlayReferenceManager = require("GamePlayReferenceManager");
+  },
+
+  SetSelectBusinessForPayDayRoll(_state)
+  {
+    this.SelectBusinessForPayDayRoll = _state;
   },
 
   SetBusinessMode(_val) {
@@ -335,6 +352,32 @@ var BusinessDetail = cc.Class({
     } else
     {
       console.log("game being played by bot");
+    }
+  },
+
+  SelectBusinessforPayDay()
+  {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+    var _tempData = _manager.PlayerGameInfo[_playerIndex];
+    if (this.BusinessMode == 1) {
+
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreen__SellBusinessUISetup();
+
+      if (_manager.PlayerGameInfo[_playerIndex].IsBot)
+        _manager.ProcessPayDay_TurnDecision(false, true, true,this.BusinessIndex, 1, 0, 0);
+      else
+        _manager.ProcessPayDay_TurnDecision(false, false, true,this.BusinessIndex, 1, 0, 0);
+      
+    } else if (this.BusinessMode == 2) {
+
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreen__SellBusinessUISetup();
+
+      var _locations = _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.length;
+      if (_manager.PlayerGameInfo[_playerIndex].IsBot)
+        _manager.ProcessPayDay_TurnDecision(false, true, true,this.BusinessIndex, 0, 1, _locations);
+      else
+        _manager.ProcessPayDay_TurnDecision(false, false, true,this.BusinessIndex, 0, 1, _locations);
     }
   },
 });
