@@ -3,6 +3,10 @@ var LossesData = null;
 var MarketingData = null;
 var WildCardData = null;
 var BigBusinessData = null;
+var TimeoutRef;
+var CompletionWindowTime = 8000;
+var LongMessageTime = 5000;
+
 //-------------------------------------------Spaces Data-------------------------//
 var EnumSpaceType = cc.Enum({
     None:0,
@@ -135,7 +139,22 @@ var CardUI=cc.Class({
           type: cc.Node,
           default: null,
           serializable: true,
-          tooltip:"three interaction Button reference for node"},
+           tooltip: "three interaction Button reference for node"
+       },
+       CompletionToastNode:
+       {
+          displayName:"CompletionToastNode",
+          type: cc.Node,
+          default: null,
+          serializable: true,
+          tooltip:"node reference for compleion toast node"},
+       CompletionToastLabel:
+       {
+          displayName:"CompletionToastLabel",
+          type: cc.Label,
+          default: null,
+          serializable: true,
+          tooltip:"label reference for compleion toast node"},
 },
 
 ctor: function () { //constructor
@@ -509,12 +528,48 @@ var DecksData = cc.Class({
         return Result;
     },
 
-    CompleteTurnWithToast(_msg, _time) {
+    DoneButtonClicked()
+    {
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        this.ShowCardInfo("", false);
+        _manager.ResetCardDisplay();
+        _manager.RaiseEventTurnComplete();
+        clearTimeout(TimeoutRef);
+        this.CompletionWindow("", false, this.isOwner, false);
+        console.error("done clicked");
+    },
+
+    CompletionWindow(message,_state,_isOwner,_isBot)
+    {
+        if (!_isBot) {
+            if (_state) {
+                this.MainUI.CompletionToastNode.active = true;
+                this.MainUI.CompletionToastLabel.string = message;
+
+                if (_isOwner) {
+                    clearTimeout(TimeoutRef);
+                    TimeoutRef = setTimeout(() => {
+                        this.DoneButtonClicked();
+                    }, (CompletionWindowTime));
+                }
+            } else {
+                this.MainUI.CompletionToastLabel.string = "";
+                this.MainUI.CompletionToastNode.active = false;
+            }
+        } else { 
+            this.MainUI.CompletionToastLabel.string = "";
+            this.MainUI.CompletionToastNode.active = false;
+        }
+    },
+
+    CompleteTurnWithToast(_msg, _time,_changeTurn=true) {
         var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
         if (this.IsBotTurn) {
+            this.CompletionWindow("", false, false, true);
             console.log(_msg);
-            var _delay = this.getRandom(2500, 3500);
+            var _delay = this.getRandom(LongMessageTime, LongMessageTime+2000);
             setTimeout(() => {
                 this.ShowCardInfo("", false);
                 _manager.ResetCardDisplay();
@@ -522,14 +577,44 @@ var DecksData = cc.Class({
             }, (_delay));
         }
         else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg, _time);
+            if (_msg != "" && !_changeTurn) {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg, LongMessageTime, this.isOwner);
+            }
+            
             this.ShowCardInfo("", false);
 
-            setTimeout(() => {
-                this.ShowCardInfo("", false);
-                _manager.ResetCardDisplay();
-                _manager.RaiseEventTurnComplete();
-            }, (_time + 1000));
+            if (_changeTurn) {
+                if (this.isOwner) {
+                    this.CompletionWindow(_msg, true, true, this.IsBotTurn);
+                }
+                else {
+                    setTimeout(() => {
+                        this.ShowCardInfo("", false);
+                        _manager.ResetCardDisplay();
+                        _manager.RaiseEventTurnComplete();
+                    }, (LongMessageTime));
+                }
+            }
+        }
+    },
+
+    AssignSecondScreenData(_isBot,_isOwner,_hasButton,_msg,_LabelRef,_buttonName)
+    {
+        if (!_isBot) {
+            this.ShowCardInfo(_msg, true);
+     
+            _LabelRef.getComponent(cc.Label).string = _buttonName;
+            this.ToggleButtons(_isOwner, _hasButton, _isBot);
+
+            if (_isOwner) {
+                setTimeout(() => {
+                    this.DoneButtonClicked();
+                }, (15000));
+            }
+        }
+        else
+        {
+            this.CardFuntionalityButton();
         }
     },
 
@@ -540,41 +625,47 @@ var DecksData = cc.Class({
         switch (_id) {
             case "1"://receive 20000$ gift to payoff loan
                 console.log(this.BigBusiness[Index].Description);
-                BigBusinessData = null;
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
                 var _result = this.CheckLoan();
                 var IsLoanTaken = _result.x;
                 var _businessIndex = _result.y;
-
+                BigBusinessData = null;
+  
                 if (IsLoanTaken == 1) //means user has taken loan
-                {
-                    _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - 20000;
-                    if (_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount <= 0) {
-                        _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = 0;
-                        _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanTaken = false;
+                    {
+                        _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - 20000;
+                        if (_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount <= 0) {
+                            _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = 0;
+                            _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanTaken = false;
+                        }
+                        _cardInfo = "Loan amount of $20000 has been payed off.";
                     }
-
-                    this.CompleteTurnWithToast("Loan amount of $20000 has been payed off.", 1800);
+                    else {
+                        _cardInfo = "You have not taken any loan, turn will skip now.";
                 }
-                else {
-                    this.CompleteTurnWithToast("You have not taken any loan, turn will skip now.", 1800);
-                }
+                
+                this.CompleteTurnWithToast(_cardInfo, 5000, true);
 
                 break;
             case "2"://hire lawyer
                 console.log(this.BigBusiness[Index].Description);
                 var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
                 var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+                var _cardInfo = "";
                 BigBusinessData = null;
 
-                if (_manager.PlayerGameInfo[_playerIndex].LawyerStatus) {
-                    this.CompleteTurnWithToast("You have already hired laywer, turn will skip now.", 1800);
-                }
-                else {
-                    _manager.PlayerGameInfo[_playerIndex].LawyerStatus = true;
-                    this.CompleteTurnWithToast("You have successfully hired a lawyer.", 1800);
-                }
+                    if (_manager.PlayerGameInfo[_playerIndex].LawyerStatus) {
+                        _cardInfo = "You have already hired laywer, turn will skip now.";
+                    }
+                    else {
+                        _manager.PlayerGameInfo[_playerIndex].LawyerStatus = true;
+                        _cardInfo = "You have successfully hired a lawyer.";
+                    }
+                
+                this.CompleteTurnWithToast(_cardInfo, 5000, true);
+
+              
 
                 break;
             case "3"://You do a Trade Show for one of your businesses and get some new clients. Choose one of your businesses and roll a PayDay roll right now.
@@ -691,7 +782,7 @@ var DecksData = cc.Class({
                         }
                         else
                         {
-                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Not enough cash.");
+                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Not enough cash.", 300, this.isOwner);
                         }
                     } else if (_type == 1)//skip
                     {

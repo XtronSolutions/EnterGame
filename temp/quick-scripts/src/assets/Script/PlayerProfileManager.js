@@ -44,6 +44,12 @@ var PlayerInfoUI = cc.Class({
       serializable: true,
       toolTip: "Reference of the player stock balance label of info player UI"
     },
+    LoanBalanceLabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true,
+      toolTip: "Reference of the player loan balance label of info player UI"
+    },
     PartnershipStatusLabel: {
       "default": null,
       type: cc.Label,
@@ -67,6 +73,26 @@ var PlayerInfoUI = cc.Class({
       type: cc.Prefab,
       serializable: true,
       toolTip: "Reference of the business detail prefab of info player UI"
+    },
+    CashLabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true
+    },
+    MarketingLabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true
+    },
+    GoldLabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true
+    },
+    StocksLabel: {
+      "default": null,
+      type: cc.Label,
+      serializable: true
     }
   }
 });
@@ -156,12 +182,34 @@ var PlayerProfileManager = cc.Class({
   ToggleTextighlighter: function ToggleTextighlighter(_state) {
     this.PlayerTurnHighlighterNode.active = _state;
   },
+  RefreshData: function RefreshData(_cash, _marketing, _gold, _stocks) {
+    this.CheckReferences();
+
+    if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length > 0 && this.PlayerIndex < GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length) {
+      this.PlayerInfoMainUI.CashLabel.string = "Cash: $" + _cash;
+      this.PlayerInfoMainUI.MarketingLabel.string = "Marketing: $" + _marketing;
+      this.PlayerInfoMainUI.GoldLabel.string = "Gold: " + _gold;
+      this.PlayerInfoMainUI.StocksLabel.string = "Stocks: " + _stocks;
+    }
+  },
+  RefreshDataAutomatically: function RefreshDataAutomatically() {
+    this.CheckReferences();
+
+    if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length > 0 && this.PlayerIndex < GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length) {
+      var _tempData = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[this.PlayerIndex];
+      this.PlayerInfoMainUI.CashLabel.string = "Cash: $" + _tempData.Cash;
+      this.PlayerInfoMainUI.MarketingLabel.string = "Marketing: $" + _tempData.MarketingAmount;
+      this.PlayerInfoMainUI.GoldLabel.string = "Gold: " + _tempData.GoldCount;
+      this.PlayerInfoMainUI.StocksLabel.string = "Stocks: " + _tempData.StockCount;
+    }
+  },
   SeeProfileData: function SeeProfileData() {
     if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
       //only for real players
       GamePlayReferenceManager.Instance.Get_GameManager().SyncDataToPlayerGameInfo(0);
     }
 
+    var _amount = 0;
     this.PlayerInfoScreen.active = true;
     this.CheckReferences();
     businessDetailNodes = [];
@@ -169,10 +217,11 @@ var PlayerProfileManager = cc.Class({
     this.PlayerInfoMainUI.PlayerName.string = _tempData.PlayerName;
     this.PlayerInfoMainUI.PlayerCash.string = _tempData.Cash;
     this.PlayerInfoMainUI.PlayerMarketingAmount.string = _tempData.MarketingAmount;
-    if (_tempData.LawyerStatus) this.PlayerInfoMainUI.LawyerLabel.string = "YES";else this.PlayerInfoMainUI.LawyerLabel.string = "NO";
-    this.PlayerInfoMainUI.PartnershipStatusLabel.string = "N/A";
+    if (_tempData.LawyerStatus) this.PlayerInfoMainUI.LawyerLabel.string = "YES";else this.PlayerInfoMainUI.LawyerLabel.string = "NO"; //this.PlayerInfoMainUI.PartnershipStatusLabel.string="N/A";
+
     this.PlayerInfoMainUI.GoldBalanceLabel.string = _tempData.GoldCount;
-    this.PlayerInfoMainUI.StockBalanceLabel.string = _tempData.StockCount; //this.PlayerInfoMainUI.StockBalanceLabel.string=_tempData.NoOfStocks.length;
+    this.PlayerInfoMainUI.StockBalanceLabel.string = _tempData.StockCount;
+    this.RefreshData(_tempData.Cash, _tempData.MarketingAmount, _tempData.GoldCount, _tempData.StockCount); //this.PlayerInfoMainUI.StockBalanceLabel.string=_tempData.NoOfStocks.length;
 
     this.PlayerInfoMainUI.BusinessNumberLabel.string = "No of Businesses : " + _tempData.NoOfBusiness.length;
 
@@ -183,10 +232,17 @@ var PlayerProfileManager = cc.Class({
       node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
       node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
       if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) node.getComponent('BusinessDetail').SetMode("Home Based");else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) node.getComponent('BusinessDetail').SetMode("Brick & Mortar");
-      node.getComponent('BusinessDetail').SetBalance(_tempData.NoOfBusiness[index].Amount);
+
+      if (_tempData.NoOfBusiness[index].LoanTaken) {
+        node.getComponent('BusinessDetail').SetBalance(_tempData.NoOfBusiness[index].LoanAmount);
+        _amount = _tempData.NoOfBusiness[index].LoanAmount;
+      }
+
       node.getComponent('BusinessDetail').SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
       businessDetailNodes.push(node);
     }
+
+    this.PlayerInfoMainUI.LoanBalanceLabel.string = _amount;
   },
   ExitProfileData: function ExitProfileData() {
     for (var index = 0; index < businessDetailNodes.length; index++) {

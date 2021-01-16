@@ -60,8 +60,8 @@
     "relativePath": "Texture\\Gameplay\\Start.png"
   },
   "b69dd489-a312-47c1-b392-19a3b8037220": {
-    "asset": 1609797401977,
-    "meta": 1609797436615,
+    "asset": 1610568127842,
+    "meta": 1610738910056,
     "relativePath": "Prefabs"
   },
   "4cc083b6-481f-4ba0-ac6d-db6d5fbc2f8a": {
@@ -845,8 +845,8 @@
     "relativePath": "Prefabs\\BoardSpace.prefab"
   },
   "dc0ad2fa-f76b-4768-b55d-67c4b2a7fa95": {
-    "asset": 1609824182185,
-    "meta": 1609824182208,
+    "asset": 1610760562970,
+    "meta": 1610760562991,
     "relativePath": "Prefabs\\BusinessDetailPrefab.prefab"
   },
   "7fbd36b5-7aa0-4e31-a543-f8980939d85a": {
@@ -939,34 +939,34 @@
     "meta": 1610588068016,
     "relativePath": "Script\\ExpandBusinessHandler.js"
   },
-  "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
-    "asset": 1610589616902,
-    "meta": 1610589701675,
-    "relativePath": "Script\\GameplayUIManager.js"
-  },
   "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1610590299570,
-    "meta": 1610590299833,
+    "asset": 1610760572112,
+    "meta": 1610760572357,
     "relativePath": "Scene\\GamePlay.fire"
   },
   "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
-    "asset": 1610593892325,
-    "meta": 1610593892357,
+    "asset": 1610760758658,
+    "meta": 1610760758697,
     "relativePath": "Scene\\MainMenu.fire"
   },
-  "5bf9b335-95ee-48cc-8448-694e673205eb": {
-    "asset": 1610592878227,
-    "meta": 1610592892807,
-    "relativePath": "Script\\PlayerProfileManager.js"
-  },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
-    "asset": 1610593879914,
-    "meta": 1610593882703,
+    "asset": 1610748632065,
+    "meta": 1610748939176,
     "relativePath": "Script\\DecksData.js"
   },
   "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1610593842843,
-    "meta": 1610593883184,
+    "asset": 1610759209662,
+    "meta": 1610759345175,
     "relativePath": "Script\\GameManager.js"
+  },
+  "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
+    "asset": 1610759343627,
+    "meta": 1610759345778,
+    "relativePath": "Script\\GameplayUIManager.js"
+  },
+  "5bf9b335-95ee-48cc-8448-694e673205eb": {
+    "asset": 1610760748260,
+    "meta": 1610760750320,
+    "relativePath": "Script\\PlayerProfileManager.js"
   }
 }

@@ -22,7 +22,11 @@ var TurnOverForInvest = false;
 var BusinessSetupCardFunctionality = false;
 var GivenCashBusiness = 0;
 var StartAnyBusinessWithoutCash = false;
-var PreviousCash = 0; //-------------------------------------------enumeration for amount of loan-------------------------//
+var PreviousCash = 0;
+var TimeoutRef;
+var CompletionWindowTime = 8000;
+var LongMessageTime = 5000;
+var ShortMessageTime = 2500; //-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -850,6 +854,12 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "label reference for pop up screen"
     },
+    PopUpUIButton: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for pop up screen"
+    },
     BusinessSetupNode: {
       "default": null,
       type: cc.Node,
@@ -1042,6 +1052,7 @@ var GameplayUIManager = cc.Class({
 
     PlayerDataIntance = new GameManager.PlayerData();
     PlayerBusinessDataIntance = new GameManager.BusinessInfo();
+    PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.None;
 
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
@@ -1113,7 +1124,7 @@ var GameplayUIManager = cc.Class({
     this.BusinessSetupData.BusinessNameLabel.string = "";
     this.BusinessSetupData.BusinessNameTextUI = "";
     this.BusinessSetupData.BusinessTypeTextUI = "";
-    PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.none;
+    PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.None;
   },
   OnHomeBasedSelected_BusinessSetup: function OnHomeBasedSelected_BusinessSetup() {
     this.BusinessSetupData.HomeBasedNodeUI.children[0].children[1].active = true;
@@ -1143,10 +1154,10 @@ var GameplayUIManager = cc.Class({
       }
 
       if (_loanTaken) {
-        this.ShowToast("You have already taken loan of $" + PlayerDataIntance.NoOfBusiness[_businessIndex].LoanAmount);
+        this.ShowToast("You have already taken loan of $" + PlayerDataIntance.NoOfBusiness[_businessIndex].LoanAmount, LongMessageTime);
       } else {
         if (PlayerDataIntance.Cash >= amount) {
-          this.ShowToast("You do not need loan, you have enough cash to buy current selected business.");
+          this.ShowToast("You do not need loan, you have enough cash to buy current selected business.", LongMessageTime);
         } else {
           this.BusinessSetupData.LoanSetupNode.active = true;
           RequiredCash = Math.abs(parseInt(PlayerDataIntance.Cash) - amount);
@@ -1226,7 +1237,7 @@ var GameplayUIManager = cc.Class({
   },
   PurchaseBusiness: function PurchaseBusiness(_amount, _businessName, _isHomeBased) {
     if (PlayerDataIntance.Cash < _amount && !StartAnyBusinessWithoutCash) {
-      this.ShowToast("You have not enough cash to buy this " + _businessName + " business.");
+      this.ShowToast("You have not enough cash to buy this " + _businessName + " business.", LongMessageTime);
     } else {
       if (_isHomeBased) {
         if (PlayerDataIntance.HomeBasedAmount < 3) {
@@ -1260,7 +1271,7 @@ var GameplayUIManager = cc.Class({
         PlayerBusinessDataIntance.LoanTaken = false;
         PlayerDataIntance.Cash = PlayerDataIntance.Cash - PlayerBusinessDataIntance.LoanAmount;
         PlayerBusinessDataIntance.LoanAmount = 0;
-        this.ShowToast("Reverting back loan amount.", 500);
+        this.ShowToast("Reverting back loan amount.");
       }
     } else {
       PlayerDataIntance.Cash = PreviousCash;
@@ -1347,6 +1358,11 @@ var GameplayUIManager = cc.Class({
   PayAmountToPlayGame: function PayAmountToPlayGame() {
     this.StartGame = false;
     if (PlayerBusinessDataIntance.BusinessTypeDescription == "") this.ShowToast("please write a business type.");else if (PlayerBusinessDataIntance.BusinessName == "") this.ShowToast("please write a business name.");else {
+      if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.None || PlayerBusinessDataIntance.BusinessType == undefined) {
+        this.ShowToast("please select a business");
+        return;
+      }
+
       if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.HomeBased) //if selected business is homebassed
         this.PurchaseBusiness(10000, "home", true);else if (PlayerBusinessDataIntance.BusinessType == GameManager.EnumBusinessType.brickAndmortar) //if selected business is brick and mortar
         this.PurchaseBusiness(50000, "brick and mortar", false);
@@ -1402,7 +1418,7 @@ var GameplayUIManager = cc.Class({
       if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash >= this.marketingAmount) {
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - this.marketingAmount;
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount + this.marketingAmount;
-        this.ShowToast("you successfully marketed amount of $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount + " , remaining cash is $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + ".");
+        this.ShowToast("you successfully marketed amount of $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount + " , remaining cash is $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + ".", LongMessageTime);
         this.UpdateCash_TurnDecision(); //reseting marketing label and its holding variable
 
         this.TurnDecisionSetupUI.MarketingEditBox.string = "";
@@ -1427,7 +1443,7 @@ var GameplayUIManager = cc.Class({
         TempHiringLawyer = true;
         console.log(TempHiringLawyer);
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - 5000;
-        this.ShowToast("you have successfully hired a lawyer, remaining cash is $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + ".");
+        this.ShowToast("you have successfully hired a lawyer, remaining cash is $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + ".", LongMessageTime);
         this.UpdateCash_TurnDecision();
       } else {
         this.ShowToast("sorry, you dont have enough money to hire a lawyer.");
@@ -1465,7 +1481,7 @@ var GameplayUIManager = cc.Class({
     var generatedLength = GamePlayReferenceManager.Instance.Get_GameManager().GenerateExpandBusiness_Prefabs_TurnDecision(BusinessSetupCardFunctionality, GivenCashBusiness, StartAnyBusinessWithoutCash);
 
     if (generatedLength == 0) {
-      this.ShowToast("You have no brick and mortar business to expand.", 1550);
+      this.ShowToast("You have no brick and mortar business to expand.");
       setTimeout(function () {
         _this2.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
       }, 1600);
@@ -1509,7 +1525,7 @@ var GameplayUIManager = cc.Class({
       OnceOrShare = DiceResult * 1000;
       this.AssignData_InvestSell("Invest In GOLD", DiceResult, "Each Ounce of GOLD price is:", OnceOrShare + "/ounce", "Enter the number of ounce of GOLD you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
     } else {
-      this.ShowToast("You can invest in gold one time during turn.", 800);
+      this.ShowToast("You can invest in gold one time during turn.");
     }
   },
   OnStockBusinessNameChanged_TurnDecision: function OnStockBusinessNameChanged_TurnDecision(name) {
@@ -1544,7 +1560,7 @@ var GameplayUIManager = cc.Class({
         this.AssignData_InvestSell("Invest in Stock", DiceResult, "Each Share of stock price is:", OnceOrShare + "/share", "Enter the number of shares of stock you want to BUY", "Total Buying Amount:", OnceOrShare + "*0=0", "BUY", this.InvestSellSetupUI.InvestState);
       }
     } else {
-      this.ShowToast("You can invest in stocks one time during turn.", 800);
+      this.ShowToast("You can invest in stocks one time during turn.");
     }
   },
   OnSellGoldClicked_TurnDecision: function OnSellGoldClicked_TurnDecision() {
@@ -1563,7 +1579,7 @@ var GameplayUIManager = cc.Class({
         this.ShowToast("you have not purchased any GOLD ounces, please buy them.");
       }
     } else {
-      this.ShowToast("You can sell gold one time during turn.", 800);
+      this.ShowToast("You can sell gold one time during turn.");
     }
   },
   OnSellStockClicked_TurnDecision: function OnSellStockClicked_TurnDecision() {
@@ -1582,7 +1598,7 @@ var GameplayUIManager = cc.Class({
         this.ShowToast("you have not purchased any shares, please buy them.");
       }
     } else {
-      this.ShowToast("You can sell stocks one time during turn.", 800);
+      this.ShowToast("You can sell stocks one time during turn.");
     }
   },
   OnPartnershipClicked_TurnDecision: function OnPartnershipClicked_TurnDecision() {
@@ -1730,9 +1746,9 @@ var GameplayUIManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", _manager.PlayerGameInfo[myIndex]);
         this.RaiseEventDecisionAnswer_PartnershipSetup(true, _payAmount, false, _manager.PlayerGameInfo[myIndex].PlayerUID, _manager.PlayerGameInfo[myIndex], _SelectedBusinessIndex);
         this.ToggleDecisionScreen_PartnerShipSetup(false);
-        this.ShowToast("congratulations! you have started business partnership", 1800);
+        this.ShowToast("congratulations! you have started business partnership");
       } else {
-        this.ShowToast("Not enough cash.", 500);
+        this.ShowToast("Not enough cash.");
       }
     } else {
       this.ShowToast("Offer has been accepted by other player.");
@@ -1752,10 +1768,10 @@ var GameplayUIManager = cc.Class({
     if (PartnerShipOfferReceived == true) {
       this.RaiseEventDecisionAnswer_PartnershipSetup(false, 0, true, _manager.PlayerGameInfo[myIndex].PlayerUID, _manager.PlayerGameInfo[myIndex], _SelectedBusinessIndex);
       this.ToggleDecisionScreen_PartnerShipSetup(false);
-      this.ShowToast("you have cancelled the offer.", 1200);
+      this.ShowToast("you have cancelled the offer.");
     } else {
       this.ToggleDecisionScreen_PartnerShipSetup(false);
-      this.ShowToast("you have cancelled the offer.", 1200);
+      this.ShowToast("you have cancelled the offer.");
     }
   },
   RaiseEventDecisionAnswer_PartnershipSetup: function RaiseEventDecisionAnswer_PartnershipSetup(_isAccepted, _payment, _isCancelled, _uID, _data, _businessIndex) {
@@ -1820,7 +1836,7 @@ var GameplayUIManager = cc.Class({
           _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].PartnerName = _playerData.PlayerName;
           GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", _manager.PlayerGameInfo[_playerIndex]);
           console.log("offer accepted");
-          this.ShowToast("your partnership offer has been accepted by " + _playerData.PlayerName + ", cash $" + _cash + " has been added to your account.", 2800);
+          this.ShowToast("your partnership offer has been accepted by " + _playerData.PlayerName + ", cash $" + _cash + " has been added to your account.", LongMessageTime);
           this.UpdateCash_TurnDecision();
         } else if (_cancelled) {
           if (CancelledID.includes(_uid) == false) CancelledID.push(_uid);
@@ -1829,7 +1845,7 @@ var GameplayUIManager = cc.Class({
           if (CancelledID.length == _manager.PlayerGameInfo.length - 1) {
             this.ToggleScreen_PartnerShipSetup(false);
             this.ToggleWaitingScreen_PartnerShipSetup(false);
-            this.ShowToast("your partnership offer has been cancelled by all other users.", 2800);
+            this.ShowToast("your partnership offer has been cancelled by all other users.");
           }
 
           console.log("offer rejected");
@@ -1837,7 +1853,7 @@ var GameplayUIManager = cc.Class({
       } else {
         if (_accepted) {
           PartnerShipOfferReceived = false;
-          this.ShowToast("Offer has been accepted by other player.", 1800);
+          this.ShowToast("Offer has been accepted by other player.");
           this.ToggleDecisionScreen_PartnerShipSetup(false);
         } else if (_cancelled) {}
       }
@@ -1903,7 +1919,7 @@ var GameplayUIManager = cc.Class({
         if (_TotalAmount <= GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash) {
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash -= _TotalAmount;
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount += _amount;
-          this.ShowToast("You have successfully bought " + _amount + " ounces of GOLD", 1400);
+          this.ShowToast("You have successfully bought " + _amount + " ounces of GOLD", LongMessageTime);
           setTimeout(function () {
             _this3.ExitButton_InvestSell();
           }, 1500);
@@ -1921,7 +1937,7 @@ var GameplayUIManager = cc.Class({
 
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash += _TotalAmount;
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount -= _amount;
-          this.ShowToast("You have successfully sold " + _amount + " ounces of GOLD for  $" + _TotalAmount, 1400);
+          this.ShowToast("You have successfully sold " + _amount + " ounces of GOLD for  $" + _TotalAmount, LongMessageTime);
           setTimeout(function () {
             _this3.ExitButton_InvestSell();
           }, 1500);
@@ -1929,7 +1945,7 @@ var GameplayUIManager = cc.Class({
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
           EnterBuySellAmount = "";
           this.InvestSellSetupUI.AmountEditBox.string = "";
-          this.ShowToast("you don't have enough GOLD ounces, you own " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount + " of GOLD ounces");
+          this.ShowToast("you don't have enough GOLD ounces, you own " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].GoldCount + " of GOLD ounces", LongMessageTime);
         }
       } else if (this.InvestSellSetupUI.InvestState == InvestEnum.StockInvest) {
         var _amount = parseInt(EnterBuySellAmount);
@@ -1940,7 +1956,7 @@ var GameplayUIManager = cc.Class({
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash -= _TotalAmount;
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount += _amount; //can add multiple stocks with business name in object if required
 
-          this.ShowToast("You have successfully bought " + _amount + " shares of business " + StockBusinessName, 1400);
+          this.ShowToast("You have successfully bought " + _amount + " shares of business " + StockBusinessName, LongMessageTime);
           setTimeout(function () {
             _this3.ExitButton_InvestSell();
           }, 1500);
@@ -1958,7 +1974,7 @@ var GameplayUIManager = cc.Class({
 
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash += _TotalAmount;
           GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount -= _amount;
-          this.ShowToast("You have successfully sold " + _amount + " shares of stock for  $" + _TotalAmount, 1400);
+          this.ShowToast("You have successfully sold " + _amount + " shares of stock for  $" + _TotalAmount, LongMessageTime);
           setTimeout(function () {
             _this3.ExitButton_InvestSell();
           }, 1500);
@@ -1966,7 +1982,7 @@ var GameplayUIManager = cc.Class({
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
           EnterBuySellAmount = "";
           this.InvestSellSetupUI.AmountEditBox.string = "";
-          this.ShowToast("you don't have enough stocks shares, you own " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount + " of stock shares");
+          this.ShowToast("you don't have enough stocks shares, you own " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].StockCount + " of stock shares", LongMessageTime);
         }
       }
     }
@@ -2208,7 +2224,7 @@ var GameplayUIManager = cc.Class({
       }
 
       if (_amountToBeAdjusted > 0) {
-        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", 2000);
+        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", LongMessageTime);
       } //partnership code
 
 
@@ -2290,7 +2306,7 @@ var GameplayUIManager = cc.Class({
       }
 
       if (_amountToBeAdjusted > 0) {
-        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", 2000);
+        this.ShowToast("you have partnership in some business, respective 50% profit of particular business will be shared.", LongMessageTime);
       }
 
       if (!_doublePayDay) TotalPayDayAmount = _amount * _dice * 2000 - _amountToBeAdjusted;else TotalPayDayAmount = 2 * (_amount * _dice) * 2000 - _amountToBeAdjusted;
@@ -2360,7 +2376,7 @@ var GameplayUIManager = cc.Class({
     this.UpdateCash_PayDay(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
 
     if (!this.IsBotTurn) {
-      this.ShowToast("Amount $" + TotalPayDayAmount + " has been added to your cash amount, Total Cash has become $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash, 1500);
+      this.ShowToast("Amount $" + TotalPayDayAmount + " has been added to your cash amount, Total Cash has become $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
       setTimeout(function () {
         _this5.ToggleResultPanelScreen_PayDay(false);
 
@@ -2373,7 +2389,7 @@ var GameplayUIManager = cc.Class({
     }
   },
   SkipLoanOneTime_PayDay: function SkipLoanOneTime_PayDay() {
-    this.ShowToast("You have skipped the loan payment, bank will call upon complete loan amount on next payday", 2000);
+    this.ShowToast("You have skipped the loan payment, bank will call upon complete loan amount on next payday");
 
     var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
@@ -2400,7 +2416,7 @@ var GameplayUIManager = cc.Class({
     var _this6 = this;
 
     //if bankrupted you can start new game
-    this.ShowToast("You will lose all progress and start new game from the start.", 3000);
+    this.ShowToast("You will lose all progress and start new game from the start.");
     setTimeout(function () {
       _this6.ExitLoanScreen_PayDay();
 
@@ -2735,17 +2751,63 @@ var GameplayUIManager = cc.Class({
     this.OneQuestionSetupUI.DecisionQuestionLabel.string = "Player has asked if " + _question + "\n" + "\n" + "*either answer question or pay $5000 to player whose asking question.";
   },
   //#endregion
-  ShowToast: function ShowToast(message, time) {
+  ShowToast: function ShowToast(message, time, _hasbutton) {
+    var _this7 = this;
+
     if (time === void 0) {
-      time = 2250;
+      time = ShortMessageTime;
+    }
+
+    if (_hasbutton === void 0) {
+      _hasbutton = true;
     }
 
     this.PopUpUI.active = true;
     this.PopUpUILabel.string = message;
     var SelfToast = this;
-    setTimeout(function () {
-      SelfToast.PopUpUI.active = false;
-    }, time);
+    var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+    if (mode == 1) //for bot mode only
+      {
+        if (GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length > 0 && GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber()].IsBot) {
+          this.PopUpUIButton.active = false;
+          setTimeout(function () {
+            SelfToast.PopUpUI.active = false;
+          }, time);
+        } else {
+          if (_hasbutton) {
+            this.PopUpUIButton.active = true;
+            clearTimeout(TimeoutRef);
+            TimeoutRef = setTimeout(function () {
+              _this7.CompleteToast();
+            }, CompletionWindowTime);
+          } else {
+            this.PopUpUIButton.active = false;
+            setTimeout(function () {
+              SelfToast.PopUpUI.active = false;
+            }, time);
+          }
+        }
+      } else //for real players
+      {
+        if (_hasbutton) {
+          this.PopUpUIButton.active = true;
+          clearTimeout(TimeoutRef);
+          TimeoutRef = setTimeout(function () {
+            _this7.CompleteToast();
+          }, CompletionWindowTime);
+        } else {
+          this.PopUpUIButton.active = false;
+          setTimeout(function () {
+            SelfToast.PopUpUI.active = false;
+          }, time);
+        }
+      }
+  },
+  CompleteToast: function CompleteToast() {
+    console.error("complete toast called");
+    this.PopUpUI.active = false;
+    clearTimeout(TimeoutRef);
   }
 });
 

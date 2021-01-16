@@ -1,6 +1,13 @@
 var _isTest = false;
 var _diceinput1 = "";
 var _diceinput2 = "";
+var PreviousDiceRoll1 = -1;
+var PreviousDiceRoll2 = -1;
+
+var PreviousDiceRoll3 = -1;
+var PreviousDiceRoll4 = -1;
+
+var PreviousDiceRoll5 = -1;
 
 //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
@@ -89,7 +96,6 @@ properties: {
 ctor: function () { //constructor
 }
 });
-
 //-------------------------------------------class for CardData-------------------------//
 var CardDataFunctionality = cc.Class({
     name: "CardDataFunctionality",
@@ -517,6 +523,7 @@ var GameManager=cc.Class({
                 }
                 else
                 {
+                    //this.EnablePlayerNodes();
                     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleLeaveRoomButton_SpectateModeUI(true);
                     GamePlayReferenceManager.Instance.Get_GameplayUIManager().InitialScreen_SpectateMode();
                 }
@@ -563,12 +570,15 @@ var GameManager=cc.Class({
         this.SyncDataToPlayerGameInfo(0);
         GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers=this.PlayerGameInfo.length;
         this.AssignPlayerGameUI();
+        this.EnablePlayerNodes();
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().CloseInitialScreen_SpectateMode();
 
 
         for (let index = 0; index < this.PlayerGameInfo.length; index++) {
-            var _toPos=cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.x,GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.y);
-            this.AllPlayerNodes[index].setPosition(_toPos.x,_toPos.y);
+            if (this.PlayerGameInfo[index].PlayerRollCounter > 0 && this.PlayerGameInfo[index].InitialCounterAssigned==true) {
+                var _toPos = cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.x, GamePlayReferenceManager.Instance.Get_SpaceManager().Data[this.PlayerGameInfo[index].PlayerRollCounter].ReferenceLocation.position.y);
+                this.AllPlayerNodes[index].setPosition(_toPos.x, _toPos.y);
+            }
         }
 
         console.log("synced playernodes");
@@ -791,6 +801,13 @@ var GameManager=cc.Class({
         GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2,this.TurnNumber);
     },
 
+    UpdateVisualData()
+    {
+        for (let index = 0; index < this.AllPlayerUI.length; index++) {
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
+        }
+    },
+
     /**
     @summary called from raise on event (from function "StartTurn" and "ChangeTurn" of this same class) to handle turn
     @method TurnHandler
@@ -799,6 +816,7 @@ var GameManager=cc.Class({
    **/ 
     TurnHandler(_turn)
     {
+        this.UpdateVisualData();
         console.error("Turn: "+_turn);
         var _playerMatched=false;
         _skipNextTurn=false;
@@ -866,6 +884,7 @@ var GameManager=cc.Class({
 
             for (let index = 0; index < this.AllPlayerUI.length; index++) {
                 this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
             }
 
 
@@ -952,6 +971,7 @@ var GameManager=cc.Class({
    **/ 
     StartTurn()
     {
+        console.log(this.PlayerGameInfo);
         this.AssignPlayerGameUI();
         this.EnablePlayerNodes();
         this.TurnNumber=0; //reseting the turn number on start of the game
@@ -983,7 +1003,8 @@ var GameManager=cc.Class({
         this.UpdateGameUI(true,this.TurnNumber);
 
         for (let index = 0; index < this.AllPlayerUI.length; index++) {
-            this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active = false;
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
         }
         
         if(this.SelectedMode==2)//for real players
@@ -1009,7 +1030,8 @@ var GameManager=cc.Class({
         this.UpdateGameUI(true,this.TurnNumber);
 
         for (let index = 0; index < this.AllPlayerUI.length; index++) {
-            this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active = false;
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
         }
         
         if(this.SelectedMode==2)//for real players
@@ -1048,6 +1070,7 @@ var GameManager=cc.Class({
             this.AllPlayerUI[index].active=true;
             this.AllPlayerUI[index].getComponent('PlayerProfileManager').PlayerInfo=this.PlayerGameInfo[index];
             this.AllPlayerUI[index].getComponent('PlayerProfileManager').SetName(this.PlayerGameInfo[index].PlayerName);
+            this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
         }
     },
 
@@ -1062,9 +1085,11 @@ var GameManager=cc.Class({
                 {
                     this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleBGHighlighter(true);
                     this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleTextighlighter(true);
+                    this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
                 }
                 else
                 {
+                    this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
                     this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleBGHighlighter(false);
                     this.AllPlayerUI[index].getComponent('PlayerProfileManager').ToggleTextighlighter(false);
                 }
@@ -1137,7 +1162,7 @@ var GameManager=cc.Class({
 
         if(this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter==0 && !this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned)
         {
-            if(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[0].BusinessType==1)
+            if(this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[0].BusinessType==2)
             {
                 RollCounter=0;
                 this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned=true;
@@ -1170,11 +1195,13 @@ var GameManager=cc.Class({
             if(this.TurnNumber==index)
             {
                 this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=true;
-                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.getComponent("DiceController").AnimateDice(_dice1,_dice2);
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.getComponent("DiceController").AnimateDice(_dice1, _dice2);
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
             }
             else
             {
-                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active=false;
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").DiceRollScreen.active = false;
+                this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
             }  
         }
 
@@ -1235,7 +1262,16 @@ var GameManager=cc.Class({
         else
         {
             Dice1=this.getRandom(1,7);
-            Dice2=this.getRandom(1,7); 
+            Dice2 = this.getRandom(1, 7); 
+            
+            if (PreviousDiceRoll1 == Dice1)
+                Dice1=this.getRandom(1,7);   
+
+            if (PreviousDiceRoll2 == Dice2)
+                Dice2 = this.getRandom(1, 7);   
+                
+            PreviousDiceRoll1 = Dice1;
+            PreviousDiceRoll2 = Dice2;
         }
          
 
@@ -1253,14 +1289,30 @@ var GameManager=cc.Class({
 
     RollOneDice()
     {
-        var Dice1=this.getRandom(1,7);
+        var Dice1 = this.getRandom(1, 7);
+        
+        if (PreviousDiceRoll5 == Dice1)
+            Dice1=this.getRandom(1,7);   
+                
+            PreviousDiceRoll5 = Dice1;
+
         return Dice1;
     },
 
     RollTwoDices()
     {
         var Dice1=this.getRandom(1,7);
-        var Dice2=this.getRandom(1,7);
+        var Dice2 = this.getRandom(1, 7);
+        
+        if (PreviousDiceRoll3 == Dice1)
+            Dice1=this.getRandom(1,7);   
+
+        if (PreviousDiceRoll4 == Dice2)
+            Dice2 = this.getRandom(1, 7);   
+                
+            PreviousDiceRoll3 = Dice1;
+            PreviousDiceRoll4 = Dice2;
+
         return (Dice1+Dice2);
     },
 
@@ -1275,10 +1327,10 @@ var GameManager=cc.Class({
             //for testing only
             if(_spaceID==2) //landed on some big business
             {
-                var valueIndex=[0,1,7,10,2,3,4,5,6,8];
-                var index=this.getRandom(0,10);
-                RandomCard=valueIndex[index];
-                //RandomCard = 8;
+                // var valueIndex=[0,1,7,10,2,3,4,5,6,8];
+                // var index=this.getRandom(0,10);
+                // RandomCard=valueIndex[index];
+                RandomCard = 1;
             }else if(_spaceID==5) //landed on some losses cards
             {
                 var valueIndex=[0,1,5,6,2,7,3,4,8,9];
@@ -1745,33 +1797,38 @@ var GameManager=cc.Class({
 
     ExpandBusiness_TurnDecision(amount,_index,_locationName,_isCardFunctionality = false,_GivenCash = 0,_StartAnyBusinessWithoutCash=false)
     {
-        if (!_isCardFunctionality) {
-            if (this.PlayerGameInfo[this.TurnNumber].Cash >= amount) {
-                this.PlayerGameInfo[this.TurnNumber].Cash = this.PlayerGameInfo[this.TurnNumber].Cash - amount;
-                this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
-                this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
-                setTimeout(() => {
-                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
-                }, 1200);
+        if (this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.length < 3) {
+            if (!_isCardFunctionality) {
+                if (this.PlayerGameInfo[this.TurnNumber].Cash >= amount) {
+                    this.PlayerGameInfo[this.TurnNumber].Cash = this.PlayerGameInfo[this.TurnNumber].Cash - amount;
+                    this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
+                    this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
+                    setTimeout(() => {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
+                    }, 1200);
+                }
+                else {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount);
+                }
             }
             else {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount);
+                if (_GivenCash >= amount) {
+                    _GivenCash = _GivenCash - amount;
+                    this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
+                    this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
+                    setTimeout(() => {
+                        GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
+                    }, 1200);
+                }
+                else {
+                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount + ", Cash Given $" + _GivenCash);
+                }
             }
-        }
-        else {
-            if (_GivenCash >= amount) {
-                _GivenCash = _GivenCash - amount;
-                this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount = this.PlayerGameInfo[this.TurnNumber].TotalLocationsAmount + 1;
-                this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[_index].LocationsName.push(_locationName);
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully expanded your business.", 1000);
-                setTimeout(() => {
-                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonExitClicked_TurnDecision();
-                }, 1200);
-            }
-            else {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to expand this business, cash needed $ " + amount+", Cash Given $"+_GivenCash);
-            }
+        } else
+        {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You cannot own more than three brick and mortar business locations");
         }
 
     },
