@@ -14,7 +14,8 @@ var PreviousDiceRoll4 = -1;
 var PreviousDiceRoll5 = -1;
 var userGameOver = false;
 var BotGameOver = false;
-var TotalCounterReached = false; //#region superclasses and enumerations
+var TotalCounterReached = false;
+var PassedPayDayCounter = 0; //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
 
 var EnumBusinessType = cc.Enum({
@@ -482,7 +483,8 @@ var GameManager = cc.Class({
     TurnCheckArray = [];
     BusinessLocationNodes = [];
     PassedPayDay = false;
-    DoublePayDay = false; //cards functionality
+    DoublePayDay = false;
+    PassedPayDayCounter = 0; //cards functionality
 
     _nextTurnDoublePay = false;
     _skipNextTurn = false;
@@ -1203,8 +1205,8 @@ var GameManager = cc.Class({
         Dice1 = parseInt(_diceinput1);
         Dice2 = parseInt(_diceinput2);
       } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
-        Dice1 = 10;
-        Dice2 = 10;
+        Dice1 = 5;
+        Dice2 = 3;
       } else {
         Dice1 = this.getRandom(1, 7);
         Dice2 = this.getRandom(1, 7);
@@ -1255,10 +1257,9 @@ var GameManager = cc.Class({
 
             if (_spaceID == 2) //landed on some big business
               {
-                // var valueIndex=[0,1,7,10,2,3,4,5,6,8];
-                // var index=this.getRandom(0,10);
-                // RandomCard=valueIndex[index];
-                RandomCard = 1;
+                var valueIndex = [0, 1, 7, 10, 2, 3, 4, 5, 6, 8];
+                var index = this.getRandom(0, 10);
+                RandomCard = valueIndex[index]; //RandomCard = 1;
               } else if (_spaceID == 5) //landed on some losses cards
               {
                 var valueIndex = [0, 1, 5, 6, 2, 7, 3, 4, 8, 9];
@@ -1662,8 +1663,16 @@ var GameManager = cc.Class({
     }
 
     if (RollCounter < GamePlayReferenceManager.Instance.Get_SpaceManager().Data.length) {
-      if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
-      if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) DoublePayDay = true;
+      if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) {
+        PassedPayDay = true;
+        PassedPayDayCounter = PassedPayDayCounter + 1;
+        console.error(PassedPayDayCounter);
+      }
+
+      if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) {
+        DoublePayDay = true;
+        PassedPayDayCounter++;
+      }
     }
 
     _nextTurnDoublePay = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnDoublePay;
@@ -1715,7 +1724,7 @@ var GameManager = cc.Class({
     var _this7 = this;
 
     cc.tween(Node) //0.4
-    .to(0.004, {
+    .to(0.4, {
       position: cc.v2(ToPos.x, ToPos.y)
     }, {
       easing: "quadInOut"
@@ -1727,13 +1736,20 @@ var GameManager = cc.Class({
           {
             if (_this7.PlayerGameInfo[_this7.TurnNumber].IsBot) {
               if (!BotGameOver) {
-                if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
+                if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6 || parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) {
+                  PassedPayDay = true;
+                  PassedPayDayCounter++;
+                }
               } else {
                 console.log("bot game is over");
               }
             } else {
               if (!userGameOver) {
-                if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
+                if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6 || parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) {
+                  PassedPayDay = true;
+                  PassedPayDayCounter++;
+                } /// console.error(PassedPayDayCounter);
+
               } else {
                 console.log("user game is over skipping");
               }
@@ -1744,7 +1760,10 @@ var GameManager = cc.Class({
         if (_this7.SelectedMode == 2) {
           if (_this7.PlayerGameInfo[_this7.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
             if (!_this7.PlayerGameInfo[_this7.TurnNumber].isGameFinished) {
-              if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6) PassedPayDay = true;
+              if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 6 || parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent('SpaceHandler').SpaceData.SpacesType) == 7) {
+                PassedPayDay = true;
+                PassedPayDayCounter++;
+              }
             } else {
               console.log("Game finished for: " + _this7.PlayerGameInfo[_this7.TurnNumber].PlayerName);
             }
@@ -1775,6 +1794,10 @@ var GameManager = cc.Class({
   TogglePayDay: function TogglePayDay(_st1, _St2) {
     PassedPayDay = _st1;
     DoublePayDay = _St2;
+
+    if (!_st1) {
+      PassedPayDayCounter = 0;
+    }
   },
   ExpandBusiness_TurnDecision: function ExpandBusiness_TurnDecision(amount, _index, _locationName, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash) {
     if (_isCardFunctionality === void 0) {
@@ -1906,7 +1929,7 @@ var GameManager = cc.Class({
 
     if (_forSelectedBusiness) {
       var _title = "PayDay";
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, false, false, false, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, HBAmount, BMAmount, BMLocations);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, false, false, false, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, HBAmount, BMAmount, BMLocations, 1);
     } else {
       _skipNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipNextPayday;
       _skipHMNextPayday = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.SkipHMNextPayday;
@@ -1930,7 +1953,7 @@ var GameManager = cc.Class({
         } else {
         var _title = "";
         if (_isDoublePayDay) _title = "DoublePayDay";else _title = "PayDay";
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot, false, 0, 0, 0, 0, PassedPayDayCounter);
       }
     }
   },

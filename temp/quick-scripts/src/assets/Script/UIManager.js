@@ -509,7 +509,7 @@ var UIManager = cc.Class({
   },
   PlayGame: function PlayGame() {
     this.ResetPlayerCountInput();
-    this.ToggleModeSelection(true);
+    this.VersesPlayerMode(); //this.ToggleModeSelection(true);
   },
   BackSelectionMode: function BackSelectionMode() {
     this.ResetPlayerCountInput();
@@ -519,30 +519,34 @@ var UIManager = cc.Class({
     this.ModeSelectionScreen.active = _state;
   },
   VersesPlayerMode: function VersesPlayerMode() {
-    if (this.TotalPlayers == "") {
-      this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.", 3500);
+    // if(this.TotalPlayers=="")
+    // {
+    //     this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.",3500);
+    // }
+    // else
+    // {
+    //     var _players=parseInt(this.TotalPlayers);
+    //     if(_players>=2 && _players<=6)
+    //     {
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(2);
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleShowRoom_Bool(false);
+    this.UIProfile.StatusNode.active = true; //this.UIProfile.PlayButtonNode.active=false;
+
+    this.UIProfile.StatusLabel.string = ""; //GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers=_players;
+
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() || GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()) {
+      cc.systemEvent.emit("UpdateStatusWindow", "waiting for other players...");
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinRandomRoom();
     } else {
-      var _players = parseInt(this.TotalPlayers);
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().RequestConnection();
+    } //     }
+    //     else
+    //     {
+    //         this.ResetPlayerCountInput();
+    //         this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.",3500);
+    //     }
+    // }
 
-      if (_players >= 2 && _players <= 6) {
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(2);
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleShowRoom_Bool(false);
-        this.UIProfile.StatusNode.active = true; //this.UIProfile.PlayButtonNode.active=false;
-
-        this.UIProfile.StatusLabel.string = "";
-        GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers = _players;
-
-        if (GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() || GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()) {
-          cc.systemEvent.emit("UpdateStatusWindow", "waiting for other players...");
-          GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinRandomRoom();
-        } else {
-          GamePlayReferenceManager.Instance.Get_MultiplayerController().RequestConnection();
-        }
-      } else {
-        this.ResetPlayerCountInput();
-        this.ShowToast("please enter player amount for multiplayer from 2-6, make sure to have same amount on different connecting devices if you want to connect them.", 3500);
-      }
-    }
   },
   VersesAIMode: function VersesAIMode() {
     GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleModeSelection(1);
@@ -571,6 +575,7 @@ var UIManager = cc.Class({
     this.StatusText = "";
     this.TotalPlayers = "";
     this.ResetPlayerCountInput();
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ResetRoomValues();
     GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
   },
   ToggleLoadingNode: function ToggleLoadingNode(state) {

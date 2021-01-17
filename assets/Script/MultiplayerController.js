@@ -4,7 +4,12 @@ var stateText="";
 var GamePlayReferenceManager=null;
 var ShowRoom = false;
 var GameFinished = false;
-
+var IsMasterClient = false;
+var TotalTimer = 30;
+var TimerStarted = false;
+var Schedular = null;
+var MaxStudents = 6;
+var RestartSpectate = false;
 //---------------------------------------class data related to RoomProperty------------------------------------------------//
 var RoomProperty=cc.Class({
     name:"RoomProperty",
@@ -98,11 +103,18 @@ var MultiplayerController=cc.Class({
 
     ResetAllData()
     {
-         PhotonRef=null;
-         stateText="";
-         GamePlayReferenceManager=null;
+        PhotonRef=null;
+        stateText="";
+        GamePlayReferenceManager=null;
         ShowRoom = false;
         GameFinished = false;
+        IsMasterClient = false;
+        TotalTimer = 30;
+        TimerStarted = false;
+        Schedular = null;
+        this.ResetRoomValues();
+        MaxStudents = 6;
+        RestartSpectate = false;
     },
     //this function is called when instance of this class is created
     onLoad() {
@@ -313,7 +325,8 @@ var MultiplayerController=cc.Class({
         this.LeaveRoom=false;    
         this.JoinedRoom=false;
         ShowRoom=false;
-        stateText="";
+        stateText = "";
+        this.ResetRoomValues();
     },
 
     /**
@@ -383,7 +396,8 @@ var MultiplayerController=cc.Class({
                     PhotonRef.myActor().name=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
                     PhotonRef.myActor().setCustomProperty("Data", GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
                     PhotonRef.myActor().setCustomProperty("PlayerSessionData", {});
-                    PhotonRef.myActor().setCustomProperty("RoomEssentials", {IsSpectate:false});
+                    PhotonRef.myActor().setCustomProperty("RoomEssentials", { IsSpectate: false });
+                    PhotonRef.myActor().setCustomProperty("RoomCounter", {Counter:TotalTimer});
                     PhotonRef.setUserId(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.userID);
                     var RoomID=Math.floor(Math.random() * Date.now());
 
@@ -423,7 +437,8 @@ var MultiplayerController=cc.Class({
                   PhotonRef.myActor().name=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
                   PhotonRef.myActor().setCustomProperty("Data", GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
                   PhotonRef.myActor().setCustomProperty("PlayerSessionData", {});
-                  PhotonRef.myActor().setCustomProperty("RoomEssentials", {IsSpectate:true});
+                  PhotonRef.myActor().setCustomProperty("RoomEssentials", { IsSpectate: true });
+                  PhotonRef.myActor().setCustomProperty("RoomCounter", {Counter:TotalTimer});
                   PhotonRef.setUserId(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.userID);
 
                   PhotonRef.joinRoom(_roomName,roomOptions);
@@ -463,7 +478,8 @@ var MultiplayerController=cc.Class({
             PhotonRef.myActor().name=GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
             PhotonRef.myActor().setCustomProperty("Data", GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
             PhotonRef.myActor().setCustomProperty("PlayerSessionData", {});
-            PhotonRef.myActor().setCustomProperty("RoomEssentials", {IsSpectate:false});
+            PhotonRef.myActor().setCustomProperty("RoomEssentials", { IsSpectate: false });
+            PhotonRef.myActor().setCustomProperty("RoomCounter", {Counter:TotalTimer});
             PhotonRef.setUserId(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.userID);
 
             PhotonRef.joinRandomRoom(roomOptions);
@@ -838,20 +854,167 @@ var MultiplayerController=cc.Class({
         // MultiplayerController.Instance.DisconnectPhoton();
     },
 
-    RestartGame()
+    RestartGame(_timer=0)
         {
             MultiplayerController.Instance.JoinedRoom=false;
             MultiplayerController.Instance.ResetState();
             MultiplayerController.Instance.DisconnectPhoton();
-
-            GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
-            GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
-            GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
-            GamePlayReferenceManager.Instance.RemovePersistNode();
-            MultiplayerController.Instance.RemovePersistNode();
-           // GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
-            cc.director.loadScene("MainMenu");
+        
+            setTimeout(() => {
+                GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+                GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+                GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+                GamePlayReferenceManager.Instance.RemovePersistNode();
+                MultiplayerController.Instance.RemovePersistNode();
+                cc.director.loadScene("MainMenu");
+            }, _timer);
+           // GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode()
         },
+
+    CheckMasterClient(_id)
+    {
+        var _isMaster = false;
+        if (PhotonRef.myRoomMasterActorNr() == _id && PhotonRef.myActor().actorNr == _id) {
+            _isMaster = true;
+            IsMasterClient = true;
+        }
+
+        //console.error(_isMaster);
+        return _isMaster;
+    },
+
+    CheckCurrentActiveMasterClient()
+    {
+        var _isMaster = false;
+        if (PhotonRef.myActor().actorNr == PhotonRef.myRoomMasterActorNr()) {
+            _isMaster = true;
+            IsMasterClient = true;
+        } else
+        {
+            IsMasterClient = false;
+        }
+
+        console.error(_isMaster);
+        return _isMaster;
+    },
+
+    ResetRoomValues()
+    {
+        clearTimeout(Schedular);
+
+        setTimeout(() => {
+            IsMasterClient = false;
+            TimerStarted = false;
+        }, 1000);
+      
+    },
+
+    GetRealActors()
+    {
+        var _realPlayer = 0;
+        var AllPlayers = PhotonRef.myRoomActorsArray();
+        for (let index = 0; index < AllPlayers.length; index++) {
+            if (AllPlayers[index].getCustomProperty("RoomEssentials")["IsSpectate"] == false)
+            {
+                _realPlayer++;
+            }  
+        }
+        return _realPlayer;
+    },
+
+    RoomCounter(_timer)
+    {
+        clearTimeout(Schedular);
+        var _data = null;
+        Schedular = setTimeout(() => {
+            if (IsMasterClient) {
+                if (_timer > 0) {
+                    _timer--;
+                    //_data = { Counter: _timer };
+                    //PhotonRef.myRoom().setCustomProperty("RoomCounter", _data, true);
+                   // console.error(_timer);
+                    this.RoomCounter(_timer);
+                } else {
+                    console.error("timer completed");
+                    if (this.GetRealActors() > 1) { //if has more than one player start real game
+                        this.SendRoomCompletedData();
+                    } else //start game with bot
+                    {
+                        MultiplayerController.Instance.ResetRoomValues();
+                        MultiplayerController.Instance.DisconnectPhoton();
+                        
+                        MultiplayerController.Instance.ToggleModeSelection(1);
+                        MultiplayerController.Instance.ToggleShowRoom_Bool(false);
+                        
+                        MultiplayerController.Instance.MaxPlayers=2;
+                        cc.systemEvent.emit("UpdateStatusWindow", "players found");
+                        cc.systemEvent.emit("UpdateStatusWindow", "starting game...");
+                
+                        setTimeout(() => {
+                            GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinedRoom=true;
+                            cc.systemEvent.emit("ChangePanelScreen",true,true,"GamePlay"); //function in ui manager
+                        }, 1000);
+                    }
+                }
+            } else
+            {
+                clearTimeout(Schedular); 
+            }
+        }, 1000);
+    },
+
+    ProcessCounter()
+    {
+        var _master = MultiplayerController.Instance.CheckCurrentActiveMasterClient();
+        if (_master) { 
+            if (!TimerStarted)
+            {
+                TimerStarted = true;
+                var _counter = PhotonRef.myActor().getCustomProperty("RoomCounter")["Counter"];
+                MultiplayerController.Instance.RoomCounter(_counter);
+            }
+        }
+    },
+
+      /**
+    @summary Send card index over network
+    @method SendRoomCompletedData
+    @param {Object} _data
+    @returns no return
+   **/ 
+  SendRoomCompletedData (_data) {
+    if(PhotonRef.isJoinedToRoom()==true)
+    {
+        console.log("sending RoomCompletedData");
+      //  console.log(_data);
+            try {
+                PhotonRef.raiseEvent(14, { Data: _data, senderName: PhotonRef.myActor().name,senderID:PhotonRef.myActor().actorNr },{receivers:Photon.LoadBalancing.Constants.ReceiverGroup.All});
+            }
+            catch (err) {
+                console.error("error: " + err.message);
+            }
+    }
+    else
+    {
+        console.log("you are not in room.");
+    }
+  },
+    RoomCompleted() {
+        
+        if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false)
+        {
+            var _realPlayer = this.GetRealActors();
+
+            MultiplayerController.Instance.MaxPlayers = _realPlayer;
+            console.log("all required players joined, starting the game..")
+            cc.systemEvent.emit("UpdateStatusWindow", "players found");
+            cc.systemEvent.emit("UpdateStatusWindow", "starting game...");
+            MultiplayerController.Instance.JoinedRoom = true;
+            setTimeout(() => { cc.systemEvent.emit("ChangePanelScreen", true, true, "GamePlay"); }, 1000); //function in ui manager
+            MultiplayerController.Instance.UpdateRoomCustomProperites(true, _realPlayer, false, false, false, null, false, 0);
+        
+        }
+},
     //called every frame
     update (dt) {
 
@@ -1046,6 +1209,11 @@ var MultiplayerController=cc.Class({
                MultiplayerController.Instance.JoinedRoom=true;
                setTimeout(() => {cc.systemEvent.emit("ChangePanelScreen",true,true,"GamePlay");}, 1000); //function in UIManager
            }
+
+            if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false)
+            {
+                MultiplayerController.Instance.ProcessCounter();
+            }
         }
 
         /**
@@ -1055,8 +1223,12 @@ var MultiplayerController=cc.Class({
             @returns no return
         **/ 
         PhotonRef.onActorJoin = function (actor) {
-            if(PhotonRef.myRoomActorCount()==MultiplayerController.Instance.MaxPlayers) //when max player required to start game has been added
+
+            var _realPlayer = MultiplayerController.Instance.GetRealActors();
+
+            if(_realPlayer==MaxStudents) //when max player required to start game has been added
             {
+                MultiplayerController.Instance.ResetRoomValues();
                 console.log("all required players joined, starting the game..")
                 cc.systemEvent.emit("UpdateStatusWindow","players found");
                 cc.systemEvent.emit("UpdateStatusWindow","starting game...");
@@ -1066,9 +1238,10 @@ var MultiplayerController=cc.Class({
                 //PhotonRef.myRoom().setCustomProperty("Player",PhotonRef.myRoomActorCount(),true);  
             }
             
-            console.log("actor " + actor.actorNr + " joined");
-            console.error("Total Players: "+PhotonRef.myRoomActorCount());
-            console.log(PhotonRef.myRoom());
+            // MultiplayerController.Instance.CheckCurrentActiveMasterClient(actor.actorNr);
+            // console.log("actor " + actor.actorNr + " joined");
+            // console.error("Total Players: "+PhotonRef.myRoomActorCount());
+            // console.log(PhotonRef.myRoom());
         },
 
         
@@ -1080,7 +1253,7 @@ var MultiplayerController=cc.Class({
             @returns no return
         **/ 
             PhotonRef.onActorLeave = function (actor) {
-            if (!GameFinished) {
+            if (!GameFinished && !RestartSpectate) {
                 if (MultiplayerController.Instance.JoinedRoom == true) {
                     if (!actor.customProperties.PlayerSessionData.GameOver) {
                         if (!MultiplayerController.Instance.LeaveRoom) {
@@ -1090,25 +1263,44 @@ var MultiplayerController=cc.Class({
                                 GamePlayReferenceManager.Instance.Get_GameManager().CheckTurnOnSpectateLeave_SpectateManager();
                             }
                             else {
-                                console.log("actor " + actor.actorNr + " left");
 
-                                MultiplayerController.Instance.JoinedRoom = false;
-                                MultiplayerController.Instance.ResetState();
-                                MultiplayerController.Instance.DisconnectPhoton();
+                                if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
+                                    console.log("actor " + actor.actorNr + " left");
 
-                                if (MultiplayerController.Instance.getSceneName() == "GamePlay") //if scene is gameplay let player finish game forcefully
-                                {
-                                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("other player " + actor.name + " has left", 2000);
-                                    setTimeout(() => {
-                                        GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
-                                        GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
-                                        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
-                                        GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
-                                        GamePlayReferenceManager.Instance.RemovePersistNode();
-                                        cc.director.loadScene("MainMenu");
-                                    }, 2100);
+                                    MultiplayerController.Instance.JoinedRoom = false;
+                                    MultiplayerController.Instance.ResetState();
+                                    MultiplayerController.Instance.DisconnectPhoton();
+
+                                    if (MultiplayerController.Instance != null) {
+                                        if (MultiplayerController.Instance.getSceneName() == "GamePlay") //if scene is gameplay let player finish game forcefully
+                                        {
+                                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("other player " + actor.name + " has left", 2000);
+                                            setTimeout(() => {
+                                                GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+                                                GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+                                                GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+                                                GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+                                                GamePlayReferenceManager.Instance.RemovePersistNode();
+                                                cc.director.loadScene("MainMenu");
+                                            }, 2100);
+                                        }
+                                    }
                                 }
                             }
+                        }
+                    }
+                }
+
+                if (MultiplayerController.Instance.JoinedRoom == true) {
+                    if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
+                        MultiplayerController.Instance.ProcessCounter();
+                    }
+
+                    if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == true) {
+                        if (PhotonRef.myRoomActorCount() == 1 && !RestartSpectate) {
+                            RestartSpectate = true;
+                            MultiplayerController.Instance.RestartGame(1500);
+                            console.error("reatrted");
                         }
                     }
                 }
@@ -1131,8 +1323,8 @@ var MultiplayerController=cc.Class({
             @param {object} actor
             @returns no return
         **/ 
-        PhotonRef.onMyRoomPropertiesChange = function () {
-            
+        PhotonRef.onMyRoomPropertiesChange = function (_data) {
+            console.log(_data);
         }
 
          /**
@@ -1272,6 +1464,15 @@ var MultiplayerController=cc.Class({
                     var senderID = content.senderID;
                     
                     MultiplayerController.Instance.CallRecieveEvent(13,senderName,senderID,_data);
+
+                    break;
+                case 14: //receiving room complete data to start Game
+                    console.log("received partnership anwser data")
+                    var _data = content.Data;
+                    var senderName = content.senderName;
+                    var senderID = content.senderID;
+                    
+                    MultiplayerController.Instance.RoomCompleted();
 
                     break;
                 default:

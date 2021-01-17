@@ -6,7 +6,7 @@ var businessDetailPartnershipNodes = [];
 var PartnerShipData = null;
 var PartnerShipOfferReceived = false;
 var CancelledID = [];
-var StartGameCash = 100000;
+var StartGameCash = 20000;
 var SelectedBusinessPayDay = false;
 var HMAmount = 0;
 var BMAmount = 0;
@@ -430,6 +430,13 @@ var PayDayUI = cc.Class({
       default: null,
       serializable: true,
       tooltip: "UI reference to the label of BrickMortarLocations node",
+    },
+    PassedPayDayCountLabel: {
+      displayName: "PassedPayDayCountLabel",
+      type: cc.Label,
+      default: null,
+      serializable: true,
+      tooltip: "UI reference to the label of PassedPayDayCountLabel node",
     },
     HomeBasedBtn: {
       displayName: "HomeBasedBtn",
@@ -1065,6 +1072,7 @@ var GameplayUIManager = cc.Class({
     this.StockInvested = false;
     this.StockSold = false;
     this.IsBotTurn = false;
+    this.PayDayCount = 0;
     this.IsBankrupted = false;
     this.BankruptedAmount = 0;
   },
@@ -2356,8 +2364,9 @@ var GameplayUIManager = cc.Class({
     return _loan;
   },
 
-  AssignData_PayDay(_title,_isDoublePayDay = false,_skipHM = false,_skipBM = false,_isBot = false,_forSelectedBusiness=false,_SelectedBusinessIndex=0,_hMAmount=0,_bmAmount=0,_bmLocation=0) {
+  AssignData_PayDay(_title,_isDoublePayDay = false,_skipHM = false,_skipBM = false,_isBot = false,_forSelectedBusiness=false,_SelectedBusinessIndex=0,_hMAmount=0,_bmAmount=0,_bmLocation=0,PaydayCounter=1) {
     this.IsBotTurn = _isBot;
+    this.PayDayCount = PaydayCounter;
     DoublePayDay = _isDoublePayDay;
     this.TogglePayDayScreen_PayDay(true);
     this.PayDaySetupUI.TitleLabel.string = _title;
@@ -2417,6 +2426,7 @@ var GameplayUIManager = cc.Class({
     this.PayDaySetupUI.HomeBasedNumberLabel.string = HMAmount;
     this.PayDaySetupUI.BMNumberLabel.string = BMAmount;
     this.PayDaySetupUI.BMNumberLocationLabel.string = BMLocations;
+    this.PayDaySetupUI.PassedPayDayCountLabel.string = this.PayDayCount;
 
     var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
@@ -2483,7 +2493,7 @@ var GameplayUIManager = cc.Class({
       var _amountToBeSend = 0;
       var _amountToBeAdjusted = 0;
       var _multiplier = 1;
-
+      var _paydaymultiplier = this.PayDayCount;
       //partnership code
       if (_doublePayDay)
         _multiplier = 2;
@@ -2492,7 +2502,7 @@ var GameplayUIManager = cc.Class({
         for (let index = 0; index < _tempData.length; index++) {
           if (_tempData[index].BusinessType == 1) {
             if (_tempData[index].IsPartnership) {
-              var _payment = _multiplier * _dice * 1000;
+              var _payment =_paydaymultiplier* _multiplier * _dice * 1000;
               _amountToBeSend = (_payment / 2);
               _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
               _amountToBeAdjusted += _amountToBeSend;
@@ -2503,7 +2513,7 @@ var GameplayUIManager = cc.Class({
       {
         if (_tempData[SelectedBusinessIndex].BusinessType == 1) {
           if (_tempData[SelectedBusinessIndex].IsPartnership) {
-            var _payment = _multiplier * _dice * 1000;
+            var _payment = _paydaymultiplier*_multiplier * _dice * 1000;
             _amountToBeSend = (_payment / 2);
             _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[SelectedBusinessIndex].PartnerID);
             _amountToBeAdjusted += _amountToBeSend;
@@ -2518,17 +2528,17 @@ var GameplayUIManager = cc.Class({
       //partnership code
 
       if (!_doublePayDay)
-        TotalPayDayAmount = HMAmount * _dice * 1000-_amountToBeAdjusted;
+        TotalPayDayAmount = _paydaymultiplier*HMAmount * _dice * 1000-_amountToBeAdjusted;
       else
-        TotalPayDayAmount = 2 * (HMAmount * _dice) * 1000-_amountToBeAdjusted;
+        TotalPayDayAmount = _paydaymultiplier*2 * (HMAmount * _dice) * 1000-_amountToBeAdjusted;
 
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = HMAmount;
 
       if (!_doublePayDay)
-        this.PayDaySetupUI.TotalAmountLabel.string ="("+_dice + "*" + HMAmount + "*" + "1000)-"+_amountToBeAdjusted+"="+ TotalPayDayAmount;
+        this.PayDaySetupUI.TotalAmountLabel.string ="("+_paydaymultiplier+"*"+_dice + "*" + HMAmount + "*" + "1000)-"+_amountToBeAdjusted+"="+ TotalPayDayAmount;
       else
-        this.PayDaySetupUI.TotalAmountLabel.string ="("+_dice + "*" + HMAmount + "*" + "1000*2)-"+_amountToBeAdjusted+"=" + TotalPayDayAmount;
+        this.PayDaySetupUI.TotalAmountLabel.string ="("+_paydaymultiplier+"*"+_dice + "*" + HMAmount + "*" + "1000*2)-"+_amountToBeAdjusted+"=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
@@ -2542,6 +2552,7 @@ var GameplayUIManager = cc.Class({
       this.ToggleResultPanelScreen_PayDay(true);
 
       var _doublePayDay = DoublePayDay;
+      var _paydaymultiplier = this.PayDayCount;
 
       if (!SelectedBusinessPayDay) {
         if (!_doublePayDay)
@@ -2581,7 +2592,7 @@ var GameplayUIManager = cc.Class({
           if (_tempData[index].BusinessType == 2) {
             if (_tempData[index].IsPartnership) {
               var _locations = _tempData[index].LocationsName.length + 1;
-              var _payment = _locations * _multiplier * _dice * 2000;
+              var _payment = _paydaymultiplier*_locations * _multiplier * _dice * 2000;
               _amountToBeSend = (_payment / 2);
               _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[index].PartnerID);
               _amountToBeAdjusted += _amountToBeSend;
@@ -2593,7 +2604,7 @@ var GameplayUIManager = cc.Class({
         if (_tempData[SelectedBusinessIndex].BusinessType == 2) {
           if (_tempData[SelectedBusinessIndex].IsPartnership) {
             var _locations = _tempData[SelectedBusinessIndex].LocationsName.length + 1;
-            var _payment = _locations * _multiplier * _dice * 2000;
+            var _payment = _paydaymultiplier*_locations * _multiplier * _dice * 2000;
             _amountToBeSend = (_payment / 2);
             _manager.SendProfit_Partner_TurnDecision(_amountToBeSend, _tempData[SelectedBusinessIndex].PartnerID);
             _amountToBeAdjusted += _amountToBeSend;
@@ -2607,17 +2618,17 @@ var GameplayUIManager = cc.Class({
       }
 
       if (!_doublePayDay)
-        TotalPayDayAmount = _amount * _dice * 2000-_amountToBeAdjusted;
+        TotalPayDayAmount = _paydaymultiplier*_amount * _dice * 2000-_amountToBeAdjusted;
       else
-        TotalPayDayAmount = 2 * (_amount * _dice) * 2000-_amountToBeAdjusted;
+        TotalPayDayAmount = _paydaymultiplier*2 * (_amount * _dice) * 2000-_amountToBeAdjusted;
 
       this.PayDaySetupUI.DiceResultLabel.string = _dice;
       this.PayDaySetupUI.TotalBusinessLabel.string = _amount;
 
       if (!_doublePayDay)
-        this.PayDaySetupUI.TotalAmountLabel.string ="("+_dice + "*" + _amount + "*" + "2000)-" +_amountToBeAdjusted+"="+ TotalPayDayAmount;
+        this.PayDaySetupUI.TotalAmountLabel.string ="("+_paydaymultiplier+"*"+_dice + "*" + _amount + "*" + "2000)-" +_amountToBeAdjusted+"="+ TotalPayDayAmount;
       else
-        this.PayDaySetupUI.TotalAmountLabel.string ="("+_dice + "*" + _amount + "*" + "2000*2)-"+_amountToBeAdjusted+"=" + TotalPayDayAmount;
+        this.PayDaySetupUI.TotalAmountLabel.string ="("+_paydaymultiplier+"*"+_dice + "*" + _amount + "*" + "2000*2)-"+_amountToBeAdjusted+"=" + TotalPayDayAmount;
 
       if (this.IsBotTurn) {
         this.ReceivePayment_PayDay();
@@ -2700,7 +2711,7 @@ var GameplayUIManager = cc.Class({
       setTimeout(() => {
         this.ToggleResultPanelScreen_PayDay(false);
         this.PayDayCompleted();
-      }, 1550);
+      }, 500);
     } else {
       console.log(
         "Amount $" +
