@@ -7,6 +7,9 @@ var TimeoutRef;
 var CompletionWindowTime = 8000;
 var LongMessageTime = 5000;
 
+// var CompletionWindowTime = 500;//8000
+// var LongMessageTime = 250;//5000
+
 //-------------------------------------------Spaces Data-------------------------//
 var EnumSpaceType = cc.Enum({
     None:0,
@@ -215,7 +218,17 @@ var DecksData = cc.Class({
         },
     },
 
+    ResetAllData()
+    {
+        GamePlayReferenceManager=null;
+        LossesData = null;
+        MarketingData = null;
+        WildCardData = null;
+        BigBusinessData = null;
+        TimeoutRef=null;
+    },
     onLoad() {
+        this.ResetAllData();
         this.CheckReferences();
         this.SelectedCardIndex = -1;
         this.CardSelected = -1;

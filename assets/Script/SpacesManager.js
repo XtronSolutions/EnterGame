@@ -11,7 +11,8 @@ var EnumSpaceType = cc.Enum({
     OneQuestion: 8,
     Sell: 9,
     BuyOrSell: 10,
-    GoBackSpaces:11,
+    GoBackSpaces: 11,
+    Finish:12
 });
 
 var allSpaces=["None","Wild Card","Big Business","Marketing","Invest","Losses","Pay Day","Double Pay Day","One Question","Sell","Buy Or Sell","Go Back 3 Spaces"];
@@ -53,7 +54,15 @@ var SpaceData = cc.Class({
             default: cc.Color.WHITE,
             type: cc.Color,
             serializable: true,
-            tooltip: "Color of the background",},
+            tooltip: "Color of the background",
+        },
+        isFinal:
+        { 
+            displayName: "isFinal",
+            default: false,
+            type: cc.boolean,
+            serializable: true,
+            tooltip: "if space is final one",},
     },
 
     ctor: function () {
@@ -88,25 +97,27 @@ var SpacesManager=cc.Class({
     CreateSpacesPool: function () {
       for(var i=0;i<this.Data.length;i++)
       {
-        if(this.Data[i].ReferenceLocation.childrenCount>0)
-        {
-           
-          this.Data[i].ReferenceLocation.active=true;
-          this.Data[i].ReferenceLocation.getComponent('SpaceHandler').InitializeData(this.Data[i]);
-          this.Data[i].ReferenceLocation.children[0].active=true;
+          if (this.Data[i].ReferenceLocation.childrenCount > 0) {
+              if (!this.Data[i].isFinal) {
+                  this.Data[i].ReferenceLocation.active = true;
+                  this.Data[i].ReferenceLocation.getComponent('SpaceHandler').InitializeData(this.Data[i]);
+                  this.Data[i].ReferenceLocation.children[0].active = true;
 
-            if(this.Data[i].CanHaveBG)
-            {
-                this.Data[i].ReferenceLocation.children[0].children[0].active=true;
-                this.Data[i].ReferenceLocation.children[0].children[0].color=this.Data[i].BGColor;
-            }
-            else
-            {
-                this.Data[i].ReferenceLocation.children[0].children[0].active=false; 
-            }
+                  if (this.Data[i].CanHaveBG) {
+                      this.Data[i].ReferenceLocation.children[0].children[0].active = true;
+                      this.Data[i].ReferenceLocation.children[0].children[0].color = this.Data[i].BGColor;
+                  }
+                  else {
+                      this.Data[i].ReferenceLocation.children[0].children[0].active = false;
+                  }
 
-            this.Data[i].ReferenceLocation.children[0].children[1].getComponent(cc.Label).string=allSpaces[parseInt(this.Data[i].SpacesType)]
-        }
+                  this.Data[i].ReferenceLocation.children[0].children[1].getComponent(cc.Label).string = allSpaces[parseInt(this.Data[i].SpacesType)]
+              } else {
+                this.Data[i].ReferenceLocation.active = true;
+                this.Data[i].ReferenceLocation.getComponent('SpaceHandler').InitializeData(this.Data[i]);
+                this.Data[i].ReferenceLocation.children[0].active = false;
+              }
+          }
       }
     },
 });

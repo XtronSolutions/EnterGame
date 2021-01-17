@@ -139,7 +139,8 @@ var PlayerProfileManager=cc.Class({
             tooltip: "all player's data"},
     },
 
-    onLoad () {
+    onLoad() {
+        GamePlayReferenceManager = null;
         this.CheckReferences();
     },
     //

@@ -188,7 +188,6 @@ var ServerBackend=cc.Class({
             serializable: true,
             tooltip: "current logged in student data"
         },
-
         TeacherData: {
             default: null,                
             type: Teacher,
@@ -218,7 +217,8 @@ var ServerBackend=cc.Class({
             type: ResponseTypeEnum,
             default: ResponseTypeEnum.None,
             serializable: true,
-            tooltip:"ResponseType catogory for api's",}, 
+            tooltip: "ResponseType catogory for api's",
+        }, 
     },
 
     statics: { //creating static instance of the class
@@ -247,66 +247,91 @@ var ServerBackend=cc.Class({
        // this.GetUserData("xtrondev@gmail.com","Student");
     },
 
-    GetUserData(_email,_role)
+    GetUserData(_email,_role,_accessToken,_subType=-1)
     {
-        var payload=new UserPayload(_email,_role);
-        this.CallRESTAPI( this.getUserAPI,"POST",payload,1);    
+        var payload = new UserPayload(_email, _role);
+        var header = { "Content-Type": "application/json; charset=utf-8", "Authorization": _accessToken };
+        this.CallRESTAPI( this.getUserAPI,"POST",payload,1,header,_subType);    
     },
 
     LoginUser(_email,_password,_role)
     {
         var payload=new UserLoginPayload(_email,_password,_role);
-        this.CallRESTAPI( this.loginUserAPI,"POST",payload,2);    
+        this.CallRESTAPI( this.loginUserAPI,"POST",payload,2,null,-1);    
     },
 
-    Fetch(_url,_method,_requestBody)
+    Fetch(_url,_method,_requestBody,_headers=null)
     {
         if(_method=="GET")
         {
-            return fetch(
-                _url, 
-                {
-                    headers: { "Content-Type": "application/json; charset=utf-8" },
-                    method: _method,
-                }
-              );
+            if (_headers ==null) {
+                return fetch(
+                    _url,
+                    {
+                        headers: { "Content-Type": "application/json; charset=utf-8" },
+                        method: _method,
+                    }
+                );
+            } else
+            {
+                return fetch(
+                    _url,
+                    {
+                        headers: _headers,
+                        method: _method,
+                    }
+                );
+            }
         }
         else
         {
-            return fetch(
-                _url, 
-                {
-                    headers: { "Content-Type": "application/json; charset=utf-8" },
-                    method: _method,
-                    body: JSON.stringify(_requestBody)
-                }
-              );
+            if (_headers == null) {
+                //console.error("header is null");
+                //console.error(_requestBody);
+                return fetch(
+                    _url,
+                    {
+                        headers: { "Content-Type": "application/json; charset=utf-8" },
+                        method: _method,
+                        body: JSON.stringify(_requestBody)
+                    }
+                );
+            } else
+            {
+                return fetch(
+                    _url,
+                    {
+                        headers:  _headers ,
+                        method: _method,
+                        body: JSON.stringify(_requestBody)
+                    }
+                );
+            }
         }
     },
     
-    CallRESTAPI(_url,_method,_requestBody,_type) {
-        Fetch_Promise(_url,_method,_requestBody);
-        async function Fetch_Promise(_url,_method,_requestBody) {
+    CallRESTAPI(_url,_method,_requestBody,_type,_headers=null,_subType=-1) {
+        Fetch_Promise(_url,_method,_requestBody,_headers);
+        async function Fetch_Promise(_url,_method,_requestBody,_headers=null) {
             try {
-                var Response=await ServerBackend.Instance.Fetch(_url,_method,_requestBody);
+                var Response=await ServerBackend.Instance.Fetch(_url,_method,_requestBody,_headers);
                 var TempData=await Response.json();
                 
                 if(_type==1) //getting user data
                 {
                     var MainData=new UserDataResponse(TempData.statusCode,TempData.message,TempData.data);
                     console.log(TempData);
-                    if(MainData.message.includes("SUCCESS"))
-                    {
-                        console.log("got data successfully");
-                        console.log(MainData);
-                        if(MainData.data.roleType.includes("Student"))
+                    if (_subType == 0) { //return data to storage class
+                        if (MainData.message.includes("SUCCESS") || MainData.message.includes("sucessfully")) { 
+                            console.log("got data successfully");
+                            console.log(MainData);
+
+                            //both below calls are written inside storgaemanager
+                            cc.systemEvent.emit("WriteData", MainData);
+                            cc.systemEvent.emit("RefreshData", 0);
+                        } else
                         {
-                            ServerBackend.Instance.AssignStudentData(MainData,false);
-                            //cc.systemEvent.emit("AssignProfileData");
-                        }
-                        else if(MainData.data.roleType.includes("Teacher"))
-                        {
-                            
+                            cc.systemEvent.emit("RefreshData", 1);
                         }
                     }
                 }
@@ -316,6 +341,7 @@ var ServerBackend=cc.Class({
                     console.log(TempData);
                     if(MainData.message.includes("sucessfully"))
                     {
+                        cc.systemEvent.emit("WriteData",MainData);
                         console.log("user logged in successfully");
                         console.log(MainData);
                         if(MainData.data.roleType.includes("Student"))
@@ -484,7 +510,44 @@ var ServerBackend=cc.Class({
 
         console.log(this.DirectorData);
     },
-    start () {},
+    start() { },
+    
+    ReloginFromStorage(MainData)
+    {
+
+                console.log("user logged in successfully automatically");
+                console.log(MainData);
+                if(MainData.data.roleType.includes("Student"))
+                {
+                    ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                    ServerBackend.Instance.AssignStudentData(MainData,true);
+                    cc.systemEvent.emit("AssignProfileData",true,false,false,false,false);
+                }
+                else if(MainData.data.roleType.includes("Teacher"))
+                {
+                    ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                    ServerBackend.Instance.AssignTeacherData(MainData,true);
+                    cc.systemEvent.emit("AssignProfileData",false,true,false,false,false);
+                }
+                else if(MainData.data.roleType.includes("ProgramAmbassador"))
+                {
+                    ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                    ServerBackend.Instance.AssignMentorData(MainData,true);
+                    cc.systemEvent.emit("AssignProfileData",false,false,true,false,false);
+                }
+                else if(MainData.data.roleType.includes("SchoolAdmin"))
+                {
+                    ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                    ServerBackend.Instance.AssignAdminData(MainData,true);
+                    cc.systemEvent.emit("AssignProfileData",false,false,false,true,false);
+                }
+                else if(MainData.data.roleType.includes("ProgramDirector"))
+                {
+                    ServerBackend.Instance.ResponseType=ResponseTypeEnum.Successful;
+                    ServerBackend.Instance.AssignDirectorData(MainData,true);
+                    cc.systemEvent.emit("AssignProfileData",false,false,false,false,true);
+                }
+    },
 });
 
 //-------------------------------------------class for sending payload to receive data-------------------------//
@@ -577,5 +640,7 @@ var UserLoginPayload = cc.Class({
         this.role = _role;  
     },
 });
+
+
 
 module.exports= ServerBackend;

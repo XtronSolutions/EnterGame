@@ -26,6 +26,7 @@ var RoomListHandler = cc.Class({
     }
   },
   onEnable: function onEnable() {
+    GamePlayReferenceManager = null;
     this.RoomName = "";
     this.CheckReferences();
   },

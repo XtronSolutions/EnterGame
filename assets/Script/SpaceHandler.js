@@ -11,6 +11,7 @@ var SpaceHandler=cc.Class({
 
     onLoad()
     {
+        GamePlayReferenceManager = null;
         this.CheckReferences();
         this.SpaceData=null;
        // SpaceData=new 

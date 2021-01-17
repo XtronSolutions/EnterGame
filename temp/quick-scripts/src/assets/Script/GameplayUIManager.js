@@ -26,7 +26,10 @@ var PreviousCash = 0;
 var TimeoutRef;
 var CompletionWindowTime = 8000;
 var LongMessageTime = 5000;
-var ShortMessageTime = 2500; //-------------------------------------------enumeration for amount of loan-------------------------//
+var ShortMessageTime = 2500; // var CompletionWindowTime = 500;//8000
+// var LongMessageTime = 250;//5000
+// var ShortMessageTime = 50;//2500
+//-------------------------------------------enumeration for amount of loan-------------------------//
 
 var LoanAmountEnum = cc.Enum({
   None: 0,
@@ -762,6 +765,32 @@ var PartnershipUI = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for ResultUI-------------------------//
+
+var ResultUI = cc.Class({
+  name: "ResultUI",
+  properties: {
+    ResultScreen: {
+      displayName: "ResultScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    StatusLabel: {
+      displayName: "StatusLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    BodyLabel: {
+      displayName: "BodyLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for GameplayUIManager-------------------------//
 
 var PlayerDataIntance;
@@ -841,6 +870,12 @@ var GameplayUIManager = cc.Class({
       type: PartnershipUI,
       serializable: true,
       tooltip: "reference of PartnershipUI class"
+    },
+    ResultSetupUI: {
+      "default": {},
+      type: ResultUI,
+      serializable: true,
+      tooltip: "reference of ResultUI class"
     },
     PopUpUI: {
       "default": null,
@@ -938,7 +973,46 @@ var GameplayUIManager = cc.Class({
       serializable: true
     }
   },
+  ResetAllData: function ResetAllData() {
+    GameManager = null;
+    GamePlayReferenceManager = null;
+    businessDetailNodes = [];
+    oneQuestionNodes = [];
+    businessDetailPartnershipNodes = [];
+    PartnerShipData = null;
+    PartnerShipOfferReceived = false;
+    CancelledID = [];
+    SelectedBusinessPayDay = false;
+    HMAmount = 0;
+    BMAmount = 0;
+    BMLocations = 0;
+    SelectedBusinessIndex = 0;
+    TurnOverForInvest = false;
+    BusinessSetupCardFunctionality = false;
+    GivenCashBusiness = 0;
+    StartAnyBusinessWithoutCash = false;
+    PreviousCash = 0;
+    TimeoutRef = null;
+    InsideGameBusinessSetup = -1; //-1 means new business is not instantialted from inside game , if it has any other value it means its been instantiated from inside game and its value represents index of player
+    //turn decisions
+
+    TempMarketingAmount = "";
+    TempHiringLawyer; //buyorsell
+
+    GoldCashAmount = "";
+    EnterBuySellAmount = "";
+    StockBusinessName = "";
+    DiceResult = 0;
+    OnceOrShare;
+    LocationName = "";
+    HomeBasedPaymentCompleted = false;
+    BrickMortarPaymentCompleted = false;
+    LoanPayed = false;
+    TotalPayDayAmount = 0;
+    DoublePayDay = false;
+  },
   onLoad: function onLoad() {
+    this.ResetAllData();
     this.CheckReferences(); //local variables
 
     this.GoldInvested = false;
@@ -991,7 +1065,7 @@ var GameplayUIManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
       GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
       GamePlayReferenceManager.Instance.RemovePersistNode();
-      cc.director.loadScene("Splash");
+      cc.director.loadScene("MainMenu");
     }, 500);
   },
   //#endregion
@@ -1051,6 +1125,7 @@ var GameplayUIManager = cc.Class({
     }
 
     PlayerDataIntance = new GameManager.PlayerData();
+    PlayerDataIntance.CardFunctionality = new GameManager.CardDataFunctionality();
     PlayerBusinessDataIntance = new GameManager.BusinessInfo();
     PlayerBusinessDataIntance.BusinessType = GameManager.EnumBusinessType.None;
 
@@ -2158,9 +2233,13 @@ var GameplayUIManager = cc.Class({
     }
 
     if (_isBot) {
-      this.OnHomeBasedPaymentClicked_PayDay();
-      this.OnBMPaymentClicked_PayDay();
-      this.OnLoanPaymentClicked_PayDay();
+      setTimeout(function () {
+        _this4.OnHomeBasedPaymentClicked_PayDay();
+
+        _this4.OnBMPaymentClicked_PayDay();
+
+        _this4.OnLoanPaymentClicked_PayDay();
+      }, 0);
     }
   },
   OnHomeBasedPaymentClicked_PayDay: function OnHomeBasedPaymentClicked_PayDay() {
@@ -2447,6 +2526,7 @@ var GameplayUIManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
         GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
         GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
+        GamePlayReferenceManager.Instance.Get_GameManager().ToggleDoublePayNextTurn(false);
         GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
       } else {
         GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
@@ -2808,6 +2888,14 @@ var GameplayUIManager = cc.Class({
     console.error("complete toast called");
     this.PopUpUI.active = false;
     clearTimeout(TimeoutRef);
+  },
+  ShowResultScreen: function ShowResultScreen(_status, _data) {
+    this.ResultSetupUI.ResultScreen.active = true;
+    this.ResultSetupUI.StatusLabel.string = _status;
+    this.ResultSetupUI.BodyLabel.string = _data;
+  },
+  RestartTheGame: function RestartTheGame() {
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().RestartGame();
   }
 });
 

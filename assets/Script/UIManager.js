@@ -375,6 +375,13 @@ var UIManager=cc.Class({
         Instance: null,
     },
 
+    ResetAllData()
+    {
+        GamePlayReferenceManager = null;
+        TweenRef;
+        TotalRoom = [];
+    },
+
     onEnable: function () {
         //events subscription to be called 
         cc.systemEvent.on('AssignProfileData', this.AssignProfileData, this);
@@ -388,7 +395,8 @@ var UIManager=cc.Class({
         cc.systemEvent.off('ChangePanelScreen', this.ChangePanelScreen, this);
       },
 
-    onLoad () {
+    onLoad() {
+        this.ResetAllData();
         this.ReferenceManagerRef=this.ReferenceManagerRef.getComponent("GamePlayReferenceManager");
 
         this.SelectedRole = Roles[0];
@@ -611,10 +619,10 @@ var UIManager=cc.Class({
         this.PasswordText=text;
     },
 
-    ToggleUIContainer()
+    ToggleUIContainer(_mainIndex)
     {
         for (let index = 0; index < this.UIContainer.length; index++) {
-            if (this.SelectedRoleIndex == index)
+            if (_mainIndex == index)
                 this.UIContainer[index].active = true;
             else
                 this.UIContainer[index].active = false;
@@ -623,12 +631,14 @@ var UIManager=cc.Class({
     },
     AssignProfileData:function(_isStudent=false,_isTeacher=false,_isMentor=false,_isAdmin=false,_isDirector=false)
     {
+        //console.error(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType));
         if(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType)==1) //means successful
         {
             this.ChangePanelScreen(true,false,"");
-            this.ToggleUIContainer();
+           
 
             if (_isStudent) {
+                this.ToggleUIContainer(0);
                 this.TogglePlayButton(true);
                 this.ToggleSpectateButton(false);
                 this.UIProfile.CashNode.active = true;
@@ -647,6 +657,7 @@ var UIManager=cc.Class({
                 this.ToggleLoadingNode(false);
             }
             else if (_isTeacher) {
+                this.ToggleUIContainer(1);
                 this.TogglePlayButton(false);
                 this.ToggleSpectateButton(true);
                 this.UIProfile.CashNode.active = false;
@@ -659,6 +670,7 @@ var UIManager=cc.Class({
                 this.ToggleLoadingNode(false);
             }
             else if (_isMentor) {
+                this.ToggleUIContainer(2);
                 this.TogglePlayButton(false);
                 this.ToggleSpectateButton(true);
                 this.UIProfile.CashNode.active = false;
@@ -670,6 +682,7 @@ var UIManager=cc.Class({
                 this.ToggleLoadingNode(false);
             }
             else if (_isAdmin) {
+                this.ToggleUIContainer(3);
                 this.TogglePlayButton(false);
                 this.ToggleSpectateButton(true);
                 this.UIProfile.CashNode.active = false;
@@ -681,6 +694,7 @@ var UIManager=cc.Class({
                 this.ToggleLoadingNode(false);
             }
             else if (_isDirector) {
+                this.ToggleUIContainer(4);
                 this.TogglePlayButton(false);
                 this.ToggleSpectateButton(true);
                 this.UIProfile.CashNode.active = false;
@@ -761,6 +775,26 @@ var UIManager=cc.Class({
         this.ToggleProfileScreen_SpectateUI(true);
         this.ToggleRoomScreen_SpectateUI(false);
         this.ExitConnecting();
+    },
+
+    Logout()
+    {
+        cc.systemEvent.emit("ClearData"); //function written in storage Manager class
+
+        if(GamePlayReferenceManager.Instance.Get_GameManager()!=null)
+            GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+        if(GamePlayReferenceManager.Instance.Get_MultiplayerController()!=null)
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+        
+        if(GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager()!=null)
+            GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+        
+        if(GamePlayReferenceManager.Instance.Get_ServerBackend()!=null)
+            GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+        
+        GamePlayReferenceManager.Instance.RemovePersistNode();
+
+        cc.director.loadScene("MainMenu");
     },
     //#endregion
 

@@ -11,7 +11,9 @@ var WildCardData = null;
 var BigBusinessData = null;
 var TimeoutRef;
 var CompletionWindowTime = 8000;
-var LongMessageTime = 5000; //-------------------------------------------Spaces Data-------------------------//
+var LongMessageTime = 5000; // var CompletionWindowTime = 500;//8000
+// var LongMessageTime = 250;//5000
+//-------------------------------------------Spaces Data-------------------------//
 
 var EnumSpaceType = cc.Enum({
   None: 0,
@@ -202,7 +204,16 @@ var DecksData = cc.Class({
       tooltip: "states machines by type of card or spaces on board"
     }
   },
+  ResetAllData: function ResetAllData() {
+    GamePlayReferenceManager = null;
+    LossesData = null;
+    MarketingData = null;
+    WildCardData = null;
+    BigBusinessData = null;
+    TimeoutRef = null;
+  },
   onLoad: function onLoad() {
+    this.ResetAllData();
     this.CheckReferences();
     this.SelectedCardIndex = -1;
     this.CardSelected = -1;

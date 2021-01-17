@@ -349,36 +349,73 @@ var ServerBackend = cc.Class({
     this.getUserAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/getUser";
     this.loginUserAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/loginUser"; // this.GetUserData("xtrondev@gmail.com","Student");
   },
-  GetUserData: function GetUserData(_email, _role) {
+  GetUserData: function GetUserData(_email, _role, _accessToken, _subType) {
+    if (_subType === void 0) {
+      _subType = -1;
+    }
+
     var payload = new UserPayload(_email, _role);
-    this.CallRESTAPI(this.getUserAPI, "POST", payload, 1);
+    var header = {
+      "Content-Type": "application/json; charset=utf-8",
+      "Authorization": _accessToken
+    };
+    this.CallRESTAPI(this.getUserAPI, "POST", payload, 1, header, _subType);
   },
   LoginUser: function LoginUser(_email, _password, _role) {
     var payload = new UserLoginPayload(_email, _password, _role);
-    this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2);
+    this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2, null, -1);
   },
-  Fetch: function Fetch(_url, _method, _requestBody) {
+  Fetch: function Fetch(_url, _method, _requestBody, _headers) {
+    if (_headers === void 0) {
+      _headers = null;
+    }
+
     if (_method == "GET") {
-      return fetch(_url, {
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
-        method: _method
-      });
+      if (_headers == null) {
+        return fetch(_url, {
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          },
+          method: _method
+        });
+      } else {
+        return fetch(_url, {
+          headers: _headers,
+          method: _method
+        });
+      }
     } else {
-      return fetch(_url, {
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
-        method: _method,
-        body: JSON.stringify(_requestBody)
-      });
+      if (_headers == null) {
+        //console.error("header is null");
+        //console.error(_requestBody);
+        return fetch(_url, {
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          },
+          method: _method,
+          body: JSON.stringify(_requestBody)
+        });
+      } else {
+        return fetch(_url, {
+          headers: _headers,
+          method: _method,
+          body: JSON.stringify(_requestBody)
+        });
+      }
     }
   },
-  CallRESTAPI: function CallRESTAPI(_url, _method, _requestBody, _type) {
-    Fetch_Promise(_url, _method, _requestBody);
+  CallRESTAPI: function CallRESTAPI(_url, _method, _requestBody, _type, _headers, _subType) {
+    if (_headers === void 0) {
+      _headers = null;
+    }
 
-    function Fetch_Promise(_x, _x2, _x3) {
+    if (_subType === void 0) {
+      _subType = -1;
+    }
+
+    Fetch_Promise(_url, _method, _requestBody, _headers);
+
+    function Fetch_Promise(_x, _x2, _x3, _x4) {
       return _Fetch_Promise.apply(this, arguments);
     } //#region Commented
     // fetch(
@@ -402,22 +439,26 @@ var ServerBackend = cc.Class({
 
 
     function _Fetch_Promise() {
-      _Fetch_Promise = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(_url, _method, _requestBody) {
+      _Fetch_Promise = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(_url, _method, _requestBody, _headers) {
         var Response, TempData, MainData;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _context.prev = 0;
-                _context.next = 3;
-                return ServerBackend.Instance.Fetch(_url, _method, _requestBody);
+                if (_headers === void 0) {
+                  _headers = null;
+                }
 
-              case 3:
+                _context.prev = 1;
+                _context.next = 4;
+                return ServerBackend.Instance.Fetch(_url, _method, _requestBody, _headers);
+
+              case 4:
                 Response = _context.sent;
-                _context.next = 6;
+                _context.next = 7;
                 return Response.json();
 
-              case 6:
+              case 7:
                 TempData = _context.sent;
 
                 if (_type == 1) //getting user data
@@ -425,13 +466,17 @@ var ServerBackend = cc.Class({
                     MainData = new UserDataResponse(TempData.statusCode, TempData.message, TempData.data);
                     console.log(TempData);
 
-                    if (MainData.message.includes("SUCCESS")) {
-                      console.log("got data successfully");
-                      console.log(MainData);
+                    if (_subType == 0) {
+                      //return data to storage class
+                      if (MainData.message.includes("SUCCESS") || MainData.message.includes("sucessfully")) {
+                        console.log("got data successfully");
+                        console.log(MainData); //both below calls are written inside storgaemanager
 
-                      if (MainData.data.roleType.includes("Student")) {
-                        ServerBackend.Instance.AssignStudentData(MainData, false); //cc.systemEvent.emit("AssignProfileData");
-                      } else if (MainData.data.roleType.includes("Teacher")) {}
+                        cc.systemEvent.emit("WriteData", MainData);
+                        cc.systemEvent.emit("RefreshData", 0);
+                      } else {
+                        cc.systemEvent.emit("RefreshData", 1);
+                      }
                     }
                   } else if (_type == 2) //login user
                   {
@@ -439,6 +484,7 @@ var ServerBackend = cc.Class({
                     console.log(TempData);
 
                     if (MainData.message.includes("sucessfully")) {
+                      cc.systemEvent.emit("WriteData", MainData);
                       console.log("user logged in successfully");
                       console.log(MainData);
 
@@ -475,12 +521,12 @@ var ServerBackend = cc.Class({
                     }
                   }
 
-                _context.next = 14;
+                _context.next = 15;
                 break;
 
-              case 10:
-                _context.prev = 10;
-                _context.t0 = _context["catch"](0);
+              case 11:
+                _context.prev = 11;
+                _context.t0 = _context["catch"](1);
 
                 if (_type == 2) //login user error
                   {
@@ -490,16 +536,16 @@ var ServerBackend = cc.Class({
 
                 console.error(_context.t0);
 
-              case 14:
-                _context.prev = 14;
-                return _context.finish(14);
+              case 15:
+                _context.prev = 15;
+                return _context.finish(15);
 
-              case 16:
+              case 17:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[0, 10, 14, 16]]);
+        }, _callee, null, [[1, 11, 15, 17]]);
       }));
       return _Fetch_Promise.apply(this, arguments);
     }
@@ -578,7 +624,33 @@ var ServerBackend = cc.Class({
 
     console.log(this.DirectorData);
   },
-  start: function start() {}
+  start: function start() {},
+  ReloginFromStorage: function ReloginFromStorage(MainData) {
+    console.log("user logged in successfully automatically");
+    console.log(MainData);
+
+    if (MainData.data.roleType.includes("Student")) {
+      ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+      ServerBackend.Instance.AssignStudentData(MainData, true);
+      cc.systemEvent.emit("AssignProfileData", true, false, false, false, false);
+    } else if (MainData.data.roleType.includes("Teacher")) {
+      ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+      ServerBackend.Instance.AssignTeacherData(MainData, true);
+      cc.systemEvent.emit("AssignProfileData", false, true, false, false, false);
+    } else if (MainData.data.roleType.includes("ProgramAmbassador")) {
+      ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+      ServerBackend.Instance.AssignMentorData(MainData, true);
+      cc.systemEvent.emit("AssignProfileData", false, false, true, false, false);
+    } else if (MainData.data.roleType.includes("SchoolAdmin")) {
+      ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+      ServerBackend.Instance.AssignAdminData(MainData, true);
+      cc.systemEvent.emit("AssignProfileData", false, false, false, true, false);
+    } else if (MainData.data.roleType.includes("ProgramDirector")) {
+      ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+      ServerBackend.Instance.AssignDirectorData(MainData, true);
+      cc.systemEvent.emit("AssignProfileData", false, false, false, false, true);
+    }
+  }
 }); //-------------------------------------------class for sending payload to receive data-------------------------//
 
 var UserPayload = cc.Class({

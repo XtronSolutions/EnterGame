@@ -2,7 +2,8 @@
 var PhotonRef;
 var stateText="";
 var GamePlayReferenceManager=null;
-var ShowRoom=false;
+var ShowRoom = false;
+var GameFinished = false;
 
 //---------------------------------------class data related to RoomProperty------------------------------------------------//
 var RoomProperty=cc.Class({
@@ -95,8 +96,17 @@ var MultiplayerController=cc.Class({
         Instance: null,
     },
 
+    ResetAllData()
+    {
+         PhotonRef=null;
+         stateText="";
+         GamePlayReferenceManager=null;
+        ShowRoom = false;
+        GameFinished = false;
+    },
     //this function is called when instance of this class is created
-    onLoad () {
+    onLoad() {
+        this.ResetAllData();
         this.Init_MultiplayerController();
     },
 
@@ -820,17 +830,27 @@ var MultiplayerController=cc.Class({
         }
     },
 
+    DisconnectData()
+    {
+        GameFinished = true;
+        // MultiplayerController.Instance.JoinedRoom=false;
+        // MultiplayerController.Instance.ResetState();
+        // MultiplayerController.Instance.DisconnectPhoton();
+    },
+
     RestartGame()
         {
             MultiplayerController.Instance.JoinedRoom=false;
             MultiplayerController.Instance.ResetState();
             MultiplayerController.Instance.DisconnectPhoton();
 
-            GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+            GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
             GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
             GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
             GamePlayReferenceManager.Instance.RemovePersistNode();
-            cc.director.loadScene("Splash");
+            MultiplayerController.Instance.RemovePersistNode();
+           // GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+            cc.director.loadScene("MainMenu");
         },
     //called every frame
     update (dt) {
@@ -1059,42 +1079,39 @@ var MultiplayerController=cc.Class({
             @param {object} actor
             @returns no return
         **/ 
-        PhotonRef.onActorLeave = function (actor) {
-            if(MultiplayerController.Instance.JoinedRoom==true)
-            {   
-                if(!actor.customProperties.PlayerSessionData.GameOver)
-                {
-                if(!MultiplayerController.Instance.LeaveRoom)
-                {
-                    if(actor.customProperties.RoomEssentials.IsSpectate)
-                    {
-                        console.log("spectator left, so dont mind, cont game");
-                        console.log("actor " + actor.actorNr + " left");
-                        GamePlayReferenceManager.Instance.Get_GameManager().CheckTurnOnSpectateLeave_SpectateManager();
-                    }
-                    else
-                    {
-                        console.log("actor " + actor.actorNr + " left");
+            PhotonRef.onActorLeave = function (actor) {
+            if (!GameFinished) {
+                if (MultiplayerController.Instance.JoinedRoom == true) {
+                    if (!actor.customProperties.PlayerSessionData.GameOver) {
+                        if (!MultiplayerController.Instance.LeaveRoom) {
+                            if (actor.customProperties.RoomEssentials.IsSpectate) {
+                                console.log("spectator left, so dont mind, cont game");
+                                console.log("actor " + actor.actorNr + " left");
+                                GamePlayReferenceManager.Instance.Get_GameManager().CheckTurnOnSpectateLeave_SpectateManager();
+                            }
+                            else {
+                                console.log("actor " + actor.actorNr + " left");
 
-                        MultiplayerController.Instance.JoinedRoom=false;
-                        MultiplayerController.Instance.ResetState();
-                        MultiplayerController.Instance.DisconnectPhoton();
+                                MultiplayerController.Instance.JoinedRoom = false;
+                                MultiplayerController.Instance.ResetState();
+                                MultiplayerController.Instance.DisconnectPhoton();
 
-                        if(MultiplayerController.Instance.getSceneName()=="GamePlay") //if scene is gameplay let player finish game forcefully
-                        {
-                            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("other player "+actor.name+" has left",2000);
-                            setTimeout(() => {
-                                GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
-                                GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
-                                GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
-                                GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
-                                GamePlayReferenceManager.Instance.RemovePersistNode();
-                                cc.director.loadScene("Splash");
-                            }, 2100);
+                                if (MultiplayerController.Instance.getSceneName() == "GamePlay") //if scene is gameplay let player finish game forcefully
+                                {
+                                    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("other player " + actor.name + " has left", 2000);
+                                    setTimeout(() => {
+                                        GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+                                        GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+                                        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+                                        GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+                                        GamePlayReferenceManager.Instance.RemovePersistNode();
+                                        cc.director.loadScene("MainMenu");
+                                    }, 2100);
+                                }
+                            }
                         }
                     }
                 }
-              }
             }
         }
 

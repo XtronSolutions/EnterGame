@@ -415,6 +415,11 @@ var UIManager = cc.Class({
     //creating static instance of the class
     Instance: null
   },
+  ResetAllData: function ResetAllData() {
+    GamePlayReferenceManager = null;
+    TweenRef;
+    TotalRoom = [];
+  },
   onEnable: function onEnable() {
     //events subscription to be called 
     cc.systemEvent.on('AssignProfileData', this.AssignProfileData, this);
@@ -427,6 +432,7 @@ var UIManager = cc.Class({
     cc.systemEvent.off('ChangePanelScreen', this.ChangePanelScreen, this);
   },
   onLoad: function onLoad() {
+    this.ResetAllData();
     this.ReferenceManagerRef = this.ReferenceManagerRef.getComponent("GamePlayReferenceManager");
     this.SelectedRole = Roles[0];
     this.SelectedRoleIndex = 0;
@@ -593,9 +599,9 @@ var UIManager = cc.Class({
   SetPasswordText: function SetPasswordText(text) {
     this.PasswordText = text;
   },
-  ToggleUIContainer: function ToggleUIContainer() {
+  ToggleUIContainer: function ToggleUIContainer(_mainIndex) {
     for (var index = 0; index < this.UIContainer.length; index++) {
-      if (this.SelectedRoleIndex == index) this.UIContainer[index].active = true;else this.UIContainer[index].active = false;
+      if (_mainIndex == index) this.UIContainer[index].active = true;else this.UIContainer[index].active = false;
     }
   },
   AssignProfileData: function AssignProfileData(_isStudent, _isTeacher, _isMentor, _isAdmin, _isDirector) {
@@ -619,12 +625,13 @@ var UIManager = cc.Class({
       _isDirector = false;
     }
 
+    //console.error(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType));
     if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 1) //means successful
       {
         this.ChangePanelScreen(true, false, "");
-        this.ToggleUIContainer();
 
         if (_isStudent) {
+          this.ToggleUIContainer(0);
           this.TogglePlayButton(true);
           this.ToggleSpectateButton(false);
           this.UIProfile.CashNode.active = true;
@@ -641,6 +648,7 @@ var UIManager = cc.Class({
           this.UIProfile.CashLabel.string = "$ " + GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gameCash;
           this.ToggleLoadingNode(false);
         } else if (_isTeacher) {
+          this.ToggleUIContainer(1);
           this.TogglePlayButton(false);
           this.ToggleSpectateButton(true);
           this.UIProfile.CashNode.active = false;
@@ -652,6 +660,7 @@ var UIManager = cc.Class({
           this.TeacherUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.contactNumber;
           this.ToggleLoadingNode(false);
         } else if (_isMentor) {
+          this.ToggleUIContainer(2);
           this.TogglePlayButton(false);
           this.ToggleSpectateButton(true);
           this.UIProfile.CashNode.active = false;
@@ -662,6 +671,7 @@ var UIManager = cc.Class({
           this.MentorUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.contactNumber;
           this.ToggleLoadingNode(false);
         } else if (_isAdmin) {
+          this.ToggleUIContainer(3);
           this.TogglePlayButton(false);
           this.ToggleSpectateButton(true);
           this.UIProfile.CashNode.active = false;
@@ -672,6 +682,7 @@ var UIManager = cc.Class({
           this.AdminUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.contactNumber;
           this.ToggleLoadingNode(false);
         } else if (_isDirector) {
+          this.ToggleUIContainer(4);
           this.TogglePlayButton(false);
           this.ToggleSpectateButton(true);
           this.UIProfile.CashNode.active = false;
@@ -731,6 +742,16 @@ var UIManager = cc.Class({
     this.ToggleProfileScreen_SpectateUI(true);
     this.ToggleRoomScreen_SpectateUI(false);
     this.ExitConnecting();
+  },
+  Logout: function Logout() {
+    cc.systemEvent.emit("ClearData"); //function written in storage Manager class
+
+    if (GamePlayReferenceManager.Instance.Get_GameManager() != null) GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController() != null) GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager() != null) GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+    if (GamePlayReferenceManager.Instance.Get_ServerBackend() != null) GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+    GamePlayReferenceManager.Instance.RemovePersistNode();
+    cc.director.loadScene("MainMenu");
   },
   //#endregion
   ShowToast: function ShowToast(msg, _time) {

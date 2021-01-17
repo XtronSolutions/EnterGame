@@ -14,5 +14,6 @@ require('./assets/Script/RoomListHandler');
 require('./assets/Script/ServerBackend');
 require('./assets/Script/SpaceHandler');
 require('./assets/Script/SpacesManager');
+require('./assets/Script/StorageManager');
 require('./assets/Script/TweenManager');
 require('./assets/Script/UIManager');

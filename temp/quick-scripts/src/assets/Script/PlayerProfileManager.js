@@ -163,6 +163,7 @@ var PlayerProfileManager = cc.Class({
     }
   },
   onLoad: function onLoad() {
+    GamePlayReferenceManager = null;
     this.CheckReferences();
   },
   //
