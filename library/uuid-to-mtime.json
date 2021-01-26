@@ -1,17 +1,17 @@
 {
   "29f52784-2fca-467b-92e7-8fd9ef8c57b7": {
-    "asset": 1609797402006,
-    "meta": 1609797436620,
+    "asset": 1611653475170,
+    "meta": 1611653496567,
     "relativePath": "Scene"
   },
   "4734c20c-0db8-4eb2-92ea-e692f4d70934": {
-    "asset": 1610832952016,
-    "meta": 1610914003965,
+    "asset": 1611653475312,
+    "meta": 1611653496569,
     "relativePath": "Script"
   },
   "7b81d4e8-ec84-4716-968d-500ac1d78a54": {
-    "asset": 1609815372177,
-    "meta": 1609956031214,
+    "asset": 1611653475442,
+    "meta": 1611653496573,
     "relativePath": "Texture"
   },
   "a8027877-d8d6-4645-97a0-52d4a0123dba": {
@@ -20,8 +20,8 @@
     "relativePath": "Texture\\singleColor.png"
   },
   "81509ba0-e75e-4a32-b4e1-f8b00c6a020c": {
-    "asset": 1609821999894,
-    "meta": 1609956031219,
+    "asset": 1611653475705,
+    "meta": 1611653496581,
     "relativePath": "Texture\\Gameplay"
   },
   "5091d9cc-b61b-4e35-9d00-b224417a10e5": {
@@ -60,8 +60,8 @@
     "relativePath": "Texture\\Gameplay\\Start.png"
   },
   "b69dd489-a312-47c1-b392-19a3b8037220": {
-    "asset": 1610568127842,
-    "meta": 1610738910056,
+    "asset": 1611653475134,
+    "meta": 1611653496563,
     "relativePath": "Prefabs"
   },
   "4cc083b6-481f-4ba0-ac6d-db6d5fbc2f8a": {
@@ -120,8 +120,8 @@
     "relativePath": "Texture\\LOADING2.png"
   },
   "7a9e2025-834d-4005-a4f8-0292ae595961": {
-    "asset": 1609797401920,
-    "meta": 1609797436611,
+    "asset": 1611653475061,
+    "meta": 1611653496561,
     "relativePath": "Animations"
   },
   "1c39e284-218d-4a40-b38f-efd7d53f25a3": {
@@ -130,8 +130,8 @@
     "relativePath": "Animations\\loading.anim"
   },
   "4139d5cb-c3bc-4adc-9868-69ebbaf164ee": {
-    "asset": 1609821999894,
-    "meta": 1609956031226,
+    "asset": 1611653475747,
+    "meta": 1611653496583,
     "relativePath": "Texture\\Gameplay\\Avatars"
   },
   "ababc4d8-df39-41b9-9f40-be404415845a": {
@@ -680,8 +680,8 @@
     "relativePath": "Script\\GamePlayReferenceManager.js"
   },
   "44672244-60ba-4985-8238-4ab6681c0189": {
-    "asset": 1609800291462,
-    "meta": 1609800314166,
+    "asset": 1611653475342,
+    "meta": 1611653496571,
     "relativePath": "Script\\Libraries"
   },
   "939d0389-e4a0-4f7e-8b8b-bba3417cd14a": {
@@ -703,11 +703,6 @@
     "asset": 1607286990186,
     "meta": 1609800314173,
     "relativePath": "Script\\Libraries\\runtime.js"
-  },
-  "b24e187b-8043-497e-943c-3137c70606fd": {
-    "asset": 1609559306882,
-    "meta": 1609800314364,
-    "relativePath": "Script\\MultiplayerSyncManager.js"
   },
   "df1540ff-8d14-4e70-8155-07e276311e1e": {
     "asset": 1609278612750,
@@ -855,8 +850,8 @@
     "relativePath": "Texture\\Gameplay\\BG_pop.png"
   },
   "9e1d2821-2a63-47e3-b81f-2d39a351f503": {
-    "asset": 1609815385485,
-    "meta": 1609956031216,
+    "asset": 1611653475437,
+    "meta": 1611653496575,
     "relativePath": "Texture\\AvatarUI"
   },
   "545c2d5a-2eaf-4872-b572-90cac97f35d3": {
@@ -924,54 +919,74 @@
     "meta": 1610853515290,
     "relativePath": "Script\\RoomListHandler.js"
   },
-  "1954f761-8ba1-4080-980c-1dd4d3d6b82d": {
-    "asset": 1610853309502,
-    "meta": 1610853515491,
-    "relativePath": "Script\\ServerBackend.js"
-  },
   "1f79f597-56a4-4d45-bfd6-999fa2e12504": {
     "asset": 1610853483793,
     "meta": 1610853515541,
     "relativePath": "Script\\SpaceHandler.js"
   },
-  "f5a146cc-b03f-4949-9a2f-2a0f5a044750": {
-    "asset": 1610853719031,
-    "meta": 1610853768136,
-    "relativePath": "Script\\StorageManager.js"
-  },
   "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1610924673030,
-    "meta": 1610924673260,
+    "asset": 1611696375427,
+    "meta": 1611696375658,
     "relativePath": "Scene\\GamePlay.fire"
-  },
-  "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
-    "asset": 1610925310126,
-    "meta": 1610925310165,
-    "relativePath": "Scene\\MainMenu.fire"
   },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
     "asset": 1610864253417,
     "meta": 1610914004679,
     "relativePath": "Script\\DecksData.js"
   },
+  "2e1318c7-f2a3-42b5-8c99-dcbc9d1263b2": {
+    "asset": 1611696830567,
+    "meta": 1611696830604,
+    "relativePath": "Scene\\MainMenu.fire"
+  },
+  "b24e187b-8043-497e-943c-3137c70606fd": {
+    "asset": 1611446599545,
+    "meta": 1611446720830,
+    "relativePath": "Script\\MultiplayerSyncManager.js"
+  },
+  "4da2e995-5938-40d0-a850-04508c541791": {
+    "asset": 1611654592485,
+    "meta": 1611654619650,
+    "relativePath": "Texture\\AvatarUI\\avatarButton.png"
+  },
+  "6bd5be51-4a88-4cd6-a23f-c182bfada137": {
+    "asset": 1611655154743,
+    "meta": 1611655165856,
+    "relativePath": "Texture\\AvatarUI\\highlighter.png"
+  },
   "a9f82208-f8fb-43dd-b6c3-35205969c53b": {
-    "asset": 1610919280787,
-    "meta": 1610919282852,
+    "asset": 1611661168239,
+    "meta": 1611661195672,
     "relativePath": "Script\\UIManager.js"
   },
-  "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1610924622301,
-    "meta": 1610924624620,
-    "relativePath": "Script\\GameManager.js"
-  },
   "5cea08ea-872c-4f5e-9880-b668ed0bbf94": {
-    "asset": 1610924587532,
-    "meta": 1610924624848,
+    "asset": 1611664710345,
+    "meta": 1611664712032,
     "relativePath": "Script\\MultiplayerController.js"
   },
+  "63365d97-0e57-4a9c-a078-1c40a45c31fc": {
+    "asset": 1611682974465,
+    "meta": 1611682997818,
+    "relativePath": "Texture\\AvatarUI\\plus.png"
+  },
+  "1954f761-8ba1-4080-980c-1dd4d3d6b82d": {
+    "asset": 1611687830434,
+    "meta": 1611688042408,
+    "relativePath": "Script\\ServerBackend.js"
+  },
+  "72485a4d-0052-4822-9676-db916a58db09": {
+    "asset": 1611696344297,
+    "meta": 1611696346214,
+    "relativePath": "Script\\GameManager.js"
+  },
   "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
-    "asset": 1610925302915,
-    "meta": 1610925305526,
+    "asset": 1611695956291,
+    "meta": 1611696346686,
     "relativePath": "Script\\GameplayUIManager.js"
+  },
+  "f5a146cc-b03f-4949-9a2f-2a0f5a044750": {
+    "asset": 1611696561351,
+    "meta": 1611696563739,
+    "relativePath": "Script\\StorageManager.js"
   }
 }

@@ -95,6 +95,16 @@ var MultiplayerSyncManager = cc.Class({
       if (this.SelectedMode == 2) //for player
         GamePlayReferenceManager.Instance.Get_MultiplayerController().SendPartnerProfitLoss(_data);else if (this.SelectedMode == 1) //for bot
         this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 15) {
+      //sending payday information to show
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendInfo(_data);else if (this.SelectedMode == 1) //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 16) {
+      //sending call to end the game
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGameOverData(_data);else if (this.SelectedMode == 1) //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
     }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -163,6 +173,16 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().ReceiveProfit_Partner_TurnDecision(_data);
+    } else if (_eventCode == 15) {
+      //receiving payday info
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowInfo(_data);
+    } else if (_eventCode == 16) {
+      //receiving payday info
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().SyncGameCompleteData(_data);
     }
   }
 });

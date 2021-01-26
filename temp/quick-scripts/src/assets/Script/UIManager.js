@@ -6,11 +6,15 @@ cc._RF.push(module, 'a9f82II+PtD3bbDNSBZacU7', 'UIManager');
 
 var _TweenManager = _interopRequireDefault(require("TweenManager"));
 
+var _ServerBackend = _interopRequireDefault(require("./ServerBackend"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var GamePlayReferenceManager = null;
 var TweenRef;
 var TotalRoom = [];
+var AvatarSelection = 0;
+var _tempAvatarSelection = 0;
 var Roles = ["Student", "Teacher", "ProgramAmbassador", "SchoolAdmin", "ProgramDirector"]; //-------------------------------------------class for Profile UI-------------------------//
 
 var ProfileUI = cc.Class({
@@ -306,6 +310,30 @@ var SpectateUI = cc.Class({
       tooltip: "Reference to the prefab of Room on room screen"
     }
   }
+}); //-------------------------------------------class for AvatarUI-------------------------//
+
+var AvatarUI = cc.Class({
+  name: "AvatarUI",
+  properties: {
+    AvatarSelectionScreen: {
+      displayName: "AvatarSelectionScreen",
+      "default": null,
+      type: cc.Node,
+      serializable: true
+    },
+    AvatarNodes: {
+      displayName: "AvatarNodes",
+      "default": [],
+      type: [cc.Node],
+      serializable: true
+    },
+    AvatarButtons: {
+      displayName: "AvatarButtons",
+      "default": [],
+      type: [cc.Node],
+      serializable: true
+    }
+  }
 }); //-------------------------------------------class for UIManager-------------------------//
 
 var UIManager = cc.Class({
@@ -346,6 +374,13 @@ var UIManager = cc.Class({
       type: DirectorProfileUI,
       serializable: true,
       tooltip: "reference to DirectorProfileUI class intance"
+    },
+    AvatarUISetup: {
+      displayName: "AvatarUISetup",
+      "default": null,
+      type: AvatarUI,
+      serializable: true,
+      tooltip: "reference to AvatarUI class intance"
     },
     ScreenNodes: {
       displayName: "ScreenNodes",
@@ -419,17 +454,19 @@ var UIManager = cc.Class({
     GamePlayReferenceManager = null;
     TweenRef;
     TotalRoom = [];
+    AvatarSelection = 0;
+    _tempAvatarSelection = 0;
   },
   onEnable: function onEnable() {
-    //events subscription to be called 
-    cc.systemEvent.on('AssignProfileData', this.AssignProfileData, this);
-    cc.systemEvent.on('UpdateStatusWindow', this.UpdateStatusWindow, this);
-    cc.systemEvent.on('ChangePanelScreen', this.ChangePanelScreen, this);
+    //events subscription to be called
+    cc.systemEvent.on("AssignProfileData", this.AssignProfileData, this);
+    cc.systemEvent.on("UpdateStatusWindow", this.UpdateStatusWindow, this);
+    cc.systemEvent.on("ChangePanelScreen", this.ChangePanelScreen, this);
   },
   onDisable: function onDisable() {
-    cc.systemEvent.off('AssignProfileData', this.AssignProfileData, this);
-    cc.systemEvent.off('UpdateStatusWindow', this.UpdateStatusWindow, this);
-    cc.systemEvent.off('ChangePanelScreen', this.ChangePanelScreen, this);
+    cc.systemEvent.off("AssignProfileData", this.AssignProfileData, this);
+    cc.systemEvent.off("UpdateStatusWindow", this.UpdateStatusWindow, this);
+    cc.systemEvent.off("ChangePanelScreen", this.ChangePanelScreen, this);
   },
   onLoad: function onLoad() {
     this.ResetAllData();
@@ -457,7 +494,7 @@ var UIManager = cc.Class({
     this.UIProfile.SpectateButton.active = _state;
   },
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   ChangePanelScreen: function ChangePanelScreen(isNext, changeScreen, sceneName) {
     var _this = this;
@@ -585,7 +622,7 @@ var UIManager = cc.Class({
     if (this.EmailText != "" && this.PasswordText != "") {
       this.ToggleLoadingNode(true);
       var anim = this.LoadingNode.children[0].children[1].getComponent(cc.Animation);
-      anim.play('loading');
+      anim.play("loading");
       GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText, this.PasswordText, this.SelectedRole);
     } else {
       this.ToggleLoadingNode(false);
@@ -609,6 +646,54 @@ var UIManager = cc.Class({
       if (_mainIndex == index) this.UIContainer[index].active = true;else this.UIContainer[index].active = false;
     }
   },
+  AssignAvatar: function AssignAvatar(_index) {
+    if (_index === void 0) {
+      _index = 0;
+    }
+
+    for (var index = 0; index < this.AvatarUISetup.AvatarNodes.length; index++) {
+      if (_index == index) this.AvatarUISetup.AvatarNodes[index].active = true;else this.AvatarUISetup.AvatarNodes[index].active = false;
+    }
+  },
+  ToggleAvatarScreen: function ToggleAvatarScreen(_state) {
+    this.AvatarUISetup.AvatarSelectionScreen.active = _state;
+  },
+  EnableAvatarScreen: function EnableAvatarScreen() {
+    this.ToggleAvatarScreen(true);
+
+    for (var index = 0; index < this.AvatarUISetup.AvatarButtons.length; index++) {
+      if (AvatarSelection == index) this.AvatarUISetup.AvatarButtons[index].children[1].active = true;else this.AvatarUISetup.AvatarButtons[index].children[1].active = false;
+    }
+  },
+  DisableAvatarScreen: function DisableAvatarScreen() {
+    this.ToggleAvatarScreen(false);
+
+    if (_tempAvatarSelection != AvatarSelection) {
+      AvatarSelection = _tempAvatarSelection;
+      this.AssignAvatar(AvatarSelection);
+      this.AssignDataClasses(AvatarSelection);
+      GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(-1, -1, AvatarSelection);
+    }
+  },
+  AssignAvatarSelection: function AssignAvatarSelection(event) {
+    if (event === void 0) {
+      event = null;
+    }
+
+    _tempAvatarSelection = parseInt(event.currentTarget.name.split("_")[1]);
+    console.log(_tempAvatarSelection);
+
+    for (var index = 0; index < this.AvatarUISetup.AvatarButtons.length; index++) {
+      if (_tempAvatarSelection == index) this.AvatarUISetup.AvatarButtons[index].children[1].active = true;else this.AvatarUISetup.AvatarButtons[index].children[1].active = false;
+    }
+  },
+  AssignDataClasses: function AssignDataClasses(_ID) {
+    GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.avatarId = _ID.toString();
+    GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.avatarId = _ID.toString();
+    GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.avatarId = _ID.toString();
+    GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData = _ID.toString();
+    GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.avatarId = _ID.toString();
+  },
   AssignProfileData: function AssignProfileData(_isStudent, _isTeacher, _isMentor, _isAdmin, _isDirector) {
     if (_isStudent === void 0) {
       _isStudent = false;
@@ -631,84 +716,129 @@ var UIManager = cc.Class({
     }
 
     //console.error(parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType));
-    if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 1) //means successful
-      {
-        this.ChangePanelScreen(true, false, "");
+    if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 1) {
+      //means successful
+      this.ChangePanelScreen(true, false, "");
 
-        if (_isStudent) {
-          this.ToggleUIContainer(0);
-          this.TogglePlayButton(true);
-          this.ToggleSpectateButton(false);
-          this.UIProfile.CashNode.active = true;
-          console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
-          this.UIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
-          this.UIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.emailAddress;
-          this.UIProfile.DOBLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.dOB;
-          this.UIProfile.GradeLevelLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gradeLevel;
-          this.UIProfile.TeacherNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.teacherName;
-          this.UIProfile.GamesWonLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon;
-          this.UIProfile.FBPageLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.facebookPage;
-          this.UIProfile.TestTakenLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testsTaken;
-          this.UIProfile.TestingAvgLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testingAverage;
-          this.UIProfile.CashLabel.string = "$ " + GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gameCash;
-          this.ToggleLoadingNode(false);
-        } else if (_isTeacher) {
-          this.ToggleUIContainer(1);
-          this.TogglePlayButton(false);
-          this.ToggleSpectateButton(true);
-          this.UIProfile.CashNode.active = false;
-          console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData);
-          this.TeacherUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.name;
-          this.TeacherUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.emailAddress;
-          this.TeacherUIProfile.ClassTaught.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.classTaught;
-          this.TeacherUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.school;
-          this.TeacherUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.contactNumber;
-          this.ToggleLoadingNode(false);
-        } else if (_isMentor) {
-          this.ToggleUIContainer(2);
-          this.TogglePlayButton(false);
-          this.ToggleSpectateButton(true);
-          this.UIProfile.CashNode.active = false;
-          console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData);
-          this.MentorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.name;
-          this.MentorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.emailAddress;
-          this.MentorUIProfile.Addresslabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.address;
-          this.MentorUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.contactNumber;
-          this.ToggleLoadingNode(false);
-        } else if (_isAdmin) {
-          this.ToggleUIContainer(3);
-          this.TogglePlayButton(false);
-          this.ToggleSpectateButton(true);
-          this.UIProfile.CashNode.active = false;
-          console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData);
-          this.AdminUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.name;
-          this.AdminUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.emailAddress;
-          this.AdminUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.schoolName;
-          this.AdminUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.contactNumber;
-          this.ToggleLoadingNode(false);
-        } else if (_isDirector) {
-          this.ToggleUIContainer(4);
-          this.TogglePlayButton(false);
-          this.ToggleSpectateButton(true);
-          this.UIProfile.CashNode.active = false;
-          console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData);
-          this.DirectorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.name;
-          this.DirectorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.emailAddress;
-          this.ToggleLoadingNode(false);
+      if (_isStudent) {
+        this.ToggleUIContainer(0);
+        this.TogglePlayButton(true);
+        this.ToggleSpectateButton(false);
+        this.UIProfile.CashNode.active = true;
+        console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData);
+
+        var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.avatarId);
+
+        if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
+          _avatar = 0;
         }
-      } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 2) //user not found
-      {
+
+        this.AssignAvatar(_avatar);
+        AvatarSelection = _avatar;
+        this.UIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
+        this.UIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.emailAddress;
+        this.UIProfile.DOBLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.dOB;
+        this.UIProfile.GradeLevelLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gradeLevel;
+        this.UIProfile.TeacherNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.teacherName;
+        this.UIProfile.GamesWonLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon;
+        this.UIProfile.FBPageLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.facebookPage;
+        this.UIProfile.TestTakenLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testsTaken;
+        this.UIProfile.TestingAvgLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.testingAverage;
+        this.UIProfile.CashLabel.string = "$ " + GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gameCash;
         this.ToggleLoadingNode(false);
-        this.ShowToast("no user registered with entered email.");
-      } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 3) //pass/email invalid
-      {
+      } else if (_isTeacher) {
+        this.ToggleUIContainer(1);
+        this.TogglePlayButton(false);
+        this.ToggleSpectateButton(true);
+        this.UIProfile.CashNode.active = false;
+        console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData);
+
+        var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.avatarId);
+
+        if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
+          _avatar = 0;
+        }
+
+        this.AssignAvatar(_avatar);
+        AvatarSelection = _avatar;
+        this.TeacherUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.name;
+        this.TeacherUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.emailAddress;
+        this.TeacherUIProfile.ClassTaught.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.classTaught;
+        this.TeacherUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.school;
+        this.TeacherUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.contactNumber;
         this.ToggleLoadingNode(false);
-        this.ShowToast("user email or password is wrong");
-      } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 4) //something went wrong
-      {
+      } else if (_isMentor) {
+        this.ToggleUIContainer(2);
+        this.TogglePlayButton(false);
+        this.ToggleSpectateButton(true);
+        this.UIProfile.CashNode.active = false;
+        console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData);
+
+        var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.avatarId);
+
+        if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
+          _avatar = 0;
+        }
+
+        this.AssignAvatar(_avatar);
+        AvatarSelection = _avatar;
+        this.MentorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.name;
+        this.MentorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.emailAddress;
+        this.MentorUIProfile.Addresslabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.address;
+        this.MentorUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.contactNumber;
         this.ToggleLoadingNode(false);
-        this.ShowToast("something went wrong please try again.");
+      } else if (_isAdmin) {
+        this.ToggleUIContainer(3);
+        this.TogglePlayButton(false);
+        this.ToggleSpectateButton(true);
+        this.UIProfile.CashNode.active = false;
+        console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData);
+
+        var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.avatarId);
+
+        if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
+          _avatar = 0;
+        }
+
+        this.AssignAvatar(_avatar);
+        AvatarSelection = _avatar;
+        this.AdminUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.name;
+        this.AdminUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.emailAddress;
+        this.AdminUIProfile.SchoolNameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.schoolName;
+        this.AdminUIProfile.ContactLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.contactNumber;
+        this.ToggleLoadingNode(false);
+      } else if (_isDirector) {
+        this.ToggleUIContainer(4);
+        this.TogglePlayButton(false);
+        this.ToggleSpectateButton(true);
+        this.UIProfile.CashNode.active = false;
+        console.log(GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData);
+
+        var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.avatarId);
+
+        if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
+          _avatar = 0;
+        }
+
+        this.AssignAvatar(_avatar);
+        AvatarSelection = _avatar;
+        this.DirectorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.name;
+        this.DirectorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.emailAddress;
+        this.ToggleLoadingNode(false);
       }
+    } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 2) {
+      //user not found
+      this.ToggleLoadingNode(false);
+      this.ShowToast("no user registered with entered email.");
+    } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 3) {
+      //pass/email invalid
+      this.ToggleLoadingNode(false);
+      this.ShowToast("user email or password is wrong");
+    } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 4) {
+      //something went wrong
+      this.ToggleLoadingNode(false);
+      this.ShowToast("something went wrong please try again.");
+    }
   },
   //#region Spectate Ui Work
   ToggleRoomScreen_SpectateUI: function ToggleRoomScreen_SpectateUI(_state) {
@@ -732,8 +862,8 @@ var UIManager = cc.Class({
   UpdateRoomsList_SpectateUI: function UpdateRoomsList_SpectateUI(_name, _players) {
     var node = cc.instantiate(this.UISpectate.RoomPrefab);
     node.parent = this.UISpectate.ScrollBarContent;
-    node.getComponent('RoomListHandler').SetRoomName(_name);
-    node.getComponent('RoomListHandler').SetPlayerCount(_players);
+    node.getComponent("RoomListHandler").SetRoomName(_name);
+    node.getComponent("RoomListHandler").SetPlayerCount(_players);
     TotalRoom.push(node);
   },
   ResetRoomList: function ResetRoomList() {

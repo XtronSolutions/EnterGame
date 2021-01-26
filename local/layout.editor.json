@@ -43,7 +43,7 @@
                 "children": [
                   "scene"
                 ],
-                "height": 439.125,
+                "height": 395.1000061035156,
                 "type": "panel",
                 "width": 556.7750244140625
               },
@@ -54,7 +54,7 @@
                   "timeline",
                   "game-window"
                 ],
-                "height": 266.07501220703125,
+                "height": 310.0874938964844,
                 "type": "panel",
                 "width": 556.7750244140625
               }
@@ -88,8 +88,7 @@
         "cocos-services",
         "node-library"
       ]
-    },
-    "window-1610925359370": {}
+    }
   },
   "panels": {
     "preferences": {

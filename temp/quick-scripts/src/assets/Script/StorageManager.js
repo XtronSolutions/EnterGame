@@ -17,29 +17,30 @@ var StorageManager = cc.Class({
   },
   // LIFE-CYCLE CALLBACKS:
   onLoad: function onLoad() {
+    console.log("V1");
     GamePlayReferenceManager = null;
     this.Loader.active = true;
     var anim = this.Loader.children[0].children[1].getComponent(cc.Animation);
-    anim.play('loading');
+    anim.play("loading");
     this.CheckReferences();
     this.ReadData();
   },
   onEnable: function onEnable() {
-    //events subscription to be called 
-    cc.systemEvent.on('WriteData', this.WriteData, this);
-    cc.systemEvent.on('RefreshData', this.RefreshData, this);
-    cc.systemEvent.on('ClearData', this.ClearData, this);
+    //events subscription to be called
+    cc.systemEvent.on("WriteData", this.WriteData, this);
+    cc.systemEvent.on("RefreshData", this.RefreshData, this);
+    cc.systemEvent.on("ClearData", this.ClearData, this);
   },
   onDisable: function onDisable() {
-    cc.systemEvent.off('WriteData', this.WriteData, this);
-    cc.systemEvent.on('RefreshData', this.RefreshData, this);
-    cc.systemEvent.on('ClearData', this.ClearData, this);
+    cc.systemEvent.off("WriteData", this.WriteData, this);
+    cc.systemEvent.off("RefreshData", this.RefreshData, this);
+    cc.systemEvent.off("ClearData", this.ClearData, this);
   },
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   ReadData: function ReadData() {
-    var userData = JSON.parse(cc.sys.localStorage.getItem('userData'));
+    var userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
     var server = GamePlayReferenceManager.Instance.Get_ServerBackend();
 
     if (userData === null) {
@@ -52,14 +53,14 @@ var StorageManager = cc.Class({
     }
   },
   WriteData: function WriteData(_data) {
-    cc.sys.localStorage.setItem('userData', JSON.stringify(_data));
+    cc.sys.localStorage.setItem("userData", JSON.stringify(_data));
   },
   RefreshData: function RefreshData(_response) {
     var _this = this;
 
     if (_response == 0) {
       //means successful
-      var userData = JSON.parse(cc.sys.localStorage.getItem('userData'));
+      var userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
       setTimeout(function () {
         var server = GamePlayReferenceManager.Instance.Get_ServerBackend();
         server.ReloginFromStorage(userData);
