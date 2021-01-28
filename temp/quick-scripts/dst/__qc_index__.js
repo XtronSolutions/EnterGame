@@ -21,6 +21,7 @@ require('./assets/Script/MultiplayerController');
 require('./assets/Script/MultiplayerSyncManager');
 require('./assets/Script/PlayerDetails');
 require('./assets/Script/PlayerProfileManager');
+require('./assets/Script/QuestionsData');
 require('./assets/Script/RoomListHandler');
 require('./assets/Script/ServerBackend');
 require('./assets/Script/SpaceHandler');

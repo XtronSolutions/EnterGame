@@ -17,7 +17,7 @@ var StorageManager = cc.Class({
   },
   // LIFE-CYCLE CALLBACKS:
   onLoad: function onLoad() {
-    console.log("V1");
+    console.log("V6");
     GamePlayReferenceManager = null;
     this.Loader.active = true;
     var anim = this.Loader.children[0].children[1].getComponent(cc.Animation);
@@ -40,12 +40,33 @@ var StorageManager = cc.Class({
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   ReadData: function ReadData() {
+    //var userData = null;
     var userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
     var server = GamePlayReferenceManager.Instance.Get_ServerBackend();
 
     if (userData === null) {
       console.log("no session data found");
       this.Loader.active = false;
+
+      var _data;
+
+      if (typeof window.getUserData === "function") {
+        _data = window.getUserData();
+        console.error(_data); // safe to use the function
+      } else {
+        console.error("not a function");
+      } // console.log(window.getUserData());
+      //  console.log(cc.sys.localStorage.getItem("userData"));
+      // console.log(localStorage.getItem("userData"));
+      //console.log(window.localStorage.getItem("userData"));
+      // console.log(_data);
+      // try {
+      //   var _data = window.getUserData();
+      //   //   console.log(getUserData());
+      // } catch (error) {
+      //   console.log(error);
+      // }
+
     } else {
       //console.error(userData);
       //check if token is expired or not

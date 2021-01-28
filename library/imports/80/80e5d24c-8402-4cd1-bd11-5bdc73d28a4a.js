@@ -696,6 +696,13 @@ var OneQuestionUI = cc.Class({
       serializable: true,
       tooltip: "UI reference to the node WaitingScreen of OneQuestion node"
     },
+    WaitingScreenLabel: {
+      displayName: "WaitingScreenLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "UI reference to the node WaitingScreenLabel of OneQuestion node"
+    },
     DecisionTitleLabel: {
       displayName: "DecisionTitleLabel",
       type: cc.Label,
@@ -2944,6 +2951,9 @@ var GameplayUIManager = cc.Class({
   ToggleWaitingScreen_OneQuestionSetupUI: function ToggleWaitingScreen_OneQuestionSetupUI(_state) {
     this.OneQuestionSetupUI.WaitingScreen.active = _state;
   },
+  ShowQuestionToast: function ShowQuestionToast(_msg) {
+    this.OneQuestionSetupUI.WaitingScreenLabel.string = _msg;
+  },
   SetUpSpaceScreen_OneQuestionSetupUI: function SetUpSpaceScreen_OneQuestionSetupUI(_myData, _actorsData, _isTurnOver, _modeIndex) {
     if (_modeIndex === void 0) {
       _modeIndex = 0;
@@ -3002,12 +3012,12 @@ var GameplayUIManager = cc.Class({
     this.ToggleSpaceScreen_OneQuestionSetupUI(false);
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
-  SetUpDecisionScreen_OneQuestionSetupUI: function SetUpDecisionScreen_OneQuestionSetupUI(_question) {
+  SetUpDecisionScreen_OneQuestionSetupUI: function SetUpDecisionScreen_OneQuestionSetupUI(_msg) {
     var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
     this.OneQuestionSetupUI.DecisionTitleLabel.string = "ONE QUESTION";
     this.OneQuestionSetupUI.DecisionCashLabel.string = "$" + _myData.Cash;
     this.OneQuestionSetupUI.DecisionPlayerNameLabel.string = _myData.PlayerName;
-    this.OneQuestionSetupUI.DecisionQuestionLabel.string = "Player has asked if " + _question + "\n" + "\n" + "*either answer question or pay $5000 to player whose asking question.";
+    this.OneQuestionSetupUI.DecisionQuestionLabel.string = _msg;
   },
   //#endregion
   ShowToast: function ShowToast(message, time, _hasbutton) {

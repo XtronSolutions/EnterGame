@@ -5,6 +5,7 @@ cc._RF.push(module, 'df154D/jRROcIFVB+J2MR4e', 'PlayerDetails');
 "use strict";
 
 var GamePlayReferenceManager = null;
+var QuestionsData = null;
 var PlayerDetails = cc.Class({
   name: "PlayerDetails",
   "extends": cc.Component,
@@ -34,20 +35,30 @@ var PlayerDetails = cc.Class({
       "default": 0,
       type: cc.Integer,
       serializable: true
+    },
+    QuestionNode: {
+      "default": null,
+      type: cc.Node,
+      serializable: true
     }
   },
   onEnable: function onEnable() {
     this.CheckReferences();
+
+    if (this.IsOneQuestion) {
+      this.VocQuestion = false;
+      this.EstQuestion = false;
+      this.ToastMessage = "";
+
+      if (this.QuestionNode) {
+        this.QuestionRef = null; // console.log(this.QuestionRef);
+      }
+    }
   },
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager"); // if (!QuestionsData || QuestionsData == null) QuestionsData = require("QuestionsData");
   },
   //#region One Question space funtionality
-  //Question 1: have you skipped loan previous payday?
-  //Question 2: Have you taken any loan?
-  //Question 3: Are you bankrupted? if more than once, tell me the amount?
-  //Question 4: Is your turn going to be skipped next time?
-  //Question 5: Is it going to be double pay day your next payday?
   setPlayerIndex: function setPlayerIndex(_index) {
     this.SelectedPlayerIndex = _index;
   },
@@ -58,11 +69,29 @@ var PlayerDetails = cc.Class({
     this.SelectedPlayerUserID = _uID;
   },
   RaiseEventOneQuestion: function RaiseEventOneQuestion() {
+    this.QuestionRef = GamePlayReferenceManager.Instance.Get_QuestionsData();
+
+    var _Qdata;
+
+    if (this.VocQuestion) {
+      console.log("voc");
+      _Qdata = this.QuestionRef.VocabularyQuestions[this.QuestionID];
+    } else if (this.EstQuestion) {
+      console.log("est");
+      _Qdata = this.QuestionRef.EstablishmentQuestions[this.QuestionID];
+    }
+
+    console.log(_Qdata);
+
     if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      this.ToastMessage = "You have asked following question:" + "\n" + _Qdata.Question + "\n" + "A. " + _Qdata.Option1 + "\n" + "B. " + _Qdata.Option2 + "\n" + "C. " + _Qdata.Option3 + "\n" + "D. " + _Qdata.Option4 + "\n" + "\n" + "waiting for player to answer....";
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowQuestionToast(this.ToastMessage);
       var _data = {
         Question: this.QuestionID,
         UserID: this.SelectedPlayerUserID,
-        UserIndex: this.SelectedPlayerIndex
+        UserIndex: this.SelectedPlayerIndex,
+        IsVoc: this.VocQuestion
       };
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(7, _data); //wait for other player
 
@@ -71,36 +100,55 @@ var PlayerDetails = cc.Class({
       console.log("no sending question to bot");
     }
   },
-  SkippedLoan: function SkippedLoan() {
+  AskVocabularyQuestion: function AskVocabularyQuestion() {
     if (this.IsOneQuestion) {
-      this.QuestionID = 1;
+      this.QuestionID = this.getRandom(0, 12);
+      this.VocQuestion = true;
+      this.EstQuestion = false;
       this.RaiseEventOneQuestion();
     }
   },
-  TakenLoan: function TakenLoan() {
+  AskEstablishmentQuestion: function AskEstablishmentQuestion() {
     if (this.IsOneQuestion) {
-      this.QuestionID = 2;
+      this.QuestionID = this.getRandom(0, 12);
+      this.VocQuestion = false;
+      this.EstQuestion = true;
       this.RaiseEventOneQuestion();
     }
   },
-  IsBankrupt: function IsBankrupt() {
-    if (this.IsOneQuestion) {
-      this.QuestionID = 3;
-      this.RaiseEventOneQuestion();
-    }
-  },
-  IsTurnSkip: function IsTurnSkip() {
-    if (this.IsOneQuestion) {
-      this.QuestionID = 4;
-      this.RaiseEventOneQuestion();
-    }
-  },
-  IsDoublePayDay: function IsDoublePayDay() {
-    if (this.IsOneQuestion) {
-      this.QuestionID = 5;
-      this.RaiseEventOneQuestion();
-    }
-  } // LIFE-CYCLE CALLBACKS:
+  getRandom: function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min; // min included and max excluded
+  } //   SkippedLoan() {
+  //     if (this.IsOneQuestion) {
+  //       this.QuestionID = 1;
+  //       this.RaiseEventOneQuestion();
+  //     }
+  //   },
+  //   TakenLoan() {
+  //     if (this.IsOneQuestion) {
+  //       this.QuestionID = 2;
+  //       this.RaiseEventOneQuestion();
+  //     }
+  //   },
+  //   IsBankrupt() {
+  //     if (this.IsOneQuestion) {
+  //       this.QuestionID = 3;
+  //       this.RaiseEventOneQuestion();
+  //     }
+  //   },
+  //   IsTurnSkip() {
+  //     if (this.IsOneQuestion) {
+  //       this.QuestionID = 4;
+  //       this.RaiseEventOneQuestion();
+  //     }
+  //   },
+  //   IsDoublePayDay() {
+  //     if (this.IsOneQuestion) {
+  //       this.QuestionID = 5;
+  //       this.RaiseEventOneQuestion();
+  //     }
+  //   },
+  // LIFE-CYCLE CALLBACKS:
   // start () {
   // },
   // update (dt) {},

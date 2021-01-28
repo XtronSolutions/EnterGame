@@ -435,7 +435,7 @@ var ServerBackend = cc.Class({
     this.CallRESTAPI(this.getUserAPI, "POST", payload, 1, header, _subType);
   },
   LoginUser: function LoginUser(_email, _password, _role) {
-    var payload = new UserLoginPayload(_email, _password, _role, "79be6824-fae7-40cf-816f-ae0be1ab1ff4");
+    var payload = new UserLoginPayload(_email, _password, _role, "UCK2SR4YMG7J");
     this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2, null, -1);
   },
   UpdateUserData: function UpdateUserData(_cash, _gameWon, _avatarID) {

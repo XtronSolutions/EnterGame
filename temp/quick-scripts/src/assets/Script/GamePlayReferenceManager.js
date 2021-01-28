@@ -64,6 +64,13 @@ var GamePlayReferenceManager = cc.Class({
       "default": null,
       serializable: true,
       tooltip: "Reference to node of DecksData"
+    },
+    QuestionsDataRef: {
+      displayName: "QuestionsDataRef",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "Reference to node of QuestionsData"
     }
   },
   statics: {
@@ -120,6 +127,10 @@ var GamePlayReferenceManager = cc.Class({
   Get_DecksData: function Get_DecksData() {
     if (this.DecksDataRef == undefined || this.DecksDataRef == null) this.DecksDataRef = cc.find("Managers/DecksManager");
     if (this.DecksDataRef != undefined && this.DecksDataRef != null) return this.DecksDataRef = this.DecksDataRef.getComponent("DecksData");else return null;
+  },
+  Get_QuestionsData: function Get_QuestionsData() {
+    if (this.QuestionsDataRef == undefined || this.QuestionsDataRef == null) this.QuestionsDataRef = cc.find("Managers/RandomQuestionsData");
+    if (this.QuestionsDataRef != undefined && this.QuestionsDataRef != null) return this.QuestionsDataRef = this.QuestionsDataRef.getComponent("QuestionsData");else return null;
   }
 });
 module.exports = GamePlayReferenceManager;

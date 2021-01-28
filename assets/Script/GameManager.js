@@ -1,4 +1,4 @@
-var _isTest = false;
+var _isTest = true;
 var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
@@ -18,6 +18,7 @@ var NoCardFunctionality = false;
 var PlayerLeft = false;
 var ForceChangeTimeOut = null;
 var GameCompleted = false;
+var CorrectAnswer = 0;
 //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
 var EnumBusinessType = cc.Enum({
@@ -502,7 +503,7 @@ var GameManager = cc.Class({
     GameCompleted = false;
     userGameOver = false;
     BotGameOver = false;
-
+    CorrectAnswer = 0;
     RollCounter = 0;
     DiceTemp = 0;
     DiceRoll = 0;
@@ -2311,9 +2312,11 @@ var GameManager = cc.Class({
   },
 
   QuestionPopUp_OtherUser_OneQuestion(_data) {
+    var _questionRef = GamePlayReferenceManager.Instance.Get_QuestionsData();
     var _userID = _data.UserID;
     var _questionIndex = _data.Question;
     var _playerIndex = _data.UserIndex;
+    var _isVoc = _data.IsVoc;
     var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
 
     if (_userID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData.PlayerUID) {
@@ -2321,9 +2324,20 @@ var GameManager = cc.Class({
 
       _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(true);
 
-      OneQuestionIndex = _questionIndex;
-      var _questionAsked = OneQuestions[_questionIndex - 1];
-      _gameplayUIManager.SetUpDecisionScreen_OneQuestionSetupUI(_questionAsked);
+      var _Qdata;
+      if (_isVoc) {
+        console.log("voc");
+        _Qdata = _questionRef.VocabularyQuestions[_questionIndex];
+      } else {
+        console.log("est");
+        _Qdata = _questionRef.EstablishmentQuestions[_questionIndex];
+      }
+
+      CorrectAnswer = _Qdata.CorrectOption;
+      var _message = "Choose the correct answer." + "\n" + "*wrong answer will cost you a fine of $5000." + "\n" + "\n" + _Qdata.Question + "\n" + "A. " + _Qdata.Option1 + "\n" + "B. " + _Qdata.Option2 + "\n" + "C. " + _Qdata.Option3 + "\n" + "D. " + _Qdata.Option4;
+
+      // var _questionAsked = OneQuestions[_questionIndex - 1];
+      _gameplayUIManager.SetUpDecisionScreen_OneQuestionSetupUI(_message);
     }
   },
 
@@ -2345,34 +2359,67 @@ var GameManager = cc.Class({
     _gameplayUIManager.SetUpSpaceScreen_OneQuestionSetupUI(_myData, _roomData, _isTurnOver, this.SelectedMode);
   },
 
-  OneQuestionDecision_PayAmount_OneQuestion() {
+  OneQuestionDecision_SelectOption_OneQuestion(event = null) {
     var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
     var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    var _selection = parseInt(event.currentTarget.name.split("_")[1]);
 
-    if (_myData.Cash >= 5000) {
-      for (let index = 0; index < this.PlayerGameInfo.length; index++) {
-        if (_myData.PlayerUID == this.PlayerGameInfo[index].PlayerUID) {
-          this.PlayerGameInfo[index].Cash -= 5000;
-          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[index]);
-          break;
-        }
-      }
-
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully paid cash amount to player.", 1200);
+    console.log("option selected: " + _selection);
+    console.log("CorrectAnswer: " + CorrectAnswer);
+    if (_selection == CorrectAnswer) {
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Your answer was correct!.", 1200);
       _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
-      this.RaiseEventDecision_OneQuestion(true, false, -1, _myData.PlayerUID);
+      this.RaiseEventDecision_OneQuestion(false, true, -1, _myData.PlayerUID);
     } else {
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash.");
+      if (_myData.Cash >= 5000) {
+        for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+          if (_myData.PlayerUID == this.PlayerGameInfo[index].PlayerUID) {
+            this.PlayerGameInfo[index].Cash -= 5000;
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[index]);
+            break;
+          }
+        }
+
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have answered wrong, fine amount was payed to the player.", 1200);
+        _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+        this.RaiseEventDecision_OneQuestion(true, false, -1, _myData.PlayerUID);
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash, Skipping question");
+        _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+        this.RaiseEventDecision_OneQuestion(false, false, 0, _myData.PlayerUID);
+        //GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+      }
     }
   },
 
-  OneQuestionDecision_AnswerQuestion_OneQuestion() {
-    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
-    var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
-    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully answered the question.", 1200);
-    _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
-    this.RaiseEventDecision_OneQuestion(false, true, OneQuestionIndex, _myData.PlayerUID);
-  },
+  // OneQuestionDecision_PayAmount_OneQuestion() {
+  //   var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+  //   var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+
+  //   if (_myData.Cash >= 5000) {
+  //     for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+  //       if (_myData.PlayerUID == this.PlayerGameInfo[index].PlayerUID) {
+  //         this.PlayerGameInfo[index].Cash -= 5000;
+  //         GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[index]);
+  //         break;
+  //       }
+  //     }
+
+  //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully paid cash amount to player.", 1200);
+  //     _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+  //     this.RaiseEventDecision_OneQuestion(true, false, -1, _myData.PlayerUID);
+  //   } else {
+  //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash.");
+  //   }
+  // },
+
+  // OneQuestionDecision_AnswerQuestion_OneQuestion() {
+  //   var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+  //   var _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+  //   GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully answered the question.", 1200);
+  //   _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+  //   this.RaiseEventDecision_OneQuestion(false, true, OneQuestionIndex, _myData.PlayerUID);
+  // },
 
   RaiseEventDecision_OneQuestion(_hasDonePayment, _hasAnsweredQuestion, _questionIndex, _UserID) {
     var _data = { PaymentDone: _hasDonePayment, QuestionAnswered: _hasAnsweredQuestion, QuestionIndex: _questionIndex, ID: _UserID };
@@ -2387,72 +2434,81 @@ var GameManager = cc.Class({
       var _questionIndex = _data.QuestionIndex;
       var _uID = _data.ID;
 
-      if (_hasDonePayment) {
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(false);
-        this.PlayerGameInfo[this.TurnNumber].Cash += 5000;
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has refused to answer the question instead payed the cash amount, $5000 added to your cash amount", 2100);
+      _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
+      if (_questionIndex == 0) {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("player does not have enough cash, so questions were skipped.", 2100);
         _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
         this.completeCardTurn();
-      } else if (_hasAnsweredQuestion) {
-        var _selectedPlayerIndex = 0;
-        var _actorsData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+      } else {
+        if (_hasDonePayment) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(false);
+          this.PlayerGameInfo[this.TurnNumber].Cash += 5000;
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("player has given wrong answer, cash $5000 has been added.", 2100);
+          _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
+          this.completeCardTurn();
+        } else if (_hasAnsweredQuestion) {
+          var _selectedPlayerIndex = 0;
+          var _actorsData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
 
-        for (let index = 0; index < _actorsData.length; index++) {
-          if (_uID == _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
-            _selectedPlayerIndex = index;
-            break;
-          }
-        }
-
-        if (_questionIndex == 1) {
-          //have you skipped loan previous payday?
-          if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.SkippedLoanPayment) {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have skipped loan payement in previous payday", 2100);
-          } else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have skipped loan payement in previous payday", 2100);
-          }
-        } else if (_questionIndex == 2) {
-          //Have you taken any loan?
-          var _loanTaken = false;
-          for (let index = 0; index < _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness.length; index++) {
-            if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness[index].LoanTaken) {
-              _loanTaken = true;
+          for (let index = 0; index < _actorsData.length; index++) {
+            if (_uID == _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+              _selectedPlayerIndex = index;
               break;
             }
           }
 
-          if (_loanTaken) {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have taken some loan", 2100);
-          } else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have taken any loan", 2100);
-          }
-        } else if (_questionIndex == 3) {
-          //Are you bankrupted? if more than once, tell me the amount?
-          if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.IsBankrupt) {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have been bankrupted " + _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.BankruptAmount + " time/es.", 2100);
-          } else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have been bankrupted", 2100);
-          }
-        } else if (_questionIndex == 4) {
-          //Is your turn going to be skipped next time?
-          if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.SkipNextTurn) {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next turn will be skipped.", 2100);
-          } else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next turn will not be skipped.", 2100);
-          }
-        } else if (_questionIndex == 5) {
-          //Is it going to be double pay day your next payday?
-          if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.NextTurnDoublePay) {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next payday will be double payday", 2100);
-          } else {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next payday will not be double payday", 2100);
-          }
-        }
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("player has given correct answer, no cash was received.", 2100);
 
-        setTimeout(() => {
-          _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
-          this.completeCardTurn();
-        }, 2150);
+          // if (_questionIndex == 1) {
+          //   //have you skipped loan previous payday?
+          //   if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.SkippedLoanPayment) {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have skipped loan payement in previous payday", 2100);
+          //   } else {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have skipped loan payement in previous payday", 2100);
+          //   }
+          // } else if (_questionIndex == 2) {
+          //   //Have you taken any loan?
+          //   var _loanTaken = false;
+          //   for (let index = 0; index < _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness.length; index++) {
+          //     if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.NoOfBusiness[index].LoanTaken) {
+          //       _loanTaken = true;
+          //       break;
+          //     }
+          //   }
+
+          //   if (_loanTaken) {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have taken some loan", 2100);
+          //   } else {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have taken any loan", 2100);
+          //   }
+          // } else if (_questionIndex == 3) {
+          //   //Are you bankrupted? if more than once, tell me the amount?
+          //   if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.IsBankrupt) {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered to have been bankrupted " + _actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.BankruptAmount + " time/es.", 2100);
+          //   } else {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered not to have been bankrupted", 2100);
+          //   }
+          // } else if (_questionIndex == 4) {
+          //   //Is your turn going to be skipped next time?
+          //   if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.SkipNextTurn) {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next turn will be skipped.", 2100);
+          //   } else {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next turn will not be skipped.", 2100);
+          //   }
+          // } else if (_questionIndex == 5) {
+          //   //Is it going to be double pay day your next payday?
+          //   if (_actorsData[_selectedPlayerIndex].customProperties.PlayerSessionData.CardFunctionality.NextTurnDoublePay) {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next payday will be double payday", 2100);
+          //   } else {
+          //     GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Player has answered, next payday will not be double payday", 2100);
+          //   }
+          // }
+
+          setTimeout(() => {
+            _gameplayUIManager.ToggleSpaceScreen_OneQuestionSetupUI(false);
+            this.completeCardTurn();
+          }, 200);
+        }
       }
     }
   },
