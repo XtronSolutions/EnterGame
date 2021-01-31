@@ -121,7 +121,7 @@ var MultiplayerController = cc.Class({
     ShowRoom = false;
     GameFinished = false;
     IsMasterClient = false;
-    TotalTimer = 5;
+    TotalTimer = 30;
     TimerStarted = false;
     Schedular = null;
     this.ResetRoomValues();
@@ -1101,6 +1101,9 @@ var MultiplayerController = cc.Class({
         _actorsArray[index].setCustomProperty("PlayerSessionData", _data);
       }
     }
+
+    console.log("updating active status of the player who has left........................");
+    console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray());
   },
   HandlePlayerLeave: function HandlePlayerLeave(actor, PhotonReferece, _manager, _playerTurn, _initialSetupDone, _isSpectate) {
     if (actor === void 0) {
@@ -1141,6 +1144,8 @@ var MultiplayerController = cc.Class({
 
               _manager.SetPlayerLeft(true);
             }
+
+            _manager.ResetSomeValues();
           }
 
           break;
@@ -1432,7 +1437,7 @@ var MultiplayerController = cc.Class({
                 if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
                   console.log("actor " + actor.actorNr + " left");
 
-                  if (_realPlayer == -11) {
+                  if (_realPlayer > 1) {
                     MultiplayerController.Instance.HandlePlayerLeave(actor, PhotonReferece, _manager, _playerTurn, _initialSetupDone, false);
 
                     if (_uIGameManager) {

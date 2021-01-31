@@ -485,6 +485,7 @@ var UIManager = cc.Class({
     //Private Variables
     this.EmailText = "";
     this.PasswordText = "";
+    this.LicenseText = "";
     this.nodeCounter = 0;
     this.StatusText = "";
     this.TotalPlayers = "";
@@ -592,10 +593,7 @@ var UIManager = cc.Class({
     this.UIProfile.StatusLabel.string = "";
     //GamePlayReferenceManager.Instance.Get_MultiplayerController().MaxPlayers=_players;
 
-    if (
-      GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() ||
-      GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()
-    ) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() || GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()) {
       cc.systemEvent.emit("UpdateStatusWindow", "waiting for other players...");
       GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinRandomRoom();
     } else {
@@ -653,7 +651,7 @@ var UIManager = cc.Class({
       this.ToggleLoadingNode(true);
       var anim = this.LoadingNode.children[0].children[1].getComponent(cc.Animation);
       anim.play("loading");
-      GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText, this.PasswordText, this.SelectedRole);
+      GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText, this.PasswordText, this.SelectedRole, this.LicenseText);
     } else {
       this.ToggleLoadingNode(false);
       this.ShowToast("Email or password invalid or empty.");
@@ -673,6 +671,10 @@ var UIManager = cc.Class({
 
   SetPasswordText: function (text) {
     this.PasswordText = text;
+  },
+
+  SetLicenseText: function (text) {
+    this.LicenseText = text;
   },
 
   ToggleUIContainer(_mainIndex) {
@@ -852,6 +854,10 @@ var UIManager = cc.Class({
       //something went wrong
       this.ToggleLoadingNode(false);
       this.ShowToast("something went wrong please try again.");
+    } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 5) {
+      //something went wrong
+      this.ToggleLoadingNode(false);
+      this.ShowToast("license key is not valid.");
     }
   },
 
@@ -867,10 +873,7 @@ var UIManager = cc.Class({
   },
 
   ShowAvailableRooms_SpectateUI() {
-    if (
-      GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() ||
-      GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()
-    ) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isConnectedToMaster() || GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().isInLobby()) {
       this.ToggleProfileScreen_SpectateUI(false);
       this.ToggleRoomScreen_SpectateUI(true);
     } else {

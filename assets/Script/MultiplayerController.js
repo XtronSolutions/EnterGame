@@ -117,7 +117,7 @@ var MultiplayerController = cc.Class({
     ShowRoom = false;
     GameFinished = false;
     IsMasterClient = false;
-    TotalTimer = 5;
+    TotalTimer = 30;
     TimerStarted = false;
     Schedular = null;
     this.ResetRoomValues();
@@ -344,16 +344,7 @@ var MultiplayerController = cc.Class({
     @method UpdateRoomCustomProperites
     @returns no return
    **/
-  UpdateRoomCustomProperites(
-    _playerUpdate = false,
-    _playerValue = 0,
-    _initialSetupUpdate = false,
-    _initialSetupValue = false,
-    _playerGameInfoUpdate = false,
-    _playerGameInfoValue = null,
-    _turnNumberUpdate = false,
-    _turnNumbervalue = 0
-  ) {
+  UpdateRoomCustomProperites(_playerUpdate = false, _playerValue = 0, _initialSetupUpdate = false, _initialSetupValue = false, _playerGameInfoUpdate = false, _playerGameInfoValue = null, _turnNumberUpdate = false, _turnNumbervalue = 0) {
     if (_playerUpdate) PhotonRef.myRoom().setCustomProperty("Player", _playerValue, true);
 
     if (_initialSetupUpdate) PhotonRef.myRoom().setCustomProperty("InitialSetup", _initialSetupValue, true);
@@ -1090,6 +1081,9 @@ var MultiplayerController = cc.Class({
         _actorsArray[index].setCustomProperty("PlayerSessionData", _data);
       }
     }
+
+    console.log("updating active status of the player who has left........................");
+    console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray());
   },
 
   HandlePlayerLeave(actor = null, PhotonReferece = null, _manager = null, _playerTurn = 0, _initialSetupDone = false, _isSpectate = false) {
@@ -1104,6 +1098,8 @@ var MultiplayerController = cc.Class({
               _manager.ChangeTurnForcefully();
               _manager.SetPlayerLeft(true);
             }
+
+            _manager.ResetSomeValues();
           }
 
           break;
@@ -1383,7 +1379,7 @@ var MultiplayerController = cc.Class({
 
                   if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
                     console.log("actor " + actor.actorNr + " left");
-                    if (_realPlayer == -11) {
+                    if (_realPlayer > 1) {
                       MultiplayerController.Instance.HandlePlayerLeave(actor, PhotonReferece, _manager, _playerTurn, _initialSetupDone, false);
                       if (_uIGameManager) {
                         _uIGameManager.ShowToast("player " + actor.name + " has left", 1150, false);

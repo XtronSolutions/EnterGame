@@ -478,6 +478,7 @@ var UIManager = cc.Class({
 
     this.EmailText = "";
     this.PasswordText = "";
+    this.LicenseText = "";
     this.nodeCounter = 0;
     this.StatusText = "";
     this.TotalPlayers = "";
@@ -623,7 +624,7 @@ var UIManager = cc.Class({
       this.ToggleLoadingNode(true);
       var anim = this.LoadingNode.children[0].children[1].getComponent(cc.Animation);
       anim.play("loading");
-      GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText, this.PasswordText, this.SelectedRole);
+      GamePlayReferenceManager.Instance.Get_ServerBackend().LoginUser(this.EmailText, this.PasswordText, this.SelectedRole, this.LicenseText);
     } else {
       this.ToggleLoadingNode(false);
       this.ShowToast("Email or password invalid or empty.");
@@ -640,6 +641,9 @@ var UIManager = cc.Class({
   },
   SetPasswordText: function SetPasswordText(text) {
     this.PasswordText = text;
+  },
+  SetLicenseText: function SetLicenseText(text) {
+    this.LicenseText = text;
   },
   ToggleUIContainer: function ToggleUIContainer(_mainIndex) {
     for (var index = 0; index < this.UIContainer.length; index++) {
@@ -838,6 +842,10 @@ var UIManager = cc.Class({
       //something went wrong
       this.ToggleLoadingNode(false);
       this.ShowToast("something went wrong please try again.");
+    } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 5) {
+      //something went wrong
+      this.ToggleLoadingNode(false);
+      this.ShowToast("license key is not valid.");
     }
   },
   //#region Spectate Ui Work

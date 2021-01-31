@@ -14,7 +14,8 @@ var ResponseTypeEnum = cc.Enum({
   Successful: 1,
   UserNotFound: 2,
   InvalidEmailPassword: 3,
-  WentWrong: 4
+  WentWrong: 4,
+  LicenseInvalid: 5
 }); //-------------------------------------------class for Student Data-------------------------//
 
 var Student = cc.Class({
@@ -413,14 +414,14 @@ var ServerBackend = cc.Class({
     if (!ServerBackend.Instance) {
       ServerBackend.Instance = this;
       cc.game.addPersistRootNode(this.node);
-      this.StudentData = new Student();
-      console.error("creating instance " + this.node.name);
+      this.StudentData = new Student(); //  console.error("creating instance " + this.node.name);
     } //private variables
 
 
     this.getUserAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/getUser";
     this.loginUserAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/loginUser";
-    this.UpdateUserDataAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/updateUser"; // this.GetUserData("xtrondev@gmail.com","Student");
+    this.UpdateUserDataAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/updateUser"; //UCK2SR4YMG7J
+    // this.GetUserData("xtrondev@gmail.com","Student");
   },
   GetUserData: function GetUserData(_email, _role, _accessToken, _subType) {
     if (_subType === void 0) {
@@ -434,8 +435,8 @@ var ServerBackend = cc.Class({
     };
     this.CallRESTAPI(this.getUserAPI, "POST", payload, 1, header, _subType);
   },
-  LoginUser: function LoginUser(_email, _password, _role) {
-    var payload = new UserLoginPayload(_email, _password, _role, "UCK2SR4YMG7J");
+  LoginUser: function LoginUser(_email, _password, _role, _license) {
+    var payload = new UserLoginPayload(_email, _password, _role, _license);
     this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2, null, -1);
   },
   UpdateUserData: function UpdateUserData(_cash, _gameWon, _avatarID) {
@@ -631,6 +632,9 @@ var ServerBackend = cc.Class({
                     cc.systemEvent.emit("AssignProfileData");
                   } else if (MainData.message.includes("Password should contain atleast one Integer")) {
                     ServerBackend.Instance.ResponseType = ResponseTypeEnum.InvalidEmailPassword;
+                    cc.systemEvent.emit("AssignProfileData");
+                  } else if (MainData.message.includes("School License is not valid contact Admin!")) {
+                    ServerBackend.Instance.ResponseType = ResponseTypeEnum.LicenseInvalid;
                     cc.systemEvent.emit("AssignProfileData");
                   }
                 } else if (_type == 3) {

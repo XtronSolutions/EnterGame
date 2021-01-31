@@ -87,13 +87,13 @@ var GamePlayReferenceManager = cc.Class({
       GamePlayReferenceManager.Instance = this;
     }
 
-    console.log(this.Get_MultiplayerController());
-    console.log(this.Get_UIManager());
-    console.log(this.Get_GameManager());
-    console.log(this.Get_GameplayUIManager());
-    console.log(this.Get_SpaceManager());
-    console.log(this.Get_MultiplayerSyncManager());
-    console.log(this.Get_ServerBackend());
+    // console.log(this.Get_MultiplayerController());
+    // console.log(this.Get_UIManager());
+    // console.log(this.Get_GameManager());
+    // console.log(this.Get_GameplayUIManager());
+    // console.log(this.Get_SpaceManager());
+    // console.log(this.Get_MultiplayerSyncManager());
+    // console.log(this.Get_ServerBackend());
   },
 
   Get_GameManager: function () {

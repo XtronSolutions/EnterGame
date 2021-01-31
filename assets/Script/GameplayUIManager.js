@@ -21,10 +21,10 @@ var TimeoutRef;
 var CompletionWindowTime = 8000;
 var LongMessageTime = 5000;
 var ShortMessageTime = 2500;
-
+var globalTurnTimer = 30;
 var PayDayInfo = "";
 var InvestSellInfo = "";
-
+var TimerTimeout;
 // var CompletionWindowTime = 500;//8000
 // var LongMessageTime = 250;//5000
 // var ShortMessageTime = 50;//2500
@@ -192,7 +192,6 @@ var BusinessSetupUI = cc.Class({
     this.PlayerNameUI.string = name;
   },
 });
-
 //-------------------------------------------class for Business Setup UI-------------------------//
 var TurnDecisionSetupUI = cc.Class({
   name: "TurnDecisionSetupUI",
@@ -247,6 +246,20 @@ var TurnDecisionSetupUI = cc.Class({
       serializable: true,
       tooltip: "Reference for prefab of expand business node",
     },
+    TimerText: {
+      displayName: "TimerText",
+      type: cc.Label,
+      default: null,
+      serializable: true,
+      tooltip: "Reference for label of timer text for turn decision",
+    },
+    BlockerNode: {
+      displayName: "BlockerNode",
+      type: cc.Node,
+      default: null,
+      serializable: true,
+      tooltip: "Reference for node of blocker for turn decision",
+    },
   },
   ctor: function () {
     //constructor
@@ -256,7 +269,6 @@ var TurnDecisionSetupUI = cc.Class({
     this.PlayerNameUI.string = name;
   },
 });
-
 //-------------------------------------------enumeration for investment/buy and sell-------------------------//
 var InvestEnum = cc.Enum({
   None: 0,
@@ -266,7 +278,6 @@ var InvestEnum = cc.Enum({
   GoldSell: 4,
   Other: 5,
 });
-
 //-------------------------------------------class for InvestSellUI-------------------------//
 var InvestSellUI = cc.Class({
   name: "InvestSellUI",
@@ -344,7 +355,6 @@ var InvestSellUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for SellBusinessUI-------------------------//
 var SellBusinessUI = cc.Class({
   name: "SellBusinessUI",
@@ -417,7 +427,6 @@ var SellBusinessUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for PayDayUI-------------------------//
 var PayDayUI = cc.Class({
   name: "PayDayUI",
@@ -553,7 +562,6 @@ var PayDayUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for InvestUI-------------------------//
 var InvestUI = cc.Class({
   name: "InvestUI",
@@ -598,7 +606,6 @@ var InvestUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for BuyOrSellUI-------------------------//
 var BuyOrSellUI = cc.Class({
   name: "BuyOrSellUI",
@@ -643,7 +650,6 @@ var BuyOrSellUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for OneQuestionUI-------------------------//
 var OneQuestionUI = cc.Class({
   name: "OneQuestionUI",
@@ -751,7 +757,6 @@ var OneQuestionUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for PartnershipUI-------------------------//
 var PartnershipUI = cc.Class({
   name: "PartnershipUI",
@@ -832,7 +837,6 @@ var PartnershipUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for ResultUI-------------------------//
 var ResultUI = cc.Class({
   name: "ResultUI",
@@ -862,7 +866,6 @@ var ResultUI = cc.Class({
     //constructor
   },
 });
-
 //-------------------------------------------class for GameplayUIManager-------------------------//
 var PlayerDataIntance;
 var PlayerBusinessDataIntance;
@@ -880,6 +883,9 @@ var StockBusinessName = "";
 var DiceResult;
 var OnceOrShare;
 var LocationName = "";
+
+var HBDiceCounter = 0;
+var BMDiceCounter = 0;
 
 var HomeBasedPaymentCompleted = false;
 var BrickMortarPaymentCompleted = false;
@@ -1053,6 +1059,9 @@ var GameplayUIManager = cc.Class({
     },
   },
 
+  /**
+    @summary Resets this class global variables and other necessary data onLoad
+   **/
   ResetAllData() {
     GameManager = null;
     GamePlayReferenceManager = null;
@@ -1100,11 +1109,48 @@ var GameplayUIManager = cc.Class({
     InvestSellInfo = "";
   },
 
+  /**
+    @summary Resets turn variables for goldinvest/goldsold/stokcinvest/stocksold
+   **/
+  ResetTurnVariable() {
+    this.GoldInvested = false;
+    this.GoldSold = false;
+    this.StockInvested = false;
+    this.StockSold = false;
+  },
+
+  /**
+    @summary check references of class/es needed.
+   **/
+  CheckReferences() {
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
+
+    if (!GameManager || GameManager == null) GameManager = require("GameManager");
+  },
+
+  /**
+    @summary called when this node gets active
+   **/
+  onEnable: function () {
+    //events subscription to be called
+    cc.systemEvent.on("SyncData", this.SyncData, this);
+  },
+
+  /**
+    @summary called when this node gets deactive
+   **/
+  onDisable: function () {
+    cc.systemEvent.off("SyncData", this.SyncData, this);
+  },
+
+  /**
+    @summary called when instance of the class is loaded
+   **/
   onLoad() {
     this.ResetAllData();
     this.CheckReferences();
 
-    //local variables
+    //declaring local variables
     this.GoldInvested = false;
     this.GoldSold = false;
     this.StockInvested = false;
@@ -1115,28 +1161,9 @@ var GameplayUIManager = cc.Class({
     this.IsBankrupted = false;
     this.BankruptedAmount = 0;
     this.AddCashAmount = "";
-  },
-
-  ResetTurnVariable() {
-    this.GoldInvested = false;
-    this.GoldSold = false;
-    this.StockInvested = false;
-    this.StockSold = false;
-  },
-
-  CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
-
-    if (!GameManager || GameManager == null) GameManager = require("GameManager");
-  },
-
-  onEnable: function () {
-    //events subscription to be called
-    cc.systemEvent.on("SyncData", this.SyncData, this);
-  },
-
-  onDisable: function () {
-    cc.systemEvent.off("SyncData", this.SyncData, this);
+    this.Timer = 0;
+    this.TimerStarted = false;
+    TimerTimeout = null;
   },
 
   ToggleScreen_InsufficientBalance(_state) {
@@ -1153,7 +1180,7 @@ var GameplayUIManager = cc.Class({
 
   CloseInitialScreen_SpectateMode() {
     this.BusinessSetupData.WaitingStatusNode.active = false;
-    console.trace("closedddddddddddddddddddddddddddddddddddd");
+    // console.trace("closedddddddddddddddddddddddddddddddddddd");
   },
 
   ToggleLeaveRoomButton_SpectateModeUI(_state) {
@@ -1238,7 +1265,7 @@ var GameplayUIManager = cc.Class({
 
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
-      this.BusinessSetupData.TimerNode.active = true;
+      this.BusinessSetupData.TimerNode.active = false;
       PlayerDataIntance.Cash = StartGameCash;
       this.BusinessSetupData.AddButtonNode.active = true;
     }
@@ -1459,7 +1486,6 @@ var GameplayUIManager = cc.Class({
       this.GameplayUIScreen.active = true;
 
       GamePlayReferenceManager.Instance.Get_GameManager().StartTurn();
-
       console.log(GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo);
     }
   },
@@ -1630,7 +1656,37 @@ var GameplayUIManager = cc.Class({
   //TurnDecisionSetupUI//------------------------
   ToggleDecision_TurnDecision: function (isactive) {
     this.DecisionScreen.active = isactive;
+
+    if (isactive) {
+      this.TurnDecisionSetupUI.BlockerNode.active = false;
+      this.Timer = globalTurnTimer;
+      this.TimerStarted = true;
+      this.TurnDecisionSetupUI.TimerText.string = this.Timer + " seconds are left to choose above options except 'Roll The Dice'";
+      this.UpdateTimer();
+    } else {
+      clearTimeout(TimerTimeout);
+      this.Timer = 0;
+      this.TimerStarted = false;
+      this.TurnDecisionSetupUI.TimerText.string = "";
+      this.TurnDecisionSetupUI.BlockerNode.active = false;
+    }
+
     this.UpdateCash_TurnDecision();
+  },
+
+  UpdateTimer() {
+    if (this.Timer > 0) {
+      this.Timer--;
+      this.TurnDecisionSetupUI.TimerText.string = this.Timer + " seconds are left to choose above options except 'Roll The Dice'";
+      TimerTimeout = setTimeout(() => {
+        this.UpdateTimer();
+      }, 1000);
+    } else {
+      this.Timer = 0;
+      this.TimerStarted = false;
+      this.TurnDecisionSetupUI.TimerText.string = "Timer is over, you can select only 'Roll The Dice' now.";
+      this.TurnDecisionSetupUI.BlockerNode.active = true;
+    }
   },
 
   UpdateCash_TurnDecision: function () {

@@ -27,8 +27,10 @@ var TimeoutRef;
 var CompletionWindowTime = 8000;
 var LongMessageTime = 5000;
 var ShortMessageTime = 2500;
+var globalTurnTimer = 30;
 var PayDayInfo = "";
-var InvestSellInfo = ""; // var CompletionWindowTime = 500;//8000
+var InvestSellInfo = "";
+var TimerTimeout; // var CompletionWindowTime = 500;//8000
 // var LongMessageTime = 250;//5000
 // var ShortMessageTime = 50;//2500
 //-------------------------------------------enumeration for amount of loan-------------------------//
@@ -245,6 +247,20 @@ var TurnDecisionSetupUI = cc.Class({
       "default": null,
       serializable: true,
       tooltip: "Reference for prefab of expand business node"
+    },
+    TimerText: {
+      displayName: "TimerText",
+      type: cc.Label,
+      "default": null,
+      serializable: true,
+      tooltip: "Reference for label of timer text for turn decision"
+    },
+    BlockerNode: {
+      displayName: "BlockerNode",
+      type: cc.Node,
+      "default": null,
+      serializable: true,
+      tooltip: "Reference for node of blocker for turn decision"
     }
   },
   ctor: function ctor() {//constructor
@@ -852,6 +868,8 @@ var StockBusinessName = "";
 var DiceResult;
 var OnceOrShare;
 var LocationName = "";
+var HBDiceCounter = 0;
+var BMDiceCounter = 0;
 var HomeBasedPaymentCompleted = false;
 var BrickMortarPaymentCompleted = false;
 var LoanPayed = false;
@@ -1022,6 +1040,10 @@ var GameplayUIManager = cc.Class({
       serializable: true
     }
   },
+
+  /**
+    @summary Resets this class global variables and other necessary data onLoad
+   **/
   ResetAllData: function ResetAllData() {
     GameManager = null;
     GamePlayReferenceManager = null;
@@ -1064,9 +1086,46 @@ var GameplayUIManager = cc.Class({
     PayDayInfo = "";
     InvestSellInfo = "";
   },
+
+  /**
+    @summary Resets turn variables for goldinvest/goldsold/stokcinvest/stocksold
+   **/
+  ResetTurnVariable: function ResetTurnVariable() {
+    this.GoldInvested = false;
+    this.GoldSold = false;
+    this.StockInvested = false;
+    this.StockSold = false;
+  },
+
+  /**
+    @summary check references of class/es needed.
+   **/
+  CheckReferences: function CheckReferences() {
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
+    if (!GameManager || GameManager == null) GameManager = require("GameManager");
+  },
+
+  /**
+    @summary called when this node gets active
+   **/
+  onEnable: function onEnable() {
+    //events subscription to be called
+    cc.systemEvent.on("SyncData", this.SyncData, this);
+  },
+
+  /**
+    @summary called when this node gets deactive
+   **/
+  onDisable: function onDisable() {
+    cc.systemEvent.off("SyncData", this.SyncData, this);
+  },
+
+  /**
+    @summary called when instance of the class is loaded
+   **/
   onLoad: function onLoad() {
     this.ResetAllData();
-    this.CheckReferences(); //local variables
+    this.CheckReferences(); //declaring local variables
 
     this.GoldInvested = false;
     this.GoldSold = false;
@@ -1078,23 +1137,9 @@ var GameplayUIManager = cc.Class({
     this.IsBankrupted = false;
     this.BankruptedAmount = 0;
     this.AddCashAmount = "";
-  },
-  ResetTurnVariable: function ResetTurnVariable() {
-    this.GoldInvested = false;
-    this.GoldSold = false;
-    this.StockInvested = false;
-    this.StockSold = false;
-  },
-  CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
-    if (!GameManager || GameManager == null) GameManager = require("GameManager");
-  },
-  onEnable: function onEnable() {
-    //events subscription to be called
-    cc.systemEvent.on("SyncData", this.SyncData, this);
-  },
-  onDisable: function onDisable() {
-    cc.systemEvent.off("SyncData", this.SyncData, this);
+    this.Timer = 0;
+    this.TimerStarted = false;
+    TimerTimeout = null;
   },
   ToggleScreen_InsufficientBalance: function ToggleScreen_InsufficientBalance(_state) {
     this.InsufficientBalanceScreen.active = _state;
@@ -1107,8 +1152,7 @@ var GameplayUIManager = cc.Class({
     this.BusinessSetupData.WaitingStatusNode.active = true;
   },
   CloseInitialScreen_SpectateMode: function CloseInitialScreen_SpectateMode() {
-    this.BusinessSetupData.WaitingStatusNode.active = false;
-    console.trace("closedddddddddddddddddddddddddddddddddddd");
+    this.BusinessSetupData.WaitingStatusNode.active = false; // console.trace("closedddddddddddddddddddddddddddddddddddd");
   },
   ToggleLeaveRoomButton_SpectateModeUI: function ToggleLeaveRoomButton_SpectateModeUI(_state) {
     this.LeaveRoomButton.active = _state;
@@ -1224,7 +1268,7 @@ var GameplayUIManager = cc.Class({
 
     if (isFirstTime) {
       this.BusinessSetupData.ExitButtonNode.active = false;
-      this.BusinessSetupData.TimerNode.active = true;
+      this.BusinessSetupData.TimerNode.active = false;
       PlayerDataIntance.Cash = StartGameCash;
       this.BusinessSetupData.AddButtonNode.active = true;
     }
@@ -1608,7 +1652,38 @@ var GameplayUIManager = cc.Class({
   //TurnDecisionSetupUI//------------------------
   ToggleDecision_TurnDecision: function ToggleDecision_TurnDecision(isactive) {
     this.DecisionScreen.active = isactive;
+
+    if (isactive) {
+      this.TurnDecisionSetupUI.BlockerNode.active = false;
+      this.Timer = globalTurnTimer;
+      this.TimerStarted = true;
+      this.TurnDecisionSetupUI.TimerText.string = this.Timer + " seconds are left to choose above options except 'Roll The Dice'";
+      this.UpdateTimer();
+    } else {
+      clearTimeout(TimerTimeout);
+      this.Timer = 0;
+      this.TimerStarted = false;
+      this.TurnDecisionSetupUI.TimerText.string = "";
+      this.TurnDecisionSetupUI.BlockerNode.active = false;
+    }
+
     this.UpdateCash_TurnDecision();
+  },
+  UpdateTimer: function UpdateTimer() {
+    var _this2 = this;
+
+    if (this.Timer > 0) {
+      this.Timer--;
+      this.TurnDecisionSetupUI.TimerText.string = this.Timer + " seconds are left to choose above options except 'Roll The Dice'";
+      TimerTimeout = setTimeout(function () {
+        _this2.UpdateTimer();
+      }, 1000);
+    } else {
+      this.Timer = 0;
+      this.TimerStarted = false;
+      this.TurnDecisionSetupUI.TimerText.string = "Timer is over, you can select only 'Roll The Dice' now.";
+      this.TurnDecisionSetupUI.BlockerNode.active = true;
+    }
   },
   UpdateCash_TurnDecision: function UpdateCash_TurnDecision() {
     this.TurnDecisionSetupUI.CashAmountLabel.string = "$ " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber()].Cash;
@@ -1665,7 +1740,7 @@ var GameplayUIManager = cc.Class({
     LocationName = _name;
   },
   OnExpandButtonClicked_TurnDecision: function OnExpandButtonClicked_TurnDecision(event, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash) {
-    var _this2 = this;
+    var _this3 = this;
 
     if (event === void 0) {
       event = null;
@@ -1694,7 +1769,7 @@ var GameplayUIManager = cc.Class({
     if (generatedLength == 0) {
       this.ShowToast("You have no brick and mortar business to expand.");
       setTimeout(function () {
-        _this2.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+        _this3.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
       }, 1600);
     }
   },
@@ -2115,7 +2190,7 @@ var GameplayUIManager = cc.Class({
     this.InvestSellSetupUI.TotalAmountValueLabel.string = _totalAmountValue;
   },
   ApplyButton_InvestSell: function ApplyButton_InvestSell() {
-    var _this3 = this;
+    var _this4 = this;
 
     if (EnterBuySellAmount == "") {
       this.ShowToast("Please enter an amount.");
@@ -2136,7 +2211,7 @@ var GameplayUIManager = cc.Class({
           InvestSellInfo = "Buying GOLD:" + "\n" + "\n" + "Dice Rolled: " + OnceOrShare / 1000 + "\n" + "Per Ounce price: $" + OnceOrShare + "\n" + "Purchased Ounces: " + _amount + "\n" + "Total Payment for Ounces: $" + _TotalAmount;
           this.RaiseEventToSyncInfo(InvestSellInfo);
           setTimeout(function () {
-            _this3.ExitButton_InvestSell();
+            _this4.ExitButton_InvestSell();
           }, 200);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -2156,7 +2231,7 @@ var GameplayUIManager = cc.Class({
           InvestSellInfo = "Selling GOLD:" + "\n" + "\n" + "Dice Rolled: " + OnceOrShare / 1000 + "\n" + "Per Ounce price: $" + OnceOrShare + "\n" + "Sold Ounces: " + _amount + "\n" + "Total Payment for Ounces: $" + _TotalAmount;
           this.RaiseEventToSyncInfo(InvestSellInfo);
           setTimeout(function () {
-            _this3.ExitButton_InvestSell();
+            _this4.ExitButton_InvestSell();
           }, 200);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -2177,7 +2252,7 @@ var GameplayUIManager = cc.Class({
           InvestSellInfo = "Buying STOCK:" + "\n" + "\n" + "Dice Rolled: " + OnceOrShare / 1000 + "\n" + "Per share price: $" + OnceOrShare + "\n" + "Purchased shares: " + _amount + "\n" + "Total Payment for shares: $" + _TotalAmount;
           this.RaiseEventToSyncInfo(InvestSellInfo);
           setTimeout(function () {
-            _this3.ExitButton_InvestSell();
+            _this4.ExitButton_InvestSell();
           }, 200);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -2197,7 +2272,7 @@ var GameplayUIManager = cc.Class({
           InvestSellInfo = "Selling STOCK:" + "\n" + "\n" + "Dice Rolled: " + OnceOrShare / 1000 + "\n" + "Per share price: $" + OnceOrShare + "\n" + "Sold shares: " + _amount + "\n" + "Total Payment for shares: $" + _TotalAmount;
           this.RaiseEventToSyncInfo(InvestSellInfo);
           setTimeout(function () {
-            _this3.ExitButton_InvestSell();
+            _this4.ExitButton_InvestSell();
           }, 200);
         } else {
           this.UpdateData_InvestSell(OnceOrShare + "*0=0");
@@ -2266,7 +2341,7 @@ var GameplayUIManager = cc.Class({
     return _loan;
   },
   AssignData_PayDay: function AssignData_PayDay(_title, _isDoublePayDay, _skipHM, _skipBM, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, _hMAmount, _bmAmount, _bmLocation, PaydayCounter, DoublePayCounter) {
-    var _this4 = this;
+    var _this5 = this;
 
     if (_isDoublePayDay === void 0) {
       _isDoublePayDay = false;
@@ -2392,17 +2467,17 @@ var GameplayUIManager = cc.Class({
 
     if (_skipBM || _skipHM) {
       setTimeout(function () {
-        _this4.PayDayCompleted();
+        _this5.PayDayCompleted();
       }, _time + 200);
     }
 
     if (_isBot) {
       setTimeout(function () {
-        _this4.OnHomeBasedPaymentClicked_PayDay();
+        _this5.OnHomeBasedPaymentClicked_PayDay();
 
-        _this4.OnBMPaymentClicked_PayDay();
+        _this5.OnBMPaymentClicked_PayDay();
 
-        _this4.OnLoanPaymentClicked_PayDay();
+        _this5.OnLoanPaymentClicked_PayDay();
       }, 0);
     }
   },
@@ -2627,7 +2702,7 @@ var GameplayUIManager = cc.Class({
     }
   },
   ReceivePayment_PayDay: function ReceivePayment_PayDay() {
-    var _this5 = this;
+    var _this6 = this;
 
     //all
     var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
@@ -2638,9 +2713,9 @@ var GameplayUIManager = cc.Class({
     if (!this.IsBotTurn) {
       this.ShowToast("Amount $" + TotalPayDayAmount + " has been added to your cash amount, Total Cash has become $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
       setTimeout(function () {
-        _this5.ToggleResultPanelScreen_PayDay(false);
+        _this6.ToggleResultPanelScreen_PayDay(false);
 
-        _this5.PayDayCompleted();
+        _this6.PayDayCompleted();
       }, 100);
     } else {
       console.log("Amount $" + TotalPayDayAmount + " has been added to your cash amount, Total Cash has become $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash);
@@ -2673,16 +2748,16 @@ var GameplayUIManager = cc.Class({
     this.PayDaySetupUI.LoanResultPanelNode.active = false;
   },
   StartNewGame_PayDay: function StartNewGame_PayDay() {
-    var _this6 = this;
+    var _this7 = this;
 
     //if bankrupted you can start new game
     this.ShowToast("You will lose all progress and start new game from the start.", 3000, false);
     setTimeout(function () {
-      _this6.ExitLoanScreen_PayDay();
+      _this7.ExitLoanScreen_PayDay();
 
-      _this6.TogglePayDayScreen_PayDay(false);
+      _this7.TogglePayDayScreen_PayDay(false);
 
-      _this6.Exit___InsufficientBalance();
+      _this7.Exit___InsufficientBalance();
 
       cc.systemEvent.emit("ShowCard", "", false);
       HomeBasedPaymentCompleted = false;
@@ -3021,7 +3096,7 @@ var GameplayUIManager = cc.Class({
   },
   //#endregion
   ShowToast: function ShowToast(message, time, _hasbutton) {
-    var _this7 = this;
+    var _this8 = this;
 
     if (time === void 0) {
       time = ShortMessageTime;
@@ -3056,7 +3131,7 @@ var GameplayUIManager = cc.Class({
           this.PopUpUIButton.active = true;
           clearTimeout(TimeoutRef);
           TimeoutRef = setTimeout(function () {
-            _this7.CompleteToast();
+            _this8.CompleteToast();
           }, CompletionWindowTime);
         } else {
           this.PopUpUIButton.active = false;
@@ -3071,7 +3146,7 @@ var GameplayUIManager = cc.Class({
           this.PopUpUIButton.active = true;
           clearTimeout(TimeoutRef);
           TimeoutRef = setTimeout(function () {
-            _this7.CompleteToast();
+            _this8.CompleteToast();
           }, CompletionWindowTime);
         } else {
           this.PopUpUIButton.active = false;
