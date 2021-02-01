@@ -5,6 +5,7 @@ cc._RF.push(module, 'f5a14bMsD9JSZovKg9aBEdQ', 'StorageManager');
 "use strict";
 
 var GamePlayReferenceManager = null;
+var IsWeb = true;
 var StorageManager = cc.Class({
   name: "StorageManager",
   "extends": cc.Component,
@@ -17,7 +18,7 @@ var StorageManager = cc.Class({
   },
   // LIFE-CYCLE CALLBACKS:
   onLoad: function onLoad() {
-    console.log("V9"); // console.log = function () {};
+    console.log("V10"); // console.log = function () {};
     //  console.error = function () {};
     // console.warn = function () {};
 
@@ -43,7 +44,21 @@ var StorageManager = cc.Class({
     if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   ReadData: function ReadData() {
-    var userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+    var userData;
+
+    if (IsWeb) {
+      var storedData = window.AllData;
+      console.log(storedData);
+
+      if (storedData == undefined || storedData == null) {
+        userData = null;
+      } else {
+        userData = JSON.parse(storedData);
+      }
+    } else {
+      userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+    }
+
     var server = GamePlayReferenceManager.Instance.Get_ServerBackend();
 
     if (userData === null) {
@@ -51,18 +66,29 @@ var StorageManager = cc.Class({
       this.Loader.active = false;
     } else {
       //check if token is expired or not
-      server.GetUserData(userData.data.SK, userData.data.roleType, userData.data.userToken, 0);
+      server.GetUserData(userData.SK, userData.roleType, userData.userToken, 0);
     }
   },
   WriteData: function WriteData(_data) {
-    cc.sys.localStorage.setItem("userData", JSON.stringify(_data));
+    if (IsWeb) {
+      window.AllData = JSON.stringify(_data);
+    } else {
+      cc.sys.localStorage.setItem("userData", JSON.stringify(_data));
+    }
   },
   RefreshData: function RefreshData(_response) {
     var _this = this;
 
     if (_response == 0) {
       //means successful
-      var userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+      var userData;
+
+      if (IsWeb) {
+        userData = JSON.parse(window.AllData);
+      } else {
+        userData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+      }
+
       setTimeout(function () {
         var server = GamePlayReferenceManager.Instance.Get_ServerBackend();
         server.ReloginFromStorage(userData);
@@ -78,7 +104,11 @@ var StorageManager = cc.Class({
     }
   },
   ClearData: function ClearData() {
-    cc.sys.localStorage.removeItem("userData");
+    if (IsWeb) {
+      window.AllData = null;
+    } else {
+      cc.sys.localStorage.removeItem("userData");
+    }
   }
 });
 

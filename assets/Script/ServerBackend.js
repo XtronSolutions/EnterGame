@@ -240,28 +240,28 @@ var ServerBackend = cc.Class({
   },
 
   UpdateUserData(_cash = -1, _gameWon = -1, _avatarID = -1) {
-    var _mainData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+    var _mainData = JSON.parse(window.AllData);
 
     if (_mainData != null) {
       var SendingPayload = new UserDataUpdatePayload(
-        _mainData.data.SK,
-        _mainData.data.password,
-        _mainData.data.name,
-        _mainData.data.role,
-        _mainData.data.doB,
-        _mainData.data.gradeLevel,
-        _mainData.data.teacherName,
-        _mainData.data.fbPage,
-        _mainData.data.gamesWon,
-        _mainData.data.testTaken,
-        _mainData.data.district,
-        _mainData.data.testingAverage,
-        _mainData.data.inGameCash,
+        _mainData.SK,
+        _mainData.password,
+        _mainData.name,
+        _mainData.role,
+        _mainData.doB,
+        _mainData.gradeLevel,
+        _mainData.teacherName,
+        _mainData.fbPage,
+        _mainData.gamesWon,
+        _mainData.testTaken,
+        _mainData.district,
+        _mainData.testingAverage,
+        _mainData.inGameCash,
         "mubeenali@gmail.com",
         "SchoolAdmin",
-        _mainData.data.addedByEmail,
-        _mainData.data.schoolName,
-        _mainData.data.avatarId
+        _mainData.addedByEmail,
+        _mainData.schoolName,
+        _mainData.avatarId
       );
 
       if (_cash != -1) {
@@ -276,7 +276,7 @@ var ServerBackend = cc.Class({
 
       console.log(SendingPayload);
       var payload = SendingPayload;
-      var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _mainData.data.userToken };
+      var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _mainData.userToken };
       this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
     } else {
       console.error("cannot update data as stored data is null");
@@ -333,7 +333,7 @@ var ServerBackend = cc.Class({
               console.log(MainData);
 
               //both below calls are written inside storgaemanager
-              cc.systemEvent.emit("WriteData", MainData);
+              cc.systemEvent.emit("WriteData", MainData.data);
               cc.systemEvent.emit("RefreshData", 0);
             } else {
               cc.systemEvent.emit("RefreshData", 1);
@@ -344,28 +344,28 @@ var ServerBackend = cc.Class({
           var MainData = new UserDataResponse(TempData.statusCode, TempData.message, TempData.data);
           console.log(TempData);
           if (MainData.message.includes("sucessfully")) {
-            cc.systemEvent.emit("WriteData", MainData);
+            cc.systemEvent.emit("WriteData", MainData.data);
             console.log("user logged in successfully");
             console.log(MainData);
             if (MainData.data.roleType.includes("Student")) {
               ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
-              ServerBackend.Instance.AssignStudentData(MainData, true);
+              ServerBackend.Instance.AssignStudentData(MainData.data, true);
               cc.systemEvent.emit("AssignProfileData", true, false, false, false, false);
             } else if (MainData.data.roleType.includes("Teacher")) {
               ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
-              ServerBackend.Instance.AssignTeacherData(MainData, true);
+              ServerBackend.Instance.AssignTeacherData(MainData.data, true);
               cc.systemEvent.emit("AssignProfileData", false, true, false, false, false);
             } else if (MainData.data.roleType.includes("ProgramAmbassador")) {
               ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
-              ServerBackend.Instance.AssignMentorData(MainData, true);
+              ServerBackend.Instance.AssignMentorData(MainData.data, true);
               cc.systemEvent.emit("AssignProfileData", false, false, true, false, false);
             } else if (MainData.data.roleType.includes("SchoolAdmin")) {
               ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
-              ServerBackend.Instance.AssignAdminData(MainData, true);
+              ServerBackend.Instance.AssignAdminData(MainData.data, true);
               cc.systemEvent.emit("AssignProfileData", false, false, false, true, false);
             } else if (MainData.data.roleType.includes("ProgramDirector")) {
               ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
-              ServerBackend.Instance.AssignDirectorData(MainData, true);
+              ServerBackend.Instance.AssignDirectorData(MainData.data, true);
               cc.systemEvent.emit("AssignProfileData", false, false, false, false, true);
             }
           } else if (MainData.message.includes("wrong") || MainData.message.includes("characters")) {
@@ -418,94 +418,95 @@ var ServerBackend = cc.Class({
   },
 
   AssignStudentData(DataResponse, isLoggedIn) {
-    this.StudentData.name = DataResponse.data.name;
-    this.StudentData.dOB = DataResponse.data.doB;
-    this.StudentData.gradeLevel = DataResponse.data.gradeLevel;
-    this.StudentData.emailAddress = DataResponse.data.SK;
-    this.StudentData.teacherName = DataResponse.data.teacherName;
-    this.StudentData.facebookPage = DataResponse.data.fbPage;
-    this.StudentData.gamesWon = DataResponse.data.gamesWon;
-    this.StudentData.testsTaken = DataResponse.data.testTaken;
-    this.StudentData.testingAverage = DataResponse.data.testingAverage;
-    this.StudentData.gameCash = DataResponse.data.inGameCash;
-    this.StudentData.userID = DataResponse.data.userID;
-    this.StudentData.avatarId = DataResponse.data.avatarId;
-    this.StudentData.district = DataResponse.data.district;
-    this.StudentData.roleType = DataResponse.data.roleType;
+    //console.error(DataResponse);
+    this.StudentData.name = DataResponse.name;
+    this.StudentData.dOB = DataResponse.doB;
+    this.StudentData.gradeLevel = DataResponse.gradeLevel;
+    this.StudentData.emailAddress = DataResponse.SK;
+    this.StudentData.teacherName = DataResponse.teacherName;
+    this.StudentData.facebookPage = DataResponse.fbPage;
+    this.StudentData.gamesWon = DataResponse.gamesWon;
+    this.StudentData.testsTaken = DataResponse.testTaken;
+    this.StudentData.testingAverage = DataResponse.testingAverage;
+    this.StudentData.gameCash = DataResponse.inGameCash;
+    this.StudentData.userID = DataResponse.userID;
+    this.StudentData.avatarId = DataResponse.avatarId;
+    this.StudentData.district = DataResponse.district;
+    this.StudentData.roleType = DataResponse.roleType;
 
     if (isLoggedIn) {
-      this.StudentData.AccessToken = DataResponse.data.userToken;
-      this.StudentData.UpdatedAt = DataResponse.data.updatedAt;
+      this.StudentData.AccessToken = DataResponse.userToken;
+      this.StudentData.UpdatedAt = DataResponse.updatedAt;
     }
 
     console.log(this.StudentData);
   },
 
   AssignTeacherData(DataResponse, isLoggedIn) {
-    this.TeacherData.name = DataResponse.data.name;
-    this.TeacherData.school = DataResponse.data.schoolName;
-    this.TeacherData.classTaught = DataResponse.data.classTaught;
-    this.TeacherData.emailAddress = DataResponse.data.SK;
-    this.TeacherData.contactNumber = DataResponse.data.contactNumber;
-    this.TeacherData.userID = DataResponse.data.userID;
-    this.TeacherData.avatarId = DataResponse.data.avatarId;
-    this.TeacherData.district = DataResponse.data.district;
-    this.TeacherData.roleType = DataResponse.data.roleType;
+    this.TeacherData.name = DataResponse.name;
+    this.TeacherData.school = DataResponse.schoolName;
+    this.TeacherData.classTaught = DataResponse.classTaught;
+    this.TeacherData.emailAddress = DataResponse.SK;
+    this.TeacherData.contactNumber = DataResponse.contactNumber;
+    this.TeacherData.userID = DataResponse.userID;
+    this.TeacherData.avatarId = DataResponse.avatarId;
+    this.TeacherData.district = DataResponse.district;
+    this.TeacherData.roleType = DataResponse.roleType;
 
     if (isLoggedIn) {
-      this.TeacherData.AccessToken = DataResponse.data.userToken;
-      this.TeacherData.UpdatedAt = DataResponse.data.updatedAt;
+      this.TeacherData.AccessToken = DataResponse.userToken;
+      this.TeacherData.UpdatedAt = DataResponse.updatedAt;
     }
 
     console.log(this.TeacherData);
   },
 
   AssignMentorData(DataResponse, isLoggedIn) {
-    this.MentorData.name = DataResponse.data.name;
-    this.MentorData.emailAddress = DataResponse.data.SK;
-    this.MentorData.contactNumber = DataResponse.data.contactNumber;
-    this.MentorData.userID = DataResponse.data.userID;
-    this.MentorData.address = DataResponse.data.address;
-    this.MentorData.avatarId = DataResponse.data.avatarId;
-    this.MentorData.district = DataResponse.data.district;
-    this.MentorData.roleType = DataResponse.data.roleType;
+    this.MentorData.name = DataResponse.name;
+    this.MentorData.emailAddress = DataResponse.SK;
+    this.MentorData.contactNumber = DataResponse.contactNumber;
+    this.MentorData.userID = DataResponse.userID;
+    this.MentorData.address = DataResponse.address;
+    this.MentorData.avatarId = DataResponse.avatarId;
+    this.MentorData.district = DataResponse.district;
+    this.MentorData.roleType = DataResponse.roleType;
 
     if (isLoggedIn) {
-      this.MentorData.AccessToken = DataResponse.data.userToken;
-      this.MentorData.UpdatedAt = DataResponse.data.updatedAt;
+      this.MentorData.AccessToken = DataResponse.userToken;
+      this.MentorData.UpdatedAt = DataResponse.updatedAt;
     }
 
     console.log(this.MentorData);
   },
 
   AssignAdminData(DataResponse, isLoggedIn) {
-    this.AdminData.name = DataResponse.data.name;
-    this.AdminData.emailAddress = DataResponse.data.SK;
-    this.AdminData.contactNumber = DataResponse.data.contactNumber;
-    this.AdminData.userID = DataResponse.data.userID;
-    this.AdminData.schoolName = DataResponse.data.schoolName;
-    this.AdminData.avatarId = DataResponse.data.avatarId;
-    this.AdminData.district = DataResponse.data.district;
-    this.AdminData.roleType = DataResponse.data.roleType;
+    this.AdminData.name = DataResponse.name;
+    this.AdminData.emailAddress = DataResponse.SK;
+    this.AdminData.contactNumber = DataResponse.contactNumber;
+    this.AdminData.userID = DataResponse.userID;
+    this.AdminData.schoolName = DataResponse.schoolName;
+    this.AdminData.avatarId = DataResponse.avatarId;
+    this.AdminData.district = DataResponse.district;
+    this.AdminData.roleType = DataResponse.roleType;
 
     if (isLoggedIn) {
-      this.AdminData.AccessToken = DataResponse.data.userToken;
-      this.AdminData.UpdatedAt = DataResponse.data.updatedAt;
+      this.AdminData.AccessToken = DataResponse.userToken;
+      this.AdminData.UpdatedAt = DataResponse.updatedAt;
     }
 
     console.log(this.AdminData);
   },
 
   AssignDirectorData(DataResponse, isLoggedIn) {
-    this.DirectorData.name = DataResponse.data.name;
-    this.DirectorData.emailAddress = DataResponse.data.SK;
-    this.DirectorData.avatarId = DataResponse.data.avatarId;
-    this.DirectorData.district = DataResponse.data.district;
-    this.DirectorData.roleType = DataResponse.data.roleType;
+    this.DirectorData.name = DataResponse.name;
+    this.DirectorData.emailAddress = DataResponse.SK;
+    this.DirectorData.avatarId = DataResponse.avatarId;
+    this.DirectorData.district = DataResponse.district;
+    this.DirectorData.roleType = DataResponse.roleType;
 
     if (isLoggedIn) {
-      this.DirectorData.AccessToken = DataResponse.data.userToken;
-      this.DirectorData.UpdatedAt = DataResponse.data.updatedAt;
+      this.DirectorData.AccessToken = DataResponse.userToken;
+      this.DirectorData.UpdatedAt = DataResponse.updatedAt;
     }
 
     console.log(this.DirectorData);
@@ -515,23 +516,23 @@ var ServerBackend = cc.Class({
   ReloginFromStorage(MainData) {
     console.log("user logged in successfully automatically");
     console.log(MainData);
-    if (MainData.data.roleType.includes("Student")) {
+    if (MainData.roleType.includes("Student")) {
       ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
       ServerBackend.Instance.AssignStudentData(MainData, true);
       cc.systemEvent.emit("AssignProfileData", true, false, false, false, false);
-    } else if (MainData.data.roleType.includes("Teacher")) {
+    } else if (MainData.roleType.includes("Teacher")) {
       ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
       ServerBackend.Instance.AssignTeacherData(MainData, true);
       cc.systemEvent.emit("AssignProfileData", false, true, false, false, false);
-    } else if (MainData.data.roleType.includes("ProgramAmbassador")) {
+    } else if (MainData.roleType.includes("ProgramAmbassador")) {
       ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
       ServerBackend.Instance.AssignMentorData(MainData, true);
       cc.systemEvent.emit("AssignProfileData", false, false, true, false, false);
-    } else if (MainData.data.roleType.includes("SchoolAdmin")) {
+    } else if (MainData.roleType.includes("SchoolAdmin")) {
       ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
       ServerBackend.Instance.AssignAdminData(MainData, true);
       cc.systemEvent.emit("AssignProfileData", false, false, false, true, false);
-    } else if (MainData.data.roleType.includes("ProgramDirector")) {
+    } else if (MainData.roleType.includes("ProgramDirector")) {
       ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
       ServerBackend.Instance.AssignDirectorData(MainData, true);
       cc.systemEvent.emit("AssignProfileData", false, false, false, false, true);
