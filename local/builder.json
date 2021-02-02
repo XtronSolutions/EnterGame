@@ -1,6 +1,6 @@
 {
-  "platform": "web-mobile",
-  "actualPlatform": "web-mobile",
+  "platform": "android",
+  "actualPlatform": "android",
   "template": "link",
   "buildPath": "C:\\Users\\GNG\\Desktop\\client\\Build",
   "debug": false,
@@ -13,8 +13,12 @@
   "keystorePassword": "",
   "keystoreAlias": "",
   "keystoreAliasPassword": "",
-  "apiLevel": "android-29",
-  "appABIs": [],
+  "apiLevel": "android-26",
+  "appABIs": [
+    "x86_64",
+    "x86",
+    "arm64-v8a"
+  ],
   "vsVersion": "2017",
   "buildScriptsOnly": false
 }

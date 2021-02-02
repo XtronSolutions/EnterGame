@@ -4,6 +4,9 @@ cc._RF.push(module, '1954fdhi6FAgJgMHdTT1rgt', 'ServerBackend');
 
 "use strict";
 
+exports.__esModule = true;
+exports["default"] = void 0;
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -422,6 +425,53 @@ var ServerBackend = cc.Class({
     this.loginUserAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/loginUser";
     this.UpdateUserDataAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/updateUser"; //UCK2SR4YMG7J
     // this.GetUserData("xtrondev@gmail.com","Student");
+    //
+    //fetch(this.getUserAPI);
+    //var _options = { params: null, url: "" };
+    // this.sendPostRequest();
+  },
+  sendPostRequest: function sendPostRequest() {
+    var http = new XMLHttpRequest();
+    var request_url = this.loginUserAPI;
+    var params = ""; // if (options.params) {
+    //   for (var key in options.params) {
+    //     params += "&" + key + "=" + options.params[key];
+    //   }
+    // }
+
+    var payload = new UserLoginPayload("xtrondev@gmail.com", "12345678", "Student", "UCK2SR4YMG7J");
+
+    var _json = JSON.stringify(payload);
+
+    http.open("POST", request_url, true); //  http.setB(_json);
+
+    http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+
+    http.onreadystatechange = function () {
+      var httpStatus = http.statusText; // console.log(httpStatus);
+
+      if (http.responseText) {
+        var responseJSON = eval("(" + http.responseText + ")");
+      } else {
+        var responseJSON = {};
+      }
+
+      console.log("rec");
+      console.log(responseJSON.statusCode);
+      console.log(responseJSON.message);
+      console.log(responseJSON.data);
+
+      switch (http.readyState) {
+        case 4:
+          console.log(responseJSON);
+
+          var _data = JSON.stringify(responseJSON);
+
+          console.log(_data);
+      }
+    };
+
+    http.send(_json);
   },
   GetUserData: function GetUserData(_email, _role, _accessToken, _subType) {
     if (_subType === void 0) {
@@ -642,7 +692,7 @@ var ServerBackend = cc.Class({
                   console.log(TempData);
                 }
 
-                _context.next = 15;
+                _context.next = 16;
                 break;
 
               case 11:
@@ -655,18 +705,19 @@ var ServerBackend = cc.Class({
                   cc.systemEvent.emit("AssignProfileData");
                 }
 
-                console.error(_context.t0);
+                console.log("something goes bezaar");
+                console.error(_context.t0.toString());
 
-              case 15:
-                _context.prev = 15;
-                return _context.finish(15);
+              case 16:
+                _context.prev = 16;
+                return _context.finish(16);
 
-              case 17:
+              case 18:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[1, 11, 15, 17]]);
+        }, _callee, null, [[1, 11, 16, 18]]);
       }));
       return _Fetch_Promise.apply(this, arguments);
     }
@@ -1023,6 +1074,8 @@ var UserDataUpdatePayload = cc.Class({
     this.avatarId = _avatarID;
   }
 });
-module.exports = ServerBackend;
+var _default = ServerBackend;
+exports["default"] = _default;
+module.exports = exports["default"];
 
 cc._RF.pop();

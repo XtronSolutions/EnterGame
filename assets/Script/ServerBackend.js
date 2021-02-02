@@ -7,6 +7,7 @@ var ResponseTypeEnum = cc.Enum({
   WentWrong: 4,
   LicenseInvalid: 5,
 });
+
 //-------------------------------------------class for Student Data-------------------------//
 var Student = cc.Class({
   name: "Student",
@@ -226,6 +227,51 @@ var ServerBackend = cc.Class({
     this.UpdateUserDataAPI = "https://ia3nqkp6th.execute-api.us-east-2.amazonaws.com/dev/updateUser";
     //UCK2SR4YMG7J
     // this.GetUserData("xtrondev@gmail.com","Student");
+    //
+    //fetch(this.getUserAPI);
+
+    //var _options = { params: null, url: "" };
+    // this.sendPostRequest();
+  },
+
+  sendPostRequest() {
+    var http = new XMLHttpRequest();
+    var request_url = this.loginUserAPI;
+
+    var params = "";
+    // if (options.params) {
+    //   for (var key in options.params) {
+    //     params += "&" + key + "=" + options.params[key];
+    //   }
+    // }
+
+    var payload = new UserLoginPayload("xtrondev@gmail.com", "12345678", "Student", "UCK2SR4YMG7J");
+    var _json = JSON.stringify(payload);
+    http.open("POST", request_url, true);
+    //  http.setB(_json);
+    http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+
+    http.onreadystatechange = function () {
+      var httpStatus = http.statusText;
+      // console.log(httpStatus);
+      if (http.responseText) {
+        var responseJSON = eval("(" + http.responseText + ")");
+      } else {
+        var responseJSON = {};
+      }
+
+      console.log("rec");
+      console.log(responseJSON.statusCode);
+      console.log(responseJSON.message);
+      console.log(responseJSON.data);
+      switch (http.readyState) {
+        case 4:
+          console.log(responseJSON);
+          var _data = JSON.stringify(responseJSON);
+          console.log(_data);
+      }
+    };
+    http.send(_json);
   },
 
   GetUserData(_email, _role, _accessToken, _subType = -1) {
@@ -391,7 +437,8 @@ var ServerBackend = cc.Class({
           ServerBackend.Instance.ResponseType = ResponseTypeEnum.WentWrong;
           cc.systemEvent.emit("AssignProfileData");
         }
-        console.error(e);
+        console.log("something goes bezaar");
+        console.error(e.toString());
       } finally {
         //  console.log('We do cleanup here');
       }
@@ -690,4 +737,4 @@ var UserDataUpdatePayload = cc.Class({
   },
 });
 
-module.exports = ServerBackend;
+export default ServerBackend;

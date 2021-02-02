@@ -14,8 +14,15 @@ var StorageManager = cc.Class({
 
   // LIFE-CYCLE CALLBACKS:
 
+  update() {
+    // if (cc.sys.getNetworkType() == cc.sys.NetworkType.LAN || cc.sys.getNetworkType() == cc.sys.NetworkType.WWAN) {
+    //   console.log("connected");
+    // } else if (cc.sys.getNetworkType() == cc.sys.NetworkType.NONE) {
+    //   console.log("not connected");
+    // }
+  },
   onLoad() {
-    console.log("V10");
+    console.log("V11");
     // console.log = function () {};
     //  console.error = function () {};
     // console.warn = function () {};
