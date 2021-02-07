@@ -16,6 +16,11 @@ var PlayerDetails = cc.Class({
       serializable: true,
       toolTip: "Is current node can be selected as one question functionality",
     },
+    IsPlayerSelectProfit: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
     SelectedPlayerIndex: {
       default: 0,
       type: cc.Integer,
@@ -98,12 +103,36 @@ var PlayerDetails = cc.Class({
     }
   },
 
+  RaiseEventSelectPlayerForProfit() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      this.ToastMessage = "You will receive next all payday profits of player " + this.PlayerNameLabel.string;
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(this.ToastMessage, 3200);
+
+      var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+      var _playerIndex = _gameplayManager.GetTurnNumber();
+      var _iD = _gameplayManager.PlayerGameInfo[_playerIndex].PlayerUID;
+      var _name = _gameplayManager.PlayerGameInfo[_playerIndex].PlayerName;
+
+      var _data = { OwnPlayerID: _iD, UserID: this.SelectedPlayerUserID, UserIndex: this.SelectedPlayerIndex, UserName: _name };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(17, _data);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitAlongTurnOver_SelectPlayerForProfit();
+    } else {
+      console.log("no selecting player for profit with bot");
+    }
+  },
+
   AskVocabularyQuestion() {
     if (this.IsOneQuestion) {
       this.QuestionID = this.getRandom(0, 12);
       this.VocQuestion = true;
       this.EstQuestion = false;
       this.RaiseEventOneQuestion();
+    }
+  },
+
+  SelectPlayerForProfit() {
+    if (this.IsPlayerSelectProfit) {
+      this.RaiseEventSelectPlayerForProfit();
     }
   },
 

@@ -1,5 +1,5 @@
 var GamePlayReferenceManager = null;
-var IsWeb = true;
+var IsWeb = false;
 var StorageManager = cc.Class({
   name: "StorageManager",
   extends: cc.Component,

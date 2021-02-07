@@ -277,30 +277,30 @@ var BusinessDetail = cc.Class({
     }
   },
   GetIntoPartnerShip: function GetIntoPartnerShip() {
-    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) //real players
-      {
-        console.log("Sending offer");
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      //real players
+      console.log("Sending offer");
 
-        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
 
-        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-        var _tempData = _manager.PlayerGameInfo[_playerIndex];
+      var _tempData = _manager.PlayerGameInfo[_playerIndex];
 
-        if (_tempData.NoOfBusiness.length > 0) {
-          console.log("has some business");
-          var _data = {
-            Data: {
-              Turn: _manager.GetTurnNumber(),
-              PlayerData: _tempData,
-              SelectedBusinsessIndex: this.BusinessIndex,
-              BusValue: this.FinalBusinessValue
-            }
-          };
-          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(11, _data);
-          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(true);
-        }
-      } else {
+      if (_tempData.NoOfBusiness.length > 0) {
+        console.log("has some business");
+        var _data = {
+          Data: {
+            Turn: _manager.GetTurnNumber(),
+            PlayerData: _tempData,
+            SelectedBusinsessIndex: this.BusinessIndex,
+            BusValue: this.FinalBusinessValue
+          }
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(11, _data);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(true);
+      }
+    } else {
       console.log("game being played by bot");
     }
   },
@@ -318,6 +318,35 @@ var BusinessDetail = cc.Class({
       GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreen__SellBusinessUISetup();
       var _locations = _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.length;
       if (_manager.PlayerGameInfo[_playerIndex].IsBot) _manager.ProcessPayDay_TurnDecision(false, true, true, this.BusinessIndex, 0, 1, _locations);else _manager.ProcessPayDay_TurnDecision(false, false, true, this.BusinessIndex, 0, 1, _locations);
+    }
+  },
+  SelectBusinessforDoublePayDay_ThroughoutGame: function SelectBusinessforDoublePayDay_ThroughoutGame() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+      var _tempData = _manager.PlayerGameInfo[_playerIndex];
+      var _receiveDouble = _tempData.NoOfBusiness[this.BusinessIndex].ReceiveDoublePayDay;
+
+      if (!_receiveDouble) {
+        if (this.BusinessMode == 1) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreen_BusinessPayDayUISetup();
+          _tempData.NoOfBusiness[this.BusinessIndex].ReceiveDoublePayDay = true;
+          _tempData.ReceiveDoublePayDayAmount++;
+        } else if (this.BusinessMode == 2) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreen_BusinessPayDayUISetup();
+          _tempData.NoOfBusiness[this.BusinessIndex].ReceiveDoublePayDay = true;
+          _tempData.ReceiveDoublePayDayAmount++;
+        }
+
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You will receive double pay day profits against selected business throughout game.", 3200);
+        GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Your current slected business already receive double pay day.", 2800);
+      }
+    } else {
+      console.log("its bot");
     }
   }
 });

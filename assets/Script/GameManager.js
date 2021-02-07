@@ -1,4 +1,4 @@
-var _isTest = false;
+var _isTest = true;
 var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
@@ -100,6 +100,12 @@ var BusinessInfo = cc.Class({
       default: 0,
       serializable: true,
     },
+    ReceiveDoublePayDay: {
+      displayName: "ReceiveDoublePayDay",
+      type: cc.Boolean,
+      default: false,
+      serializable: true,
+    },
   },
 
   ctor: function () {
@@ -144,6 +150,12 @@ var CardDataFunctionality = cc.Class({
       default: false,
       serializable: true,
       tooltip: "keep track if payday for bricka and mmortar buisiness is going to skipped on next payday for current player",
+    },
+    NextTurnHalfPayDay: {
+      displayName: "NextTurnHalfPayDay",
+      type: cc.Boolean,
+      default: false,
+      serializable: true,
     },
   },
 
@@ -236,6 +248,12 @@ var PlayerData = cc.Class({
       default: 0,
       serializable: true,
       tooltip: "number of brick and mortar business a player owns",
+    },
+    ReceiveDoublePayDayAmount: {
+      displayName: "ReceiveDoublePayDayAmount",
+      type: cc.Integer,
+      default: 0,
+      serializable: true,
     },
     TotalLocationsAmount: {
       displayName: "TotalLocationsAmount",
@@ -388,6 +406,19 @@ var PlayerData = cc.Class({
       default: true,
       serializable: true,
     },
+    CanGiveProfitOnPayDay: {
+      displayName: "CanGiveProfitOnPayDay",
+      type: cc.Boolean,
+      default: true,
+      serializable: true,
+    },
+
+    UserIDForProfitPayDay: {
+      displayName: "UserIDForProfitPayDay",
+      type: cc.Text,
+      default: "",
+      serializable: true,
+    },
   },
   ctor: function () {
     //constructor
@@ -410,6 +441,7 @@ var DoublePayDay = false;
 
 //cards functionality
 var _nextTurnDoublePay = false;
+var _nextTurnhalfPay = false;
 var _skipNextTurn = false;
 var _skipNextPayday = false; //skip whole pay day
 var _skipHMNextPayday = false; //skip pay day for home based businessess only
@@ -498,7 +530,7 @@ var GameManager = cc.Class({
     PlayerLeft = false;
     PreviousDiceRoll3 = -1;
     PreviousDiceRoll4 = -1;
-
+    _nextTurnhalfPay = false;
     PreviousDiceRoll5 = -1;
     GameCompleted = false;
     userGameOver = false;
@@ -1275,8 +1307,8 @@ var GameManager = cc.Class({
         Dice1 = parseInt(_diceinput1);
         Dice2 = parseInt(_diceinput2);
       } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
-        Dice1 = 50;
-        Dice2 = 3;
+        Dice1 = 4;
+        Dice2 = 4;
       } else {
         Dice1 = this.getRandom(1, 7);
         Dice2 = this.getRandom(1, 7);
@@ -1356,10 +1388,10 @@ var GameManager = cc.Class({
             //RandomCard = 5;
           } else if (_spaceID == 1) {
             //landed on some wild cards
-            var valueIndex = [0, 1, 6, 10, 2, 3, 4];
-            var index = this.getRandom(0, 7);
+            var valueIndex = [0, 1, 6, 10, 2, 3, 4, 5, 7, 8, 9];
+            var index = this.getRandom(0, 11);
             RandomCard = valueIndex[index];
-            //RandomCard = 0;
+            // RandomCard = 9;
           }
 
           IsTweening = false;
@@ -1964,6 +1996,8 @@ var GameManager = cc.Class({
     }
 
     _nextTurnDoublePay = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnDoublePay;
+    _nextTurnhalfPay = this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnHalfPayDay;
+
     if (PassedPayDay && !DoublePayDay && !_nextTurnDoublePay) {
       //this.ToggleDoublePayNextTurn(false);
       //this.TogglePayDay(false,false);
@@ -2200,7 +2234,7 @@ var GameManager = cc.Class({
   ProcessPayDay_TurnDecision(_isDoublePayDay = false, _isBot = false, _forSelectedBusiness = false, _SelectedBusinessIndex = 0, HBAmount = 0, BMAmount = 0, BMLocations = 0) {
     if (_forSelectedBusiness) {
       var _title = "PayDay";
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, false, false, false, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, HBAmount, BMAmount, BMLocations, 1, 0);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, false, false, false, _isBot, _forSelectedBusiness, _SelectedBusinessIndex, HBAmount, BMAmount, BMLocations, 1, 0, _nextTurnhalfPay);
     } else {
       if (DoublePayDay && PassedPayDay && _nextTurnDoublePay) {
         DoublePayDayCounter = 2;
@@ -2231,7 +2265,7 @@ var GameManager = cc.Class({
         if (_isDoublePayDay) _title = "DoublePayDay";
         else _title = "PayDay";
 
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot, false, 0, 0, 0, 0, PassedPayDayCounter, DoublePayDayCounter);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().AssignData_PayDay(_title, _isDoublePayDay, _skipHMNextPayday, _skipBMNextPayday, _isBot, false, 0, 0, 0, 0, PassedPayDayCounter, DoublePayDayCounter, _nextTurnhalfPay);
       }
     }
   },
@@ -2260,7 +2294,7 @@ var GameManager = cc.Class({
         }
 
         this.PlayerGameInfo[_myIndex].Cash += _amount;
-        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have received profit of $" + _amount + " from your partner.", 2800);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have received profit of $" + _amount + " from other player.", 2800);
         GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
       }
     }
@@ -2272,6 +2306,11 @@ var GameManager = cc.Class({
   ToggleDoublePayNextTurn(_state) {
     _nextTurnDoublePay = _state;
     this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnDoublePay = _nextTurnDoublePay;
+  },
+
+  ToggleHalfPayNextTurn(_state) {
+    _nextTurnhalfPay = _state;
+    this.PlayerGameInfo[this.TurnNumber].CardFunctionality.NextTurnHalfPayDay = _nextTurnhalfPay;
   },
 
   ToggleSkipNextTurn(_state) {
@@ -2448,6 +2487,47 @@ var GameManager = cc.Class({
   //   _gameplayUIManager.ToggleDecisionScreen_OneQuestionSetupUI(false);
   //   this.RaiseEventDecision_OneQuestion(false, true, OneQuestionIndex, _myData.PlayerUID);
   // },
+
+  SelectPlayerProfit_Space_CardFunctionality(_isTurnOver = false) {
+    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    var _myData;
+    var _roomData;
+    if (this.SelectedMode == 2) {
+      //for real players
+      _roomData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+      _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    } else if (this.SelectedMode == 1) {
+      //for bot
+      _myData = this.PlayerGameInfo[0];
+      _roomData = this.PlayerGameInfo;
+    }
+    _gameplayUIManager.ToggleScreen_SelectPlayerForProfit(true);
+    _gameplayUIManager.ResetSpaceScreen_SelectPlayerForProfit();
+    _gameplayUIManager.SetUpSpaceScreen_SelectPlayerForProfit(_myData, _roomData, _isTurnOver, this.SelectedMode);
+  },
+
+  ReceiveEvent_SelectPlayerForProfit_Space_CardFunctionality(_data) {
+    var _ownID = _data.UserID.toString();
+    var _playerIndex = parseInt(_data.UserIndex);
+    var _playerName = _data.UserName;
+    var _playerID = _data.OwnPlayerID.toString();
+    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    if (_ownID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+      console.log("received event: " + _playerName);
+
+      for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+        if (this.PlayerGameInfo[index].PlayerUID == _ownID) {
+          this.PlayerGameInfo[index].CanGiveProfitOnPayDay = true;
+          this.PlayerGameInfo[index].UserIDForProfitPayDay = _playerID;
+
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[index]);
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("PlayerGameInfo", this.PlayerGameInfo, true);
+          _gameplayUIManager.ShowToast("Player " + _playerName + " will receive all your next pay day profits", 3200);
+          break;
+        }
+      }
+    }
+  },
 
   RaiseEventDecision_OneQuestion(_hasDonePayment, _hasAnsweredQuestion, _questionIndex, _UserID) {
     var _data = { PaymentDone: _hasDonePayment, QuestionAnswered: _hasAnsweredQuestion, QuestionIndex: _questionIndex, ID: _UserID };

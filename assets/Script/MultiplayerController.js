@@ -117,7 +117,7 @@ var MultiplayerController = cc.Class({
     ShowRoom = false;
     GameFinished = false;
     IsMasterClient = false;
-    TotalTimer = 30;
+    TotalTimer = 5;
     TimerStarted = false;
     Schedular = null;
     this.ResetRoomValues();
@@ -527,6 +527,28 @@ var MultiplayerController = cc.Class({
             senderID: PhotonRef.myActor().actorNr,
           },
           { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.All }
+        );
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+
+  SendSelectedPlayerForProfit(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending game over data to sync");
+      console.log(_data);
+      try {
+        PhotonRef.raiseEvent(
+          17,
+          {
+            Data: _data,
+            senderName: PhotonRef.myActor().name,
+            senderID: PhotonRef.myActor().actorNr,
+          },
+          { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others }
         );
       } catch (err) {
         console.error("error: " + err.message);
@@ -1636,6 +1658,15 @@ var MultiplayerController = cc.Class({
           var senderID = content.senderID;
 
           MultiplayerController.Instance.CallRecieveEvent(16, senderName, senderID, _data);
+
+          break;
+        case 17: //receiving data of player to get all profit next pay day
+          console.log("received data of player to get all profit next pay day");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+
+          MultiplayerController.Instance.CallRecieveEvent(17, senderName, senderID, _data);
 
           break;
         default:

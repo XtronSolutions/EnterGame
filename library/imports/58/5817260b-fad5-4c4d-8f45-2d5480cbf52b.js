@@ -231,7 +231,7 @@ var DecksData = cc.Class({
     cc.systemEvent.off("ShowCard", this.ShowCardInfo, this);
   },
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   getRandom: function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; // min included and max excluded
@@ -640,17 +640,17 @@ var DecksData = cc.Class({
         var _businessIndex = _result.y;
         BigBusinessData = null;
 
-        if (IsLoanTaken == 1) //means user has taken loan
-          {
-            _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - 20000;
+        if (IsLoanTaken == 1) {
+          //means user has taken loan
+          _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount - 20000;
 
-            if (_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount <= 0) {
-              _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = 0;
-              _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanTaken = false;
-            }
+          if (_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount <= 0) {
+            _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanAmount = 0;
+            _manager.PlayerGameInfo[_playerIndex].NoOfBusiness[_businessIndex].LoanTaken = false;
+          }
 
-            _cardInfo = "Loan amount of $20000 has been payed off.";
-          } else {
+          _cardInfo = "Loan amount of $20000 has been payed off.";
+        } else {
           _cardInfo = "You have not taken any loan, turn will skip now.";
         }
 
@@ -778,15 +778,15 @@ var DecksData = cc.Class({
         BigBusinessData = null;
 
         if (!this.IsBotTurn) {
-          if (_type == 0) //start new business
-            {
-              this.ShowCardInfo("", false);
-              GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, CashGiven, false);
-            } else if (_type == 1) //invest in existing business
-            {
-              this.ShowCardInfo("", false);
-              GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonClicked_TurnDecision(null, true, CashGiven, false);
-            }
+          if (_type == 0) {
+            //start new business
+            this.ShowCardInfo("", false);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, CashGiven, false);
+          } else if (_type == 1) {
+            //invest in existing business
+            this.ShowCardInfo("", false);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().OnExpandButtonClicked_TurnDecision(null, true, CashGiven, false);
+          }
         } else {
           console.log("is bot, so skipping turn");
           this.CompleteTurnWithToast("", 1200);
@@ -806,19 +806,19 @@ var DecksData = cc.Class({
         BigBusinessData = null;
 
         if (!this.IsBotTurn) {
-          if (_type == 0) //pay amount
-            {
-              if (_manager.PlayerGameInfo[_playerIndex].Cash >= CashCost) {
-                _manager.PlayerGameInfo[_playerIndex].Cash -= CashCost;
-                this.ShowCardInfo("", false);
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, 0, true);
-              } else {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Not enough cash.", 300, this.isOwner);
-              }
-            } else if (_type == 1) //skip
-            {
-              this.CompleteTurnWithToast("Skipping...", 1400);
+          if (_type == 0) {
+            //pay amount
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= CashCost) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= CashCost;
+              this.ShowCardInfo("", false);
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, 0, false, 0, true, 0, true);
+            } else {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Not enough cash.", 300, this.isOwner);
             }
+          } else if (_type == 1) {
+            //skip
+            this.CompleteTurnWithToast("Skipping...", 1400);
+          }
         } else {
           console.log("is bot, so skipping turn");
           this.CompleteTurnWithToast("", 1200);
@@ -1568,35 +1568,35 @@ var DecksData = cc.Class({
 
         var _businessType = parseInt(_manager.PlayerGameInfo[_playerIndex].NoOfBusiness[0].BusinessType);
 
-        if (_businessType == 1) // first business was home based
-          {
-            if (_manager.PlayerGameInfo[_playerIndex].Cash >= 5000) {
-              _manager.PlayerGameInfo[_playerIndex].Cash -= 5000;
-              this.CompleteTurnWithToast("You payed $5000 insurance on your first home based business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+        if (_businessType == 1) {
+          // first business was home based
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= 5000) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= 5000;
+            this.CompleteTurnWithToast("You payed $5000 insurance on your first home based business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+          } else {
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
             } else {
-              if (!this.IsBotTurn) {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
-              } else {
-                LossesData = null;
-                console.log("it was bot and had not enough money");
-                this.CompleteTurnWithToast("", 1200);
-              }
-            }
-          } else if (_businessType == 2) //first busioness was brick & mortar
-          {
-            if (_manager.PlayerGameInfo[_playerIndex].Cash >= 10000) {
-              _manager.PlayerGameInfo[_playerIndex].Cash -= 10000;
-              this.CompleteTurnWithToast("You payed $10000 insurance on your first brick & mortar business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
-            } else {
-              if (!this.IsBotTurn) {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
-              } else {
-                LossesData = null;
-                console.log("it was bot and had not enough money");
-                this.CompleteTurnWithToast("", 1200);
-              }
+              LossesData = null;
+              console.log("it was bot and had not enough money");
+              this.CompleteTurnWithToast("", 1200);
             }
           }
+        } else if (_businessType == 2) {
+          //first busioness was brick & mortar
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= 10000) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= 10000;
+            this.CompleteTurnWithToast("You payed $10000 insurance on your first brick & mortar business, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+          } else {
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              LossesData = null;
+              console.log("it was bot and had not enough money");
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
 
         break;
 
@@ -2005,7 +2005,17 @@ var DecksData = cc.Class({
           break;
 
         case "6":
+          //An unsatisfied customer takes to social media and smear’s your name. It affects your Brand and your business before you can get a handle on it. You lose half your income on your next PayDay.
           console.log(_this7.WildCards[Index].Description);
+
+          var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          WildCardData = null;
+
+          _manager.ToggleHalfPayNextTurn(true);
+
+          _this7.CompleteTurnWithToast("You will receive half profits on next payday.", 2400);
+
           break;
 
         case "7":
@@ -2040,15 +2050,110 @@ var DecksData = cc.Class({
           break;
 
         case "8":
+          //You are sued for Trademark Infringement (copying someone else’s product), and you lose. If you have a lawyer roll 2 die, multiply by $1,000 and pay to the Bank. If you do not have a Lawyer, roll two die and multiply by $3,000 and pay to the Bank.
           console.log(_this7.WildCards[Index].Description);
+
+          var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+          var _lawyerStatus = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+
+          var DiceResult = _manager.RollTwoDices();
+
+          var _fine = 3000;
+          var TotalResult = 0;
+
+          if (_hasTwoScreens) {
+            if (_lawyerStatus) _fine = 1000;
+            TotalResult = _fine * DiceResult;
+            WildCardData = {
+              Data: {
+                result: TotalResult
+              }
+            };
+
+            if (!_this7.IsBotTurn) {
+              _this7.ShowCardInfo("\n" + "Lawyer Hired : " + _lawyerStatus + "\n" + "\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Total fine $" + TotalResult, true);
+
+              _this7.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+
+              _this7.ToggleButtons(_this7.isOwner, true, _this7.IsBotTurn);
+            } else {
+              _this7.CardFuntionalityButton();
+            }
+          } else {
+            TotalResult = WildCardData.Data.result;
+
+            if (_manager.PlayerGameInfo[_playerIndex].Cash >= TotalResult) {
+              _manager.PlayerGameInfo[_playerIndex].Cash -= TotalResult;
+              _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+
+              _this7.CompleteTurnWithToast("Fees $" + TotalResult + " was successfully paid, remaining cash $" + _manager.PlayerGameInfo[_playerIndex].Cash, 2800);
+
+              WildCardData = null;
+            } else {
+              console.log("not enough cash");
+
+              if (!_this7.IsBotTurn) {
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+              } else {
+                console.log("its bot and has no cash,skipping");
+                WildCardData = null;
+
+                _this7.CompleteTurnWithToast("", 1200);
+              }
+            }
+          }
+
           break;
 
         case "9":
+          //The City is adding a bus line that runs in front of your business. If you own a Brick & Mortar business, for the rest of the game, you receive double your income for one Brick & Mortar business.
           console.log(_this7.WildCards[Index].Description);
+
+          var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+          var BMBusiness = _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+
+          if (BMBusiness <= 0) {
+            _this7.CompleteTurnWithToast("You do not have any brick and mortar business, skipping turn.", 3200);
+          } else {
+            if (!_this7.IsBotTurn) {
+              _this7.ShowCardInfo("", false);
+
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSeletiveDoublePayDay_BusinessPayDayUISetup(false, true);
+            } else {
+              console.log("its bot and skipping");
+              WildCardData = null;
+
+              _this7.CompleteTurnWithToast("", 1200);
+            }
+          }
+
           break;
 
         case "10":
+          //You sue a company for Defamation (lying on you) and win. Choose a player and receive all of their profits on their next Pay Day.
           console.log(_this7.WildCards[Index].Description);
+
+          var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+          if (!_this7.IsBotTurn) {
+            _this7.ShowCardInfo("", false);
+
+            _manager.SelectPlayerProfit_Space_CardFunctionality(true);
+          } else {
+            console.log("its bot and skipping");
+            WildCardData = null;
+
+            _this7.CompleteTurnWithToast("", 1200);
+          }
+
           break;
 
         case "11":

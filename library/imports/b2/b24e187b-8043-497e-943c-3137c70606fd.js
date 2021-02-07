@@ -105,6 +105,11 @@ var MultiplayerSyncManager = cc.Class({
       if (this.SelectedMode == 2) //for player
         GamePlayReferenceManager.Instance.Get_MultiplayerController().SendGameOverData(_data);else if (this.SelectedMode == 1) //for bot
         this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 17) {
+      //sending data of player to get all profit next pay day
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendSelectedPlayerForProfit(_data);else if (this.SelectedMode == 1) //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
     }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -183,6 +188,11 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().SyncGameCompleteData(_data);
+    } else if (_eventCode == 17) {
+      //receiving payday info
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_SelectPlayerForProfit_Space_CardFunctionality(_data);
     }
   }
 });
