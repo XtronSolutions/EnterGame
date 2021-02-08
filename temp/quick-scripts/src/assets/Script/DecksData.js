@@ -1800,23 +1800,209 @@ var DecksData = cc.Class({
         break;
 
       case "11":
+        //Mold is discovered in all the buildings of your Brick & Mortar businesses. Roll 2 die and multiply by $2,000. Pay that amount to clean the building of EACH of your Brick & Mortar businesses.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _TotalBM = _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+        var _TotalBMLocations = _manager.PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+        var DiceResult;
+        var CashMulitplier = 2000;
+        var totalAmount;
+
+        if (_TotalBM <= 0) {
+          this.CompleteTurnWithToast("You do not own any Brick & Mortar business, Skipping turn.", 2800);
+          return;
+        }
+
+        if (_hasTwoScreens) {
+          DiceResult = _manager.RollTwoDices();
+          totalAmount = DiceResult * CashMulitplier;
+          LossesData = {
+            Data: {
+              Dice: DiceResult,
+              Total: totalAmount
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Total Brick & Mortar Business (with Locations) : " + (_TotalBM + _TotalBMLocations) + "\n" + "\n" + "Payable amount : " + DiceResult + "*" + CashMulitplier + "=$" + totalAmount, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          DiceResult = LossesData.Data.Dice;
+          totalAmount = LossesData.Data.Total;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= totalAmount) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= totalAmount;
+            this.CompleteTurnWithToast("You payed $" + totalAmount + " to clean mold on the building of EACH of your Brick & Mortar businesses, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+          } else {
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              LossesData = null;
+              console.log("it was bot and had not enough money");
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
+
         break;
 
       case "12":
+        //It is March 15th and business Tax Returns are due. Roll the dice for each of your businesses; 1 - For each home-based business, pay $1,000 times the amounts rolled 2 - For each brick & mortar business, pay $3,000 times the amounts rolled
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _TotalBM = _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+        var _TotalBMLocations = _manager.PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+        var _TotalHB = _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount;
+        var DiceResult;
+        var CashMulitplier1 = 1000;
+        var CashMulitplier2 = 3000;
+        var totalAmount;
+
+        if (_hasTwoScreens) {
+          DiceResult = _manager.RollOneDice();
+          totalAmount = DiceResult * CashMulitplier1 * _TotalHB + DiceResult * CashMulitplier2 * (_TotalBM + _TotalBMLocations);
+          LossesData = {
+            Data: {
+              Dice: DiceResult,
+              Total: totalAmount
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("Dice Result : " + DiceResult + "\n" + "\n" + "Total Brick & Mortar Business (with Locations) : " + (_TotalBM + _TotalBMLocations) + "\n" + "\n" + "Total Home Based Business : " + _TotalHB + "\n" + "\n" + "Payable amount : " + DiceResult + "*" + CashMulitplier1 + "*" + _TotalHB + "+" + DiceResult + "*" + CashMulitplier2 + "*" + (_TotalBM + _TotalBMLocations) + "=$" + totalAmount, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          DiceResult = LossesData.Data.Dice;
+          totalAmount = LossesData.Data.Total;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= totalAmount) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= totalAmount;
+            this.CompleteTurnWithToast("You payed $" + totalAmount + " tax on your businesses, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+          } else {
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              LossesData = null;
+              console.log("it was bot and had not enough money");
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
+
         break;
 
       case "13":
+        //You make a business deal with a friend and soon after, they are arrested for fraud. You are investigated as well and your brand takes a hit. If you have a lawyer, pay $15,000 in legal fees. If you do not have a lawyer, pay $40,000 in court fees plus loose half your income on the next payday
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _lawyerStatus = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+        var _fine = 40000;
+
+        if (_hasTwoScreens) {
+          if (_lawyerStatus) {
+            _fine = 15000;
+          }
+
+          LossesData = {
+            Data: {
+              Fine: _fine
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "Lawyer Status : " + _lawyerStatus + "\n" + "\n" + "Payable amount : $" + _fine, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Pay Amount";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          _fine = LossesData.Data.Fine;
+
+          if (_manager.PlayerGameInfo[_playerIndex].Cash >= _fine) {
+            _manager.PlayerGameInfo[_playerIndex].Cash -= _fine;
+
+            if (_lawyerStatus) {
+              _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+              this.CompleteTurnWithToast("You payed $" + _fine + " fine, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+            } else {
+              _manager.ToggleHalfPayNextTurn(true);
+
+              this.CompleteTurnWithToast("You payed $" + _fine + " fine, you will also lose half profit on next payday, remaining cash is $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4200);
+            }
+          } else {
+            if (!this.IsBotTurn) {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+            } else {
+              LossesData = null;
+              console.log("it was bot and had not enough money");
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        }
+
         break;
 
       case "14":
+        //You have not been taking care of your health and you become too ill to work. You lose half of your income on your next Payday.
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        LossesData = null;
+
+        _manager.ToggleHalfPayNextTurn(true);
+
+        this.CompleteTurnWithToast("You will receive half profits on next payday.", 2400);
         break;
 
       case "15":
+        //You make a comment on Social Media that is going viral in a bad way. All of your businesses suffer because of it. You lose half your income on the next two Paydays. If you have a lawyer, lose half your income on only one Payday
         console.log(this.Losses[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _lawyerStatus = _manager.PlayerGameInfo[_playerIndex].LawyerStatus;
+
+        if (_lawyerStatus) {
+          _manager.PlayerGameInfo[_playerIndex].LawyerStatus = false;
+          LossesData = null;
+
+          _manager.ToggleHalfPayNextTurn(true);
+
+          this.CompleteTurnWithToast("You will receive half profits on next payday.", 2400);
+        } else {
+          LossesData = null;
+          _manager.PlayerGameInfo[_playerIndex].CardFunctionality.NextTurnHalfPayDayCounter = 1;
+
+          _manager.ToggleHalfPayNextTurn(true);
+
+          this.CompleteTurnWithToast("You will receive half profits on next two paydays.", 2400);
+        }
+
         break;
 
       default:

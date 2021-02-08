@@ -1,3 +1,4 @@
+var IsWeb = true;
 //-------------------------------------------enumeration for type of business-------------------------//
 var ResponseTypeEnum = cc.Enum({
   None: 0,
@@ -286,7 +287,12 @@ var ServerBackend = cc.Class({
   },
 
   UpdateUserData(_cash = -1, _gameWon = -1, _avatarID = -1) {
-    var _mainData = JSON.parse(window.AllData);
+    var _mainData;
+    if (IsWeb) {
+      _mainData = JSON.parse(window.AllData);
+    } else {
+      _mainData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+    }
 
     if (_mainData != null) {
       var SendingPayload = new UserDataUpdatePayload(

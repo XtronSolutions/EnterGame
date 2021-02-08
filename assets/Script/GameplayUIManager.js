@@ -2505,8 +2505,8 @@ var GameplayUIManager = cc.Class({
       _manager.PlayerGameInfo[_playerIndex].UserIDForProfitPayDay = "";
     }
 
-    console.error(GiveProfitUserID);
-    console.error(_manager.PlayerGameInfo[_playerIndex].UserIDForProfitPayDay);
+    console.log(GiveProfitUserID);
+    console.log(_manager.PlayerGameInfo[_playerIndex].UserIDForProfitPayDay);
 
     if (GiveProfitUserID != "") {
       this.ShowToast("your whole profit will be transferred to other player this turn.", 1200);
@@ -2955,16 +2955,24 @@ var GameplayUIManager = cc.Class({
   },
 
   RaiseEventForCompletion() {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+    var _playerIndex = _manager.GetTurnNumber();
+
     if (!SelectedBusinessPayDay) {
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_Whole(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_HomeBased(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleSkipPayDay_BrickAndMortar(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().TogglePayDay(false, false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleDoublePayNextTurn(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().ToggleHalfPayNextTurn(false);
-      GamePlayReferenceManager.Instance.Get_GameManager().callUponCard();
+      _manager.ToggleSkipPayDay_Whole(false);
+      _manager.ToggleSkipPayDay_HomeBased(false);
+      _manager.ToggleSkipPayDay_BrickAndMortar(false);
+      _manager.TogglePayDay(false, false);
+      _manager.ToggleDoublePayNextTurn(false);
+
+      if (_manager.PlayerGameInfo[_playerIndex].CardFunctionality.NextTurnHalfPayDayCounter > 0) {
+        _manager.PlayerGameInfo[_playerIndex].CardFunctionality.NextTurnHalfPayDayCounter--;
+      } else {
+        _manager.ToggleHalfPayNextTurn(false);
+      }
+      _manager.callUponCard();
     } else {
-      GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+      _manager.completeCardTurn();
     }
 
     this.RaiseEventToSyncInfo(PayDayInfo);

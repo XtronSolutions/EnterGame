@@ -117,7 +117,7 @@ var MultiplayerController = cc.Class({
     ShowRoom = false;
     GameFinished = false;
     IsMasterClient = false;
-    TotalTimer = 5;
+    TotalTimer = 30;
     TimerStarted = false;
     Schedular = null;
     this.ResetRoomValues();

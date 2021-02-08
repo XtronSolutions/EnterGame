@@ -11,7 +11,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-//-------------------------------------------enumeration for type of business-------------------------//
+var IsWeb = true; //-------------------------------------------enumeration for type of business-------------------------//
+
 var ResponseTypeEnum = cc.Enum({
   None: 0,
   Successful: 1,
@@ -502,7 +503,13 @@ var ServerBackend = cc.Class({
       _avatarID = -1;
     }
 
-    var _mainData = JSON.parse(window.AllData);
+    var _mainData;
+
+    if (IsWeb) {
+      _mainData = JSON.parse(window.AllData);
+    } else {
+      _mainData = JSON.parse(cc.sys.localStorage.getItem("userData"));
+    }
 
     if (_mainData != null) {
       var SendingPayload = new UserDataUpdatePayload(_mainData.SK, _mainData.password, _mainData.name, _mainData.role, _mainData.doB, _mainData.gradeLevel, _mainData.teacherName, _mainData.fbPage, _mainData.gamesWon, _mainData.testTaken, _mainData.district, _mainData.testingAverage, _mainData.inGameCash, "mubeenali@gmail.com", "SchoolAdmin", _mainData.addedByEmail, _mainData.schoolName, _mainData.avatarId);

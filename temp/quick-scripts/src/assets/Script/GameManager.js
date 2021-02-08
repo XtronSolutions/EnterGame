@@ -4,7 +4,7 @@ cc._RF.push(module, '72485pNAFJIIpZ225FqWNsJ', 'GameManager');
 
 "use strict";
 
-var _isTest = true;
+var _isTest = false;
 var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
@@ -157,6 +157,12 @@ var CardDataFunctionality = cc.Class({
       displayName: "NextTurnHalfPayDay",
       type: cc.Boolean,
       "default": false,
+      serializable: true
+    },
+    NextTurnHalfPayDayCounter: {
+      displayName: "NextTurnHalfPayDayCounter",
+      type: cc.Integer,
+      "default": 0,
       serializable: true
     }
   },
@@ -1284,8 +1290,8 @@ var GameManager = cc.Class({
         Dice1 = parseInt(_diceinput1);
         Dice2 = parseInt(_diceinput2);
       } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
-        Dice1 = 4;
-        Dice2 = 4;
+        Dice1 = 1;
+        Dice2 = 1;
       } else {
         Dice1 = this.getRandom(1, 7);
         Dice2 = this.getRandom(1, 7);
@@ -1341,9 +1347,9 @@ var GameManager = cc.Class({
             RandomCard = valueIndex[index]; //RandomCard = 1;
           } else if (_spaceID == 5) {
             //landed on some losses cards
-            var valueIndex = [0, 1, 5, 6, 2, 7, 3, 4, 8, 9];
-            var index = this.getRandom(0, 10);
-            RandomCard = valueIndex[index]; // RandomCard = 0;
+            var valueIndex = [0, 1, 5, 6, 2, 7, 3, 4, 8, 9, 10, 11, 12, 13, 14];
+            var index = this.getRandom(0, 15);
+            RandomCard = valueIndex[index]; //RandomCard = 14;
           } else if (_spaceID == 3) {
             //landed on some marketing cards
             var valueIndex = [0, 7, 3, 8, 13, 9, 1, 2, 4, 5];
