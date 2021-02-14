@@ -4,7 +4,7 @@ cc._RF.push(module, '72485pNAFJIIpZ225FqWNsJ', 'GameManager');
 
 "use strict";
 
-var _isTest = false;
+var _isTest = true;
 var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
@@ -21,7 +21,19 @@ var NoCardFunctionality = false;
 var PlayerLeft = false;
 var ForceChangeTimeOut = null;
 var GameCompleted = false;
-var CorrectAnswer = 0; //#region superclasses and enumerations
+var CorrectAnswer = 0;
+var VocabularyQuestions = [];
+var EstablishmentQuestions = [];
+var VocabularyQuestionsCounter = 0;
+var EstablishmentQuestionsCounter = 0;
+var BigBusinessArray = [];
+var LossesArray = [];
+var MarketingArray = [];
+var WildCardArray = [];
+var BigBusinessArrayCounter = 0;
+var LossesArrayCounter = 0;
+var MarketingArrayCounter = 0;
+var WildCardArrayCounter = 0; //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
 
 var EnumBusinessType = cc.Enum({
@@ -451,8 +463,6 @@ var CardEventReceived = false;
 var TurnInProgress = false;
 var Backspaces = 3;
 var isGameOver = false;
-var OneQuestionIndex = -1;
-var OneQuestions = ["you have skipped loan previous payday?", "you have taken any loan?", "you have bankrupted ever?", "your next turn is going to be skipped?", "your next payday is going to be double payday?"];
 var CardDisplaySetTimout = null;
 var GameManager = cc.Class({
   name: "GameManager",
@@ -518,6 +528,18 @@ var GameManager = cc.Class({
     PlayerLeft = _state;
   },
   ResetAllVariables: function ResetAllVariables() {
+    VocabularyQuestions = [];
+    EstablishmentQuestions = [];
+    VocabularyQuestionsCounter = 0;
+    EstablishmentQuestionsCounter = 0;
+    BigBusinessArray = [];
+    LossesArray = [];
+    MarketingArray = [];
+    WildCardArray = [];
+    BigBusinessArrayCounter = 0;
+    LossesArrayCounter = 0;
+    MarketingArrayCounter = 0;
+    WildCardArrayCounter = 0;
     _diceinput1 = "";
     _diceinput2 = "";
     PreviousDiceRoll1 = -1;
@@ -556,8 +578,6 @@ var GameManager = cc.Class({
     TurnInProgress = false;
     Backspaces = 3;
     isGameOver = false;
-    OneQuestionIndex = -1;
-    OneQuestions = ["you have skipped loan previous payday?", "you have taken any loan?", "you have bankrupted ever?", "your next turn is going to be skipped?", "your next payday is going to be double payday?"];
     CardDisplaySetTimout = null;
     TotalCounterReached = false;
     NoCardFunctionality = false;
@@ -706,6 +726,7 @@ var GameManager = cc.Class({
     if (TurnCheckArray.length == TotalConnectedPlayers) {
       TurnCheckArray = [];
       this.TurnCompleted = true;
+      console.log("reseting for spectate");
 
       if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
         this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter;
@@ -791,6 +812,44 @@ var GameManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoom().setCustomProperty("PlayerGameInfo", this.PlayerGameInfo, true);
     }
   },
+  RemoveFromCheckArray: function RemoveFromCheckArray(_uid) {
+    if (this.SelectedMode == 2) {
+      var _ind = -1;
+
+      for (var index = 0; index < TurnCheckArray.length; index++) {
+        if (TurnCheckArray[index] == _uid) _ind = index;
+      }
+
+      if (_ind != -1) {
+        console.log("removing from turn check array");
+        TurnCheckArray.splice(_ind, 1);
+      }
+    }
+  },
+  CheckTurnComplete: function CheckTurnComplete() {
+    var TotalConnectedPlayers = 0;
+
+    for (var j = 0; j < this.PlayerGameInfo.length; j++) {
+      if (this.PlayerGameInfo[j].IsActive) TotalConnectedPlayers++;
+    }
+
+    console.log("Turn Check: " + TurnCheckArray.length);
+    console.log("Total Connected Players: " + TotalConnectedPlayers);
+    console.log(TurnCheckArray);
+
+    if (TurnCheckArray.length >= TotalConnectedPlayers) {
+      TurnCheckArray = [];
+      this.TurnCompleted = true;
+
+      if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+        this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter; //this.SyncAllData();
+
+        this.ChangeTurn();
+        console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
+        console.log("Change Turn is called by: " + this.PlayerGameInfo[this.TurnNumber].PlayerName);
+      }
+    }
+  },
 
   /**
     @summary called on all players to validate if move is completed on all connected clients
@@ -811,27 +870,7 @@ var GameManager = cc.Class({
           TurnCheckArray.push(_uid);
         }
 
-        var TotalConnectedPlayers = 0;
-
-        for (var j = 0; j < this.PlayerGameInfo.length; j++) {
-          if (this.PlayerGameInfo[j].IsActive) TotalConnectedPlayers++;
-        }
-
-        console.log("Turn Check: " + TurnCheckArray.length);
-        console.log("Total Connected Players: " + TotalConnectedPlayers);
-
-        if (TurnCheckArray.length >= TotalConnectedPlayers) {
-          TurnCheckArray = [];
-          this.TurnCompleted = true;
-
-          if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
-            this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter; //this.SyncAllData();
-
-            this.ChangeTurn();
-            console.log(GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor());
-            console.log("Change Turn is called by: " + this.PlayerGameInfo[this.TurnNumber].PlayerName);
-          }
-        }
+        this.CheckTurnComplete();
       }
     } else if (this.SelectedMode == 1) {
       this.TurnCompleted = true;
@@ -851,9 +890,8 @@ var GameManager = cc.Class({
     if (this.TurnNumber < this.PlayerGameInfo.length - 1) this.TurnNumber = this.TurnNumber + 1;else this.TurnNumber = 0;
     GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(2, this.TurnNumber);
   },
-  ResetSomeValues: function ResetSomeValues() {
-    TurnCheckArray = [];
-    this.TurnCompleted = true;
+  ResetSomeValues: function ResetSomeValues() {//TurnCheckArray = [];
+    //this.TurnCompleted = true;
   },
   ChangeTurnForcefully: function ChangeTurnForcefully() {
     var _this2 = this;
@@ -1222,11 +1260,11 @@ var GameManager = cc.Class({
         console.error(RollCounter);
       } else {
         this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned = true;
-        RollCounter = 13;
+        RollCounter = 14;
         console.error(RollCounter);
       }
     } else {
-      if (this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter == 12) this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 21;else this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 1;
+      if (this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter == 13) this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 22;else this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 1;
       RollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter;
       console.error(RollCounter - 1);
     }
@@ -1329,6 +1367,339 @@ var GameManager = cc.Class({
     PreviousDiceRoll4 = Dice2;
     return Dice1 + Dice2;
   },
+  PopulateDecksArray: function PopulateDecksArray(_isBigBusiness, _isLosses, _isMarketing, _isWildCard, _data) {
+    if (_isBigBusiness === void 0) {
+      _isBigBusiness = false;
+    }
+
+    if (_isLosses === void 0) {
+      _isLosses = false;
+    }
+
+    if (_isMarketing === void 0) {
+      _isMarketing = false;
+    }
+
+    if (_isWildCard === void 0) {
+      _isWildCard = false;
+    }
+
+    if (_data === void 0) {
+      _data = null;
+    }
+
+    // BigBusinessArray = [];
+    // LossesArray = [];
+    // MarketingArray = [];
+    // WildCardArray = [];
+    // BigBusinessArrayCounter = 0;
+    // LossesArrayCounter = 0;
+    // MarketingArrayCounter = 0;
+    // WildCardArrayCounter = 0;
+    if (_isBigBusiness) {
+      if (_data == null) {
+        BigBusinessArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
+        BigBusinessArray.sort(function () {
+          return 0.5 - Math.random();
+        });
+        console.log(BigBusinessArray);
+        BigBusinessArrayCounter = 0;
+        var _tempData = {
+          BigArray: BigBusinessArray,
+          LossArray: null,
+          MarketArray: null,
+          WildArrya: null
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(19, _tempData);
+      }
+    } else if (_isLosses) {
+      if (_data == null) {
+        LossesArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+        LossesArray.sort(function () {
+          return 0.5 - Math.random();
+        });
+        console.log(LossesArray);
+        LossesArrayCounter = 0;
+        var _tempData = {
+          BigArray: null,
+          LossArray: LossesArray,
+          MarketArray: null,
+          WildArrya: null
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(19, _tempData);
+      }
+    } else if (_isMarketing) {
+      if (_data == null) {
+        MarketingArray = [0, 1, 2, 3, 4, 5, 7, 8, 9, 13];
+        MarketingArray.sort(function () {
+          return 0.5 - Math.random();
+        });
+        console.log(MarketingArray);
+        MarketingArrayCounter = 0;
+        var _tempData = {
+          BigArray: null,
+          LossArray: null,
+          MarketArray: MarketingArray,
+          WildArrya: null
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(19, _tempData);
+      }
+    } else if (_isWildCard) {
+      if (_data == null) {
+        WildCardArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        WildCardArray.sort(function () {
+          return 0.5 - Math.random();
+        });
+        console.log(WildCardArray);
+        WildCardArrayCounter = 0;
+        var _tempData = {
+          BigArray: null,
+          LossArray: null,
+          MarketArray: null,
+          WildArrya: WildCardArray
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(19, _tempData);
+      }
+    }
+
+    if (_data != null) {
+      if (_data.BigArray != null) {
+        BigBusinessArray = _data.BigArray;
+        console.log(BigBusinessArray);
+        BigBusinessArrayCounter = 0;
+      }
+
+      if (_data.LossArray != null) {
+        LossesArray = _data.LossArray;
+        console.log(LossesArray);
+        LossesArrayCounter = 0;
+      }
+
+      if (_data.MarketArray != null) {
+        MarketingArray = _data.MarketArray;
+        console.log(MarketingArray);
+        MarketingArrayCounter = 0;
+      }
+
+      if (_data.WildArrya != null) {
+        WildCardArray = _data.WildArrya;
+        console.log(WildCardArray);
+        WildCardArrayCounter = 0;
+      }
+    }
+  },
+  GetBigBusinessIndex: function GetBigBusinessIndex(_index) {
+    var _val = -1;
+
+    if (BigBusinessArray.length > 0) {
+      if (BigBusinessArrayCounter < BigBusinessArray.length) {
+        _val = BigBusinessArray[BigBusinessArrayCounter];
+        BigBusinessArrayCounter++;
+        var _tempData = {
+          BigArray: true,
+          LossArray: false,
+          MarketArray: false,
+          WildArrya: false
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(20, _tempData);
+      } else {
+        this.PopulateDecksArray(true, false, false, false, null);
+      }
+    } else {
+      this.PopulateDecksArray(true, false, false, false, null);
+    }
+
+    return _val;
+  },
+  GetLossesIndex: function GetLossesIndex(_index) {
+    var _val = -1;
+
+    if (LossesArray.length > 0) {
+      if (LossesArrayCounter < LossesArray.length) {
+        _val = LossesArray[LossesArrayCounter];
+        LossesArrayCounter++;
+        var _tempData = {
+          BigArray: false,
+          LossArray: true,
+          MarketArray: false,
+          WildArrya: false
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(20, _tempData);
+      } else {
+        this.PopulateDecksArray(false, true, false, false, null);
+      }
+    } else {
+      this.PopulateDecksArray(false, true, false, false, null);
+    }
+
+    return _val;
+  },
+  GetMarketingIndex: function GetMarketingIndex(_index) {
+    var _val = -1;
+
+    if (MarketingArray.length > 0) {
+      if (MarketingArrayCounter < MarketingArray.length) {
+        _val = MarketingArray[MarketingArrayCounter];
+        MarketingArrayCounter++;
+        var _tempData = {
+          BigArray: false,
+          LossArray: false,
+          MarketArray: true,
+          WildArrya: false
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(20, _tempData);
+      } else {
+        this.PopulateDecksArray(false, false, true, false, null);
+      }
+    } else {
+      this.PopulateDecksArray(false, false, true, false, null);
+    }
+
+    return _val;
+  },
+  GetWildCardIndex: function GetWildCardIndex(_index) {
+    var _val = -1;
+
+    if (WildCardArray.length > 0) {
+      if (WildCardArrayCounter < WildCardArray.length) {
+        _val = WildCardArray[WildCardArrayCounter];
+        WildCardArrayCounter++;
+        var _tempData = {
+          BigArray: false,
+          LossArray: false,
+          MarketArray: false,
+          WildArrya: true
+        };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(20, _tempData);
+      } else {
+        this.PopulateDecksArray(false, false, false, true, null);
+      }
+    } else {
+      this.PopulateDecksArray(false, false, false, true, null);
+    }
+
+    return _val;
+  },
+  UpdateCounters: function UpdateCounters(_data) {
+    if (_data === void 0) {
+      _data = null;
+    }
+
+    if (_data.BigArray) {
+      BigBusinessArrayCounter++;
+    }
+
+    if (_data.LossArray) {
+      LossesArrayCounter++;
+    }
+
+    if (_data.MarketArray) {
+      MarketingArrayCounterv++;
+    }
+
+    if (_data.WildArrya) {
+      WildCardArrayCounter++;
+    }
+  },
+  SelectRelatedCard: function SelectRelatedCard(_isBigBusiness, _isLosses, _isMarketing, _isWildCard) {
+    if (_isBigBusiness === void 0) {
+      _isBigBusiness = false;
+    }
+
+    if (_isLosses === void 0) {
+      _isLosses = false;
+    }
+
+    if (_isMarketing === void 0) {
+      _isMarketing = false;
+    }
+
+    if (_isWildCard === void 0) {
+      _isWildCard = false;
+    }
+
+    if (_isBigBusiness) {
+      if (this.SelectedMode == 2) {
+        if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+          var index = this.GetBigBusinessIndex();
+
+          if (index == -1) {
+            index = this.GetBigBusinessIndex();
+          }
+
+          return index;
+        }
+      } else if (this.SelectedMode == 1) {
+        var index = this.GetBigBusinessIndex();
+
+        if (index == -1) {
+          index = this.GetBigBusinessIndex();
+        }
+
+        return index;
+      }
+    } else if (_isLosses) {
+      if (this.SelectedMode == 2) {
+        if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+          var index = this.GetLossesIndex();
+
+          if (index == -1) {
+            index = this.GetLossesIndex();
+          }
+
+          return index;
+        }
+      } else if (this.SelectedMode == 1) {
+        var index = this.GetLossesIndex();
+
+        if (index == -1) {
+          index = this.GetLossesIndex();
+        }
+
+        return index;
+      }
+    } else if (_isMarketing) {
+      if (this.SelectedMode == 2) {
+        if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+          var index = this.GetMarketingIndex();
+
+          if (index == -1) {
+            index = this.GetMarketingIndex();
+          }
+
+          return index;
+        }
+      } else if (this.SelectedMode == 1) {
+        var index = this.GetMarketingIndex();
+
+        if (index == -1) {
+          index = this.GetMarketingIndex();
+        }
+
+        return index;
+      }
+    } else if (_isWildCard) {
+      if (this.SelectedMode == 2) {
+        if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+          var index = this.GetWildCardIndex();
+
+          if (index == -1) {
+            index = this.GetWildCardIndex();
+          }
+
+          return index;
+        }
+      } else if (this.SelectedMode == 1) {
+        var index = this.GetWildCardIndex();
+
+        if (index == -1) {
+          index = this.GetWildCardIndex();
+        }
+
+        return index;
+      }
+    }
+  },
   callUponCard: function callUponCard() {
     if (!isGameOver) {
       if (RollCounter < GamePlayReferenceManager.Instance.Get_SpaceManager().Data.length) {
@@ -1337,29 +1708,21 @@ var GameManager = cc.Class({
         this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = RollCounter;
 
         if (_spaceID != 6 && _spaceID != 7) {
-          //6 means payday and 7 means double payday, 9 menas sell space
-          var RandomCard = this.getRandom(0, 15); //for testing only
+          //6 means payday and 7 means double payday, 9 means sell space
+          var RandomCard = this.getRandom(0, 15);
 
           if (_spaceID == 2) {
-            //landed on some big business
-            var valueIndex = [0, 1, 7, 10, 2, 3, 4, 5, 6, 8];
-            var index = this.getRandom(0, 10);
-            RandomCard = valueIndex[index]; //RandomCard = 1;
+            //landed on big business cards
+            RandomCard = this.SelectRelatedCard(true, false, false, false);
           } else if (_spaceID == 5) {
             //landed on some losses cards
-            var valueIndex = [0, 1, 5, 6, 2, 7, 3, 4, 8, 9, 10, 11, 12, 13, 14];
-            var index = this.getRandom(0, 15);
-            RandomCard = valueIndex[index]; //RandomCard = 14;
+            RandomCard = this.SelectRelatedCard(false, true, false, false); //RandomCard = 14;
           } else if (_spaceID == 3) {
             //landed on some marketing cards
-            var valueIndex = [0, 7, 3, 8, 13, 9, 1, 2, 4, 5];
-            var index = this.getRandom(0, 10);
-            RandomCard = valueIndex[index]; //RandomCard = 5;
+            RandomCard = this.SelectRelatedCard(false, false, true, false); //RandomCard = 5;
           } else if (_spaceID == 1) {
             //landed on some wild cards
-            var valueIndex = [0, 1, 6, 10, 2, 3, 4, 5, 7, 8, 9];
-            var index = this.getRandom(0, 11);
-            RandomCard = valueIndex[index]; // RandomCard = 9;
+            RandomCard = this.SelectRelatedCard(false, false, false, true); // RandomCard = 9;
           }
 
           IsTweening = false;
@@ -1579,7 +1942,7 @@ var GameManager = cc.Class({
 
             _won = _won + 1;
             GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon = _won.toString();
-            GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(_total, _won, -1);
+            GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(-1, _won, -1);
             GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowResultScreen(statusText, infoText);
           } else {
             //you lose
@@ -1613,7 +1976,7 @@ var GameManager = cc.Class({
 
         _won = _won + 1;
         GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.gamesWon = _won.toString();
-        GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(_total, _won, -1);
+        GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(-1, _won, -1);
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowResultScreen(statusText, infoText);
       } else {
         //you lose
@@ -1937,8 +2300,10 @@ var GameManager = cc.Class({
   TweenPlayer: function TweenPlayer(Node, ToPos) {
     var _this11 = this;
 
+    var speed = 0.4; //if (_isTest) speed = 0.04;
+
     cc.tween(Node) //0.4
-    .to(0.4, {
+    .to(speed, {
       position: cc.v2(ToPos.x, ToPos.y)
     }, {
       easing: "quadInOut"
@@ -1990,7 +2355,7 @@ var GameManager = cc.Class({
         }
 
         if (RollCounter < GamePlayReferenceManager.Instance.Get_SpaceManager().Data.length) {
-          if (RollCounter == 12) RollCounter = RollCounter + 21;else RollCounter = RollCounter + 1;
+          if (RollCounter == 13) RollCounter = RollCounter + 22;else RollCounter = RollCounter + 1;
         } else {
           RollCounter = RollCounter + 1;
           DiceTemp = DiceRoll;
@@ -2287,6 +2652,88 @@ var GameManager = cc.Class({
 
     return _amount;
   },
+  GetVocabularyQuestionsIndex: function GetVocabularyQuestionsIndex() {
+    var _val = -1;
+
+    if (VocabularyQuestions.length > 0) {
+      if (VocabularyQuestionsCounter < VocabularyQuestions.length) {
+        _val = VocabularyQuestions[VocabularyQuestionsCounter];
+        VocabularyQuestionsCounter++;
+      } else {
+        this.PopulateOneQuestionArray_Vocabulary();
+      }
+    } else {
+      this.PopulateOneQuestionArray_Vocabulary();
+    }
+
+    return _val;
+  },
+  GetEstablishmentQuestionsIndex: function GetEstablishmentQuestionsIndex() {
+    var _val = -1;
+
+    if (EstablishmentQuestions.length > 0) {
+      if (EstablishmentQuestionsCounter < EstablishmentQuestions.length) {
+        _val = EstablishmentQuestions[EstablishmentQuestionsCounter];
+        EstablishmentQuestionsCounter++;
+      } else {
+        this.PopulateOneQuestionArray_Establishment();
+      }
+    } else {
+      this.PopulateOneQuestionArray_Establishment();
+    }
+
+    return _val;
+  },
+  PopulateOneQuestionArray_Vocabulary: function PopulateOneQuestionArray_Vocabulary(_data) {
+    if (_data === void 0) {
+      _data = null;
+    }
+
+    if (_data == null) {
+      VocabularyQuestions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      VocabularyQuestions.sort(function () {
+        return 0.5 - Math.random();
+      });
+      console.log(VocabularyQuestions);
+      VocabularyQuestionsCounter = 0;
+      var _tempData = {
+        VocArray: VocabularyQuestions,
+        EstArray: null
+      };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(18, _tempData);
+    } else {
+      if (_data.VocArray != null) {
+        VocabularyQuestions = _data.VocArray;
+        console.log(VocabularyQuestions);
+        VocabularyQuestionsCounter = 0;
+      }
+    }
+  },
+  PopulateOneQuestionArray_Establishment: function PopulateOneQuestionArray_Establishment(_data) {
+    if (_data === void 0) {
+      _data = null;
+    }
+
+    if (_data == null) {
+      EstablishmentQuestions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      EstablishmentQuestions.sort(function () {
+        return 0.5 - Math.random();
+      });
+      console.log(EstablishmentQuestions);
+      EstablishmentQuestionsCounter = 0;
+      var _tempData = {
+        VocArray: null,
+        EstArray: EstablishmentQuestions
+      };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(18, _tempData);
+    } else {
+      if (_data.EstArray != null) {
+        EstablishmentQuestions = _data.EstArray;
+        console.log(EstablishmentQuestions);
+        EstablishmentQuestionsCounter = 0;
+      }
+    }
+  },
   QuestionPopUp_OtherUser_OneQuestion: function QuestionPopUp_OtherUser_OneQuestion(_data) {
     var _questionRef = GamePlayReferenceManager.Instance.Get_QuestionsData();
 
@@ -2296,6 +2743,12 @@ var GameManager = cc.Class({
     var _isVoc = _data.IsVoc;
 
     var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+
+    if (_isVoc) {
+      VocabularyQuestionsCounter++;
+    } else {
+      EstablishmentQuestionsCounter++;
+    }
 
     if (_userID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData.PlayerUID) {
       console.log("ID matched");

@@ -137,6 +137,24 @@ var MultiplayerController = cc.Class({
   ) {
     this.ModeSelection = _val;
   },
+  GetActiveStatus: function GetActiveStatus(_uID) {
+    if (_uID === void 0) {
+      _uID = "";
+    }
+
+    var _isActive = true;
+    var _array = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo;
+
+    for (var index = 0; index < _array.length; index++) {
+      if (_array[index].PlayerUID == _uID) {
+        if (_array[index].IsActive == false) {
+          _isActive = false;
+        }
+      }
+    }
+
+    return _isActive;
+  },
   GetSelectedMode: function GetSelectedMode() {
     return this.ModeSelection;
   },
@@ -660,7 +678,67 @@ var MultiplayerController = cc.Class({
           senderName: PhotonRef.myActor().name,
           senderID: PhotonRef.myActor().actorNr
         }, {
-          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.All
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
+        });
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+  SendOneQuestionArrays: function SendOneQuestionArrays(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending one question arrays");
+      console.log(_data);
+
+      try {
+        PhotonRef.raiseEvent(18, {
+          Data: _data,
+          senderName: PhotonRef.myActor().name,
+          senderID: PhotonRef.myActor().actorNr
+        }, {
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
+        });
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+  SendDecksArrays: function SendDecksArrays(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending decks arrays");
+      console.log(_data);
+
+      try {
+        PhotonRef.raiseEvent(19, {
+          Data: _data,
+          senderName: PhotonRef.myActor().name,
+          senderID: PhotonRef.myActor().actorNr
+        }, {
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
+        });
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+  SendDecksArrayCounter: function SendDecksArrayCounter(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending decks arrays counters");
+      console.log(_data);
+
+      try {
+        PhotonRef.raiseEvent(20, {
+          Data: _data,
+          senderName: PhotonRef.myActor().name,
+          senderID: PhotonRef.myActor().actorNr
+        }, {
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
         });
       } catch (err) {
         console.error("error: " + err.message);
@@ -1033,20 +1111,21 @@ var MultiplayerController = cc.Class({
           if (_this2.GetRealActors() > 1) {
             //if has more than one player start real game
             _this2.SendRoomCompletedData();
-          } //start game with bot
-          else {
-              MultiplayerController.Instance.ResetRoomValues();
-              MultiplayerController.Instance.DisconnectPhoton();
-              MultiplayerController.Instance.ToggleModeSelection(1);
-              MultiplayerController.Instance.ToggleShowRoom_Bool(false);
-              MultiplayerController.Instance.MaxPlayers = 2;
-              cc.systemEvent.emit("UpdateStatusWindow", "players found");
-              cc.systemEvent.emit("UpdateStatusWindow", "starting game...");
-              setTimeout(function () {
-                GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinedRoom = true;
-                cc.systemEvent.emit("ChangePanelScreen", true, true, "GamePlay"); //function in ui manager
-              }, 1000);
-            }
+          } else {
+            clearTimeout(Schedular);
+            GamePlayReferenceManager.Instance.Get_UIManager().ShowToast("No online player was found, please try again later");
+            GamePlayReferenceManager.Instance.Get_UIManager().ExitConnecting(); // MultiplayerController.Instance.ResetRoomValues();
+            // MultiplayerController.Instance.DisconnectPhoton();
+            // MultiplayerController.Instance.ToggleModeSelection(1);
+            // MultiplayerController.Instance.ToggleShowRoom_Bool(false);
+            // MultiplayerController.Instance.MaxPlayers = 2;
+            // cc.systemEvent.emit("UpdateStatusWindow", "players found");
+            // cc.systemEvent.emit("UpdateStatusWindow", "starting game...");
+            // setTimeout(() => {
+            //   GamePlayReferenceManager.Instance.Get_MultiplayerController().JoinedRoom = true;
+            //   cc.systemEvent.emit("ChangePanelScreen", true, true, "GamePlay"); //function in ui manager
+            // }, 1000);
+          }
         }
       } else {
         clearTimeout(Schedular);
@@ -1157,10 +1236,16 @@ var MultiplayerController = cc.Class({
           MultiplayerController.Instance.UpdateActorActiveData(actor);
 
           if (!_isSpectate) {
-            _manager.ReceiveEventTurnComplete(_manager.PlayerGameInfo[index].PlayerUID);
+            console.log("player left: " + _manager.PlayerGameInfo[index].PlayerUID);
+
+            _manager.RemoveFromCheckArray(_manager.PlayerGameInfo[index].PlayerUID.toString());
+
+            _manager.CheckTurnComplete();
 
             if (_playerTurn == index && PhotonReferece.myActor().actorNr == PhotonReferece.myRoomMasterActorNr()) {
               _manager.ChangeTurnForcefully();
+
+              console.log("change turn forcefully");
 
               _manager.SetPlayerLeft(true);
             }
@@ -1725,6 +1810,33 @@ var MultiplayerController = cc.Class({
           var senderName = content.senderName;
           var senderID = content.senderID;
           MultiplayerController.Instance.CallRecieveEvent(17, senderName, senderID, _data);
+          break;
+
+        case 18:
+          //receiving one question array
+          console.log("received data for one question array");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+          MultiplayerController.Instance.CallRecieveEvent(18, senderName, senderID, _data);
+          break;
+
+        case 19:
+          //receiving decks array
+          console.log("received data for decks array");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+          MultiplayerController.Instance.CallRecieveEvent(19, senderName, senderID, _data);
+          break;
+
+        case 20:
+          //receiving decks array Counter
+          console.log("received data for decks array counter");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+          MultiplayerController.Instance.CallRecieveEvent(20, senderName, senderID, _data);
           break;
 
         default:

@@ -3161,6 +3161,7 @@
       "__id__": 11
     },
     "IsOneQuestion": true,
+    "IsPlayerSelectProfit": false,
     "SelectedPlayerIndex": 0,
     "SelectedPlayerUserID": "",
     "QuestionID": 0,

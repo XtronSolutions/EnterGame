@@ -1,4 +1,4 @@
-var IsWeb = true;
+var IsWeb = false;
 //-------------------------------------------enumeration for type of business-------------------------//
 var ResponseTypeEnum = cc.Enum({
   None: 0,

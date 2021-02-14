@@ -563,8 +563,8 @@ var UIManager = cc.Class({
 
   PlayGame: function () {
     this.ResetPlayerCountInput();
-    this.VersesPlayerMode();
-    //this.ToggleModeSelection(true);
+    // this.VersesPlayerMode();
+    this.ToggleModeSelection(true);
   },
 
   BackSelectionMode: function () {

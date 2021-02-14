@@ -73,6 +73,11 @@ var SpacesManager = cc.Class({
   name: "SpacesManager",
   "extends": cc.Component,
   properties: {
+    PreSpaces: {
+      "default": [],
+      type: [SpaceData],
+      serializable: true
+    },
     Data: {
       "default": [],
       type: [SpaceData],
@@ -85,11 +90,14 @@ var SpacesManager = cc.Class({
   },
   start: function start() {},
   CreateSpacesPool: function CreateSpacesPool() {
+    this.Data.splice(0, 0, this.PreSpaces[0]);
+    this.Data.splice(14, 0, this.PreSpaces[1]);
+
     for (var i = 0; i < this.Data.length; i++) {
       if (this.Data[i].ReferenceLocation.childrenCount > 0) {
         if (!this.Data[i].isFinal) {
           this.Data[i].ReferenceLocation.active = true;
-          this.Data[i].ReferenceLocation.getComponent('SpaceHandler').InitializeData(this.Data[i]);
+          this.Data[i].ReferenceLocation.getComponent("SpaceHandler").InitializeData(this.Data[i]);
           this.Data[i].ReferenceLocation.children[0].active = true;
 
           if (this.Data[i].CanHaveBG) {
@@ -99,10 +107,10 @@ var SpacesManager = cc.Class({
             this.Data[i].ReferenceLocation.children[0].children[0].active = false;
           }
 
-          this.Data[i].ReferenceLocation.children[0].children[1].getComponent(cc.Label).string = allSpaces[parseInt(this.Data[i].SpacesType)];
+          if (parseInt(this.Data[i].SpacesType) != 0) this.Data[i].ReferenceLocation.children[0].children[1].getComponent(cc.Label).string = allSpaces[parseInt(this.Data[i].SpacesType)];else this.Data[i].ReferenceLocation.children[0].children[1].getComponent(cc.Label).string = "";
         } else {
           this.Data[i].ReferenceLocation.active = true;
-          this.Data[i].ReferenceLocation.getComponent('SpaceHandler').InitializeData(this.Data[i]);
+          this.Data[i].ReferenceLocation.getComponent("SpaceHandler").InitializeData(this.Data[i]);
           this.Data[i].ReferenceLocation.children[0].active = false;
         }
       }

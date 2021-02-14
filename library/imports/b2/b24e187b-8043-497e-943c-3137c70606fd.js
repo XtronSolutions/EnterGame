@@ -110,6 +110,22 @@ var MultiplayerSyncManager = cc.Class({
       if (this.SelectedMode == 2) //for player
         GamePlayReferenceManager.Instance.Get_MultiplayerController().SendSelectedPlayerForProfit(_data);else if (this.SelectedMode == 1) //for bot
         this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 18) {
+      //sending data of one question array
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendOneQuestionArrays(_data);else if (this.SelectedMode == 1) //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 19) {
+      //sending data of decks array
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendDecksArrays(_data);else if (this.SelectedMode == 1) //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+    } else if (_eventCode == 20) {
+      //sending data of decks array
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendDecksArrayCounter(_data);else if (this.SelectedMode == 1) {//for bot
+        //this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
     }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -193,6 +209,22 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_SelectPlayerForProfit_Space_CardFunctionality(_data);
+    } else if (_eventCode == 18) {
+      //receiving one question array data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().PopulateOneQuestionArray_Vocabulary(_data);
+      GamePlayReferenceManager.Instance.Get_GameManager().PopulateOneQuestionArray_Establishment(_data);
+    } else if (_eventCode == 19) {
+      //receiving one question array data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().PopulateDecksArray(false, false, false, false, _data);
+    } else if (_eventCode == 20) {
+      //receiving one question array data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().UpdateCounters(_data);
     }
   }
 });

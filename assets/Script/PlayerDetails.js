@@ -1,5 +1,6 @@
 var GamePlayReferenceManager = null;
 var QuestionsData = null;
+var _gameManager = null;
 var PlayerDetails = cc.Class({
   name: "PlayerDetails",
   extends: cc.Component,
@@ -47,6 +48,7 @@ var PlayerDetails = cc.Class({
     this.CheckReferences();
 
     if (this.IsOneQuestion) {
+      this.QuestionAsked = false;
       this.VocQuestion = false;
       this.EstQuestion = false;
       this.ToastMessage = "";
@@ -89,15 +91,23 @@ var PlayerDetails = cc.Class({
     console.log(_Qdata);
 
     if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
-      this.ToastMessage = "You have asked following question:" + "\n" + _Qdata.Question + "\n" + "A. " + _Qdata.Option1 + "\n" + "B. " + _Qdata.Option2 + "\n" + "C. " + _Qdata.Option3 + "\n" + "D. " + _Qdata.Option4 + "\n" + "\n" + "waiting for player to answer....";
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowQuestionToast(this.ToastMessage);
+      var isActive = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetActiveStatus(this.SelectedPlayerUserID);
 
-      var _data = { Question: this.QuestionID, UserID: this.SelectedPlayerUserID, UserIndex: this.SelectedPlayerIndex, IsVoc: this.VocQuestion };
-      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(7, _data);
+      if (isActive) {
+        this.ToastMessage = "You have asked following question:" + "\n" + _Qdata.Question + "\n" + "A. " + _Qdata.Option1 + "\n" + "B. " + _Qdata.Option2 + "\n" + "C. " + _Qdata.Option3 + "\n" + "D. " + _Qdata.Option4 + "\n" + "\n" + "waiting for player to answer....";
+        //GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowQuestionToast(this.ToastMessage);
 
-      //wait for other player
-      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+        var _data = { Question: this.QuestionID, UserID: this.SelectedPlayerUserID, UserIndex: this.SelectedPlayerIndex, IsVoc: this.VocQuestion };
+        GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(7, _data);
+
+        //wait for other player
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(true);
+        _gameManager = GamePlayReferenceManager.Instance.Get_GameManager();
+        this.QuestionAsked = true;
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore.");
+      }
     } else {
       console.log("no sending question to bot");
     }
@@ -123,10 +133,17 @@ var PlayerDetails = cc.Class({
 
   AskVocabularyQuestion() {
     if (this.IsOneQuestion) {
-      this.QuestionID = this.getRandom(0, 12);
-      this.VocQuestion = true;
-      this.EstQuestion = false;
-      this.RaiseEventOneQuestion();
+      var _index = GamePlayReferenceManager.Instance.Get_GameManager().GetVocabularyQuestionsIndex();
+      if (_index == -1) {
+        console.log("index -1 received");
+        this.AskVocabularyQuestion();
+      } else {
+        this.QuestionID = _index;
+        //this.QuestionID = this.getRandom(0, 12);
+        this.VocQuestion = true;
+        this.EstQuestion = false;
+        this.RaiseEventOneQuestion();
+      }
     }
   },
 
@@ -138,15 +155,33 @@ var PlayerDetails = cc.Class({
 
   AskEstablishmentQuestion() {
     if (this.IsOneQuestion) {
-      this.QuestionID = this.getRandom(0, 12);
-      this.VocQuestion = false;
-      this.EstQuestion = true;
-      this.RaiseEventOneQuestion();
+      var _index = GamePlayReferenceManager.Instance.Get_GameManager().GetEstablishmentQuestionsIndex();
+      if (_index == -1) {
+        console.log("index -1 received");
+        this.AskEstablishmentQuestion();
+      } else {
+        this.QuestionID = _index;
+        //this.QuestionID = this.getRandom(0, 12);
+        this.VocQuestion = false;
+        this.EstQuestion = true;
+        this.RaiseEventOneQuestion();
+      }
     }
   },
 
   getRandom: function (min, max) {
     return Math.floor(Math.random() * (max - min)) + min; // min included and max excluded
+  },
+
+  update(dt) {
+    if (this.QuestionAsked) {
+      if (_gameManager.PlayerGameInfo[this.SelectedPlayerIndex].PlayerUID == this.SelectedPlayerUserID && _gameManager.PlayerGameInfo[this.SelectedPlayerIndex].IsActive == false) {
+        this.QuestionAsked = false;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore, skipping turn.");
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(false);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitAlongTurnOver_OneQuestionSetupUI();
+      }
+    }
   },
 
   //   SkippedLoan() {

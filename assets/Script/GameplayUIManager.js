@@ -1918,6 +1918,18 @@ var GameplayUIManager = cc.Class({
       this.ShowToast("You have no brick and mortar business to expand.");
       setTimeout(() => {
         this.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+
+        if (BusinessSetupCardFunctionality) {
+          this.CheckReferences();
+          LocationName = "";
+          console.log("expand business exit called");
+          GamePlayReferenceManager.Instance.Get_GameManager().DestroyGeneratedNodes();
+          this.TurnDecisionSetupUI.ExpandBusinessNode.active = false;
+          BusinessSetupCardFunctionality = false;
+          GivenCashBusiness = 0;
+          StartAnyBusinessWithoutCash = false;
+          GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+        }
       }, 1600);
     }
   },
@@ -3206,6 +3218,7 @@ var GameplayUIManager = cc.Class({
   },
 
   SetUpSpaceScreen_OneQuestionSetupUI(_myData, _actorsData, _isTurnOver, _modeIndex = 0) {
+    this.ToggleWaitingScreen_OneQuestionSetupUI(false);
     this.OneQuestionSetupUI.TitleLabel.string = "ONE QUESTION";
     this.OneQuestionSetupUI.CashLabel.string = "$" + _myData.Cash;
     this.OneQuestionSetupUI.PlayerNameLabel.string = _myData.PlayerName;
@@ -3271,7 +3284,7 @@ var GameplayUIManager = cc.Class({
   },
   //#endregion
 
-  //#region Select Business ofr double payday setup
+  //#region Select Business for double payday setup
   ToggleScreen_BusinessPayDayUISetup(_state) {
     this.BusinessDoublePayScreen.active = _state;
   },
