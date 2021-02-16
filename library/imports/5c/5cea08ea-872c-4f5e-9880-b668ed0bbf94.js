@@ -130,12 +130,16 @@ var MultiplayerController = cc.Class({
   },
   //this function is called when instance of this class is created
   onLoad: function onLoad() {
+    this.ExitConnecting = false;
     this.ResetAllData();
     this.Init_MultiplayerController();
   },
   ToggleModeSelection: function ToggleModeSelection(_val // 1 means bot , 2 means real players
   ) {
     this.ModeSelection = _val;
+  },
+  SetConneting: function SetConneting(_state) {
+    this.ExitConnecting = _state;
   },
   GetActiveStatus: function GetActiveStatus(_uID) {
     if (_uID === void 0) {
@@ -306,6 +310,17 @@ var MultiplayerController = cc.Class({
   RequestConnection: function RequestConnection() {
     if (PhotonRef.state == 5 || PhotonRef.isConnectedToMaster() == true || PhotonRef.isInLobby() == true) console.log("already connected");else PhotonRef.start();
   },
+  CheckConnectionState: function CheckConnectionState() {
+    var _connected = false;
+
+    if (PhotonRef.state == 5 || PhotonRef.state == 7 || PhotonRef.isConnectedToMaster() == true || PhotonRef.isInLobby() == true || PhotonRef.isJoinedToRoom() == true) {
+      console.log("already connected");
+      _connected = true;
+    }
+
+    console.log(PhotonRef.state);
+    return _connected;
+  },
 
   /**
     @summary Disconnect from photon
@@ -314,15 +329,14 @@ var MultiplayerController = cc.Class({
     @returns no return
    **/
   DisconnectPhoton: function DisconnectPhoton() {
-    if (PhotonRef.isConnectedToMaster() == true || PhotonRef.isInLobby() == true || PhotonRef.isJoinedToRoom() == true) {
-      PhotonRef.disconnect();
-      this.JoinedRoom = false; //PhotonRef.leaveRoom();
+    //if (PhotonRef.isConnectedToMaster() == true || PhotonRef.state == 5 || PhotonRef.state == 7 || PhotonRef.isInLobby() == true || PhotonRef.isJoinedToRoom() == true) {
+    PhotonRef.disconnect();
+    this.JoinedRoom = false; //PhotonRef.leaveRoom();
 
-      this.ResetState();
-    } else {
-      console.log("not inside any room or lobby or connected to photon");
-    }
+    this.ResetState(); //  } else {
+    //    console.log("not inside any room or lobby or connected to photon");
   },
+  // },
 
   /**
     @summary reseting few values
@@ -1103,6 +1117,7 @@ var MultiplayerController = cc.Class({
       if (IsMasterClient) {
         if (_timer > 0) {
           _timer--;
+          console.log(_timer);
 
           _this2.RoomCounter(_timer);
         } else {
@@ -1131,6 +1146,11 @@ var MultiplayerController = cc.Class({
         clearTimeout(Schedular);
       }
     }, 1000);
+  },
+  ClearTimer: function ClearTimer() {
+    TimerStarted = false;
+    _timer = 0;
+    clearTimeout(Schedular);
   },
   ProcessCounter: function ProcessCounter() {
     var _master = MultiplayerController.Instance.CheckCurrentActiveMasterClient();
@@ -1366,9 +1386,16 @@ var MultiplayerController = cc.Class({
       }
 
       if (param1 == 226) {
-        //room does not exists or is full
-        GamePlayReferenceManager.Instance.Get_UIManager().ToggleLoadingNode(false);
-        GamePlayReferenceManager.Instance.Get_UIManager().ShowToast("Room is full, please select any other room to spectate.");
+        if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
+          GamePlayReferenceManager.Instance.Get_UIManager().ShowToast("Room does not exists anymore,please try again by exiting."); // MultiplayerController.Instance.ClearTimer();
+          // MultiplayerController.Instance.SetConneting(false);
+          // MultiplayerController.Instance.ResetRoomValues();
+          // MultiplayerController.Instance.DisconnectPhoton();
+        } else {
+          //room does not exists or is full
+          GamePlayReferenceManager.Instance.Get_UIManager().ToggleLoadingNode(false);
+          GamePlayReferenceManager.Instance.Get_UIManager().ShowToast("Room is full, please select any other room to spectate.");
+        }
       }
     };
     /**
@@ -1474,10 +1501,16 @@ var MultiplayerController = cc.Class({
         setTimeout(function () {
           cc.systemEvent.emit("ChangePanelScreen", true, true, "GamePlay");
         }, 1000); //function in UIManager
-      }
+      } // if (MultiplayerController.Instance.ExitConnecting) {
+      //   MultiplayerController.Instance.ClearTimer();
+      //   MultiplayerController.Instance.SetConneting(false);
+      //   MultiplayerController.Instance.ResetRoomValues();
+      //   MultiplayerController.Instance.DisconnectPhoton();
+      // } else {
+
 
       if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
-        MultiplayerController.Instance.ProcessCounter();
+        MultiplayerController.Instance.ProcessCounter(); //}
       }
     };
     /**
@@ -1600,7 +1633,11 @@ var MultiplayerController = cc.Class({
           }
         }
 
-        if (MultiplayerController.Instance.JoinedRoom == true && !IsGameStarted) {
+        console.log("actor has left");
+        console.log(PhotonRef.isJoinedToRoom());
+        console.log(IsGameStarted);
+
+        if (PhotonRef.isJoinedToRoom() == true && !IsGameStarted) {
           if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
             MultiplayerController.Instance.ProcessCounter();
           }

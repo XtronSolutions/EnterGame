@@ -606,6 +606,7 @@ var UIManager = cc.Class({
     this.UIProfile.StatusLabel.string = this.StatusText;
   },
   ExitConnecting: function ExitConnecting() {
+    // if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckConnectionState() == true) {
     this.UIProfile.StatusNode.active = false;
     this.UIProfile.PlayButtonNode.active = true;
     this.UIProfile.StatusLabel.string = "";
@@ -614,8 +615,10 @@ var UIManager = cc.Class({
     this.StatusText = "";
     this.TotalPlayers = "";
     this.ResetPlayerCountInput();
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ClearTimer();
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().SetConneting(true);
     GamePlayReferenceManager.Instance.Get_MultiplayerController().ResetRoomValues();
-    GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton(); // }
   },
   ToggleLoadingNode: function ToggleLoadingNode(state) {
     this.LoadingNode.active = state;
@@ -670,6 +673,10 @@ var UIManager = cc.Class({
       if (AvatarSelection == index) this.AvatarUISetup.AvatarButtons[index].children[1].active = true;else this.AvatarUISetup.AvatarButtons[index].children[1].active = false;
     }
   },
+  // OnChangAvatarID: function (UID) {
+  //   if (isNaN(UID) || UID == undefined) UID = 0;
+  //   AvatarSelection = UID;
+  // },
   DisableAvatarScreen: function DisableAvatarScreen() {
     this.ToggleAvatarScreen(false);
 
@@ -677,16 +684,26 @@ var UIManager = cc.Class({
       AvatarSelection = _tempAvatarSelection;
       this.AssignAvatar(AvatarSelection);
       this.AssignDataClasses(AvatarSelection);
+      console.log("Sending avatar selection to update: " + AvatarSelection);
       GamePlayReferenceManager.Instance.Get_ServerBackend().UpdateUserData(-1, -1, AvatarSelection);
     }
   },
-  AssignAvatarSelection: function AssignAvatarSelection(event) {
+  AssignAvatarSelection: function AssignAvatarSelection(event, _Selection) {
     if (event === void 0) {
       event = null;
     }
 
-    _tempAvatarSelection = parseInt(event.currentTarget.name.split("_")[1]);
-    console.log(_tempAvatarSelection);
+    if (_Selection === void 0) {
+      _Selection = -1;
+    }
+
+    if (_Selection != -1) {
+      _tempAvatarSelection = _Selection;
+      console.log(_Selection);
+    } else {
+      _tempAvatarSelection = parseInt(event.currentTarget.name.split("_")[1]);
+      console.log(_tempAvatarSelection);
+    }
 
     for (var index = 0; index < this.AvatarUISetup.AvatarButtons.length; index++) {
       if (_tempAvatarSelection == index) this.AvatarUISetup.AvatarButtons[index].children[1].active = true;else this.AvatarUISetup.AvatarButtons[index].children[1].active = false;
@@ -735,10 +752,12 @@ var UIManager = cc.Class({
         var _avatar = parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.avatarId);
 
         if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
-          _avatar = 0;
-        }
+          _avatar = -1;
+          this.AssignAvatarSelection(null, 0);
+          this.EnableAvatarScreen();
+        } //this.AssignAvatar(_avatar);
 
-        this.AssignAvatar(_avatar);
+
         AvatarSelection = _avatar;
         this.UIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.name;
         this.UIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().StudentData.emailAddress;
@@ -762,9 +781,10 @@ var UIManager = cc.Class({
 
         if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
           _avatar = 0;
-        }
+          this.AssignAvatarSelection(null, 0); //this.EnableAvatarScreen();
+        } //this.AssignAvatar(_avatar);
 
-        this.AssignAvatar(_avatar);
+
         AvatarSelection = _avatar;
         this.TeacherUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.name;
         this.TeacherUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().TeacherData.emailAddress;
@@ -783,9 +803,10 @@ var UIManager = cc.Class({
 
         if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
           _avatar = 0;
-        }
+          this.AssignAvatarSelection(null, 0); //this.EnableAvatarScreen();
+        } //this.AssignAvatar(_avatar);
 
-        this.AssignAvatar(_avatar);
+
         AvatarSelection = _avatar;
         this.MentorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.name;
         this.MentorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().MentorData.emailAddress;
@@ -803,9 +824,10 @@ var UIManager = cc.Class({
 
         if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
           _avatar = 0;
-        }
+          this.AssignAvatarSelection(null, 0); // this.EnableAvatarScreen();
+        } //this.AssignAvatar(_avatar);
 
-        this.AssignAvatar(_avatar);
+
         AvatarSelection = _avatar;
         this.AdminUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.name;
         this.AdminUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().AdminData.emailAddress;
@@ -823,14 +845,17 @@ var UIManager = cc.Class({
 
         if (_avatar == undefined || isNaN(_avatar) == true || _avatar == null) {
           _avatar = 0;
-        }
+          this.AssignAvatarSelection(null, 0); // this.EnableAvatarScreen();
+        } //this.AssignAvatar(_avatar);
 
-        this.AssignAvatar(_avatar);
+
         AvatarSelection = _avatar;
         this.DirectorUIProfile.NameLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.name;
         this.DirectorUIProfile.EmailAddressLabel.string = GamePlayReferenceManager.Instance.Get_ServerBackend().DirectorData.emailAddress;
         this.ToggleLoadingNode(false);
       }
+
+      this.AssignAvatar(AvatarSelection);
     } else if (parseInt(GamePlayReferenceManager.Instance.Get_ServerBackend().ResponseType) == 2) {
       //user not found
       this.ToggleLoadingNode(false);

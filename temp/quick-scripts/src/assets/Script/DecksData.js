@@ -2040,7 +2040,7 @@ var DecksData = cc.Class({
           break;
 
         case "2":
-          //Roll 1 die, multiply result by $5,000 and receive your advance from the Bank.
+          //Roll 2 die, multiply result by $5,000 and receive your advance from the Bank.
           console.log(_this7.WildCards[Index].Description);
           WildCardData = null;
 
@@ -2048,7 +2048,7 @@ var DecksData = cc.Class({
 
           var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-          var DiceResult = _manager.RollOneDice();
+          var DiceResult = _manager.RollTwoDices();
 
           var CashMulitplier = 5000;
           var TotalResult = DiceResult * CashMulitplier;

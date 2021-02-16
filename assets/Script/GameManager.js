@@ -1,4 +1,4 @@
-var _isTest = true;
+var _isTest = false;
 var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
@@ -618,6 +618,7 @@ var GameManager = cc.Class({
    **/
   onLoad() {
     this.ResetAllVariables();
+    this.ResetPayDay();
     GameManager.Instance = this;
     this.TurnNumber = 0;
     this.TurnCompleted = false;
@@ -630,6 +631,19 @@ var GameManager = cc.Class({
     this.CardCounter = 0;
     this.CardDisplayed = false;
     CardEventReceived = false;
+  },
+
+  ResetPayDay() {
+    console.log("reseting payday");
+    _skipNextPayday = false;
+    _skipHMNextPayday = false;
+    _skipBMNextPayday = false;
+    PassedPayDay = false;
+    DoublePayDay = false;
+    PassedPayDayCounter = 0;
+    DoublePayDayCounter = 0;
+    _nextTurnDoublePay = false;
+    _nextTurnhalfPay = false;
   },
 
   /**
@@ -1074,6 +1088,8 @@ var GameManager = cc.Class({
         }, 500);
       }
     }
+
+    this.UpdateUIData();
   },
 
   SyncDataToPlayerGameInfo(_ind) {
@@ -1317,11 +1333,21 @@ var GameManager = cc.Class({
       }
     }
 
+    this.UpdateUIData();
     // let targetPos=this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0,120));
     // var _pos=this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
     // this.TweenCamera(_pos,true,0.4);
   },
 
+  UpdateUIData() {
+    if (this.SelectedMode == 2) {
+      this.SyncDataToPlayerGameInfo(0);
+    }
+
+    for (let index = 0; index < this.AllPlayerUI.length; index++) {
+      this.AllPlayerUI[index].getComponent("PlayerProfileManager").RefreshDataAutomatically();
+    }
+  },
   DiceFuntionality() {
     let targetPos = this.AllPlayerNodes[this.TurnNumber].convertToWorldSpaceAR(cc.Vec2(0, 120));
     var _pos = this.CameraNode.parent.convertToNodeSpaceAR(targetPos);
@@ -1572,7 +1598,7 @@ var GameManager = cc.Class({
       LossesArrayCounter++;
     }
     if (_data.MarketArray) {
-      MarketingArrayCounterv++;
+      MarketingArrayCounter++;
     }
     if (_data.WildArrya) {
       WildCardArrayCounter++;
@@ -1659,6 +1685,7 @@ var GameManager = cc.Class({
           if (_spaceID == 2) {
             //landed on big business cards
             RandomCard = this.SelectRelatedCard(true, false, false, false);
+            //RandomCard = 5;
           } else if (_spaceID == 5) {
             //landed on some losses cards
             RandomCard = this.SelectRelatedCard(false, true, false, false);

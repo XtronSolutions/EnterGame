@@ -1,4 +1,4 @@
-var IsWeb = false;
+var IsWeb = true;
 //-------------------------------------------enumeration for type of business-------------------------//
 var ResponseTypeEnum = cc.Enum({
   None: 0,
@@ -294,44 +294,48 @@ var ServerBackend = cc.Class({
       _mainData = JSON.parse(cc.sys.localStorage.getItem("userData"));
     }
 
-    if (_mainData != null) {
-      var SendingPayload = new UserDataUpdatePayload(
-        _mainData.SK,
-        _mainData.password,
-        _mainData.name,
-        _mainData.role,
-        _mainData.doB,
-        _mainData.gradeLevel,
-        _mainData.teacherName,
-        _mainData.fbPage,
-        _mainData.gamesWon,
-        _mainData.testTaken,
-        _mainData.district,
-        _mainData.testingAverage,
-        _mainData.inGameCash,
-        "mubeenali@gmail.com",
-        "SchoolAdmin",
-        _mainData.addedByEmail,
-        _mainData.schoolName,
-        _mainData.avatarId
-      );
+    if (_mainData.roleType == "Student") {
+      if (_mainData != null) {
+        var SendingPayload = new UserDataUpdatePayload(
+          _mainData.SK,
+          _mainData.password,
+          _mainData.name,
+          _mainData.roleType,
+          _mainData.doB,
+          _mainData.gradeLevel,
+          _mainData.teacherName,
+          _mainData.fbPage,
+          _mainData.gamesWon,
+          _mainData.testTaken,
+          _mainData.district,
+          _mainData.testingAverage,
+          _mainData.inGameCash,
+          "programdirector@gmail.com",
+          "ProgramDirector",
+          _mainData.addedByEmail,
+          _mainData.schoolName,
+          _mainData.avatarId
+        );
 
-      if (_cash != -1) {
-        SendingPayload.inGameCash = _cash;
-      }
-      if (_gameWon != -1) {
-        SendingPayload.gamesWon = _gameWon;
-      }
-      if (_avatarID != -1) {
-        SendingPayload.avatarId = _avatarID.toString();
-      }
+        if (_cash != -1) {
+          SendingPayload.inGameCash = _cash;
+        }
+        if (_gameWon != -1) {
+          SendingPayload.gamesWon = _gameWon;
+        }
+        if (_avatarID != -1) {
+          SendingPayload.avatarId = _avatarID.toString();
+        }
 
-      console.log(SendingPayload);
-      var payload = SendingPayload;
-      var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _mainData.userToken };
-      this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
+        console.log(SendingPayload);
+        var payload = SendingPayload;
+        var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _mainData.userToken };
+        this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
+      } else {
+        console.error("cannot update data as stored data is null");
+      }
     } else {
-      console.error("cannot update data as stored data is null");
+      console.log("not student");
     }
   },
 
@@ -429,7 +433,7 @@ var ServerBackend = cc.Class({
           } else if (MainData.message.includes("Password should contain atleast one Integer")) {
             ServerBackend.Instance.ResponseType = ResponseTypeEnum.InvalidEmailPassword;
             cc.systemEvent.emit("AssignProfileData");
-          } else if (MainData.message.includes("School License is not valid contact Admin!")) {
+          } else if (MainData.message.includes("School License is not valid contact Admin!") || MainData.message.includes("School License Does not exist!")) {
             ServerBackend.Instance.ResponseType = ResponseTypeEnum.LicenseInvalid;
             cc.systemEvent.emit("AssignProfileData");
           }

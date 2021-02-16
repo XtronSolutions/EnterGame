@@ -98,7 +98,7 @@ var PlayerInfoUI = cc.Class({
 });
 var GamePlayReferenceManager = null;
 
-var GameManager = require('GameManager');
+var GameManager = require("GameManager");
 
 var PlayerProfileManager = cc.Class({
   name: "PlayerProfileManager",
@@ -169,7 +169,7 @@ var PlayerProfileManager = cc.Class({
   //
   start: function start() {},
   CheckReferences: function CheckReferences() {
-    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require('GamePlayReferenceManager');
+    if (!GamePlayReferenceManager || GamePlayReferenceManager == null) GamePlayReferenceManager = require("GamePlayReferenceManager");
   },
   SetName: function SetName(_name) {
     this.PlayerNameLabel.string = _name;
@@ -210,6 +210,7 @@ var PlayerProfileManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_GameManager().SyncDataToPlayerGameInfo(0);
     }
 
+    console.log("profile called");
     var _amount = 0;
     this.PlayerInfoScreen.active = true;
     this.CheckReferences();
@@ -229,17 +230,17 @@ var PlayerProfileManager = cc.Class({
     for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
       var node = cc.instantiate(this.PlayerInfoMainUI.BusinessDetailPrefab);
       node.parent = this.PlayerInfoMainUI.BusinessDetailContent;
-      node.getComponent('BusinessDetail').SetName(_tempData.NoOfBusiness[index].BusinessName);
-      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
-      node.getComponent('BusinessDetail').SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
-      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) node.getComponent('BusinessDetail').SetMode("Home Based");else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) node.getComponent('BusinessDetail').SetMode("Brick & Mortar");
+      node.getComponent("BusinessDetail").SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) node.getComponent("BusinessDetail").SetMode("Home Based");else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) node.getComponent("BusinessDetail").SetMode("Brick & Mortar");
 
       if (_tempData.NoOfBusiness[index].LoanTaken) {
-        node.getComponent('BusinessDetail').SetBalance(_tempData.NoOfBusiness[index].LoanAmount);
+        node.getComponent("BusinessDetail").SetBalance(_tempData.NoOfBusiness[index].LoanAmount);
         _amount = _tempData.NoOfBusiness[index].LoanAmount;
       }
 
-      node.getComponent('BusinessDetail').SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+      node.getComponent("BusinessDetail").SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
       businessDetailNodes.push(node);
     }
 

@@ -5,7 +5,7 @@ cc._RF.push(module, 'f5a14bMsD9JSZovKg9aBEdQ', 'StorageManager');
 "use strict";
 
 var GamePlayReferenceManager = null;
-var IsWeb = false;
+var IsWeb = true;
 var StorageManager = cc.Class({
   name: "StorageManager",
   "extends": cc.Component,
@@ -24,7 +24,7 @@ var StorageManager = cc.Class({
     // }
   },
   onLoad: function onLoad() {
-    console.log("V12"); // console.log = function () {};
+    console.log("V13"); // console.log = function () {};
     //  console.error = function () {};
     // console.warn = function () {};
 

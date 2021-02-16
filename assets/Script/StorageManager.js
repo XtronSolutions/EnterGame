@@ -1,5 +1,5 @@
 var GamePlayReferenceManager = null;
-var IsWeb = false;
+var IsWeb = true;
 var StorageManager = cc.Class({
   name: "StorageManager",
   extends: cc.Component,
@@ -22,7 +22,7 @@ var StorageManager = cc.Class({
     // }
   },
   onLoad() {
-    console.log("V12");
+    console.log("V13");
     // console.log = function () {};
     //  console.error = function () {};
     // console.warn = function () {};

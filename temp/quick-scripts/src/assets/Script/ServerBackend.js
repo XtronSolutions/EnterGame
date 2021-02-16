@@ -11,7 +11,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var IsWeb = false; //-------------------------------------------enumeration for type of business-------------------------//
+var IsWeb = true; //-------------------------------------------enumeration for type of business-------------------------//
 
 var ResponseTypeEnum = cc.Enum({
   None: 0,
@@ -511,30 +511,34 @@ var ServerBackend = cc.Class({
       _mainData = JSON.parse(cc.sys.localStorage.getItem("userData"));
     }
 
-    if (_mainData != null) {
-      var SendingPayload = new UserDataUpdatePayload(_mainData.SK, _mainData.password, _mainData.name, _mainData.role, _mainData.doB, _mainData.gradeLevel, _mainData.teacherName, _mainData.fbPage, _mainData.gamesWon, _mainData.testTaken, _mainData.district, _mainData.testingAverage, _mainData.inGameCash, "mubeenali@gmail.com", "SchoolAdmin", _mainData.addedByEmail, _mainData.schoolName, _mainData.avatarId);
+    if (_mainData.roleType == "Student") {
+      if (_mainData != null) {
+        var SendingPayload = new UserDataUpdatePayload(_mainData.SK, _mainData.password, _mainData.name, _mainData.roleType, _mainData.doB, _mainData.gradeLevel, _mainData.teacherName, _mainData.fbPage, _mainData.gamesWon, _mainData.testTaken, _mainData.district, _mainData.testingAverage, _mainData.inGameCash, "programdirector@gmail.com", "ProgramDirector", _mainData.addedByEmail, _mainData.schoolName, _mainData.avatarId);
 
-      if (_cash != -1) {
-        SendingPayload.inGameCash = _cash;
+        if (_cash != -1) {
+          SendingPayload.inGameCash = _cash;
+        }
+
+        if (_gameWon != -1) {
+          SendingPayload.gamesWon = _gameWon;
+        }
+
+        if (_avatarID != -1) {
+          SendingPayload.avatarId = _avatarID.toString();
+        }
+
+        console.log(SendingPayload);
+        var payload = SendingPayload;
+        var header = {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: _mainData.userToken
+        };
+        this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
+      } else {
+        console.error("cannot update data as stored data is null");
       }
-
-      if (_gameWon != -1) {
-        SendingPayload.gamesWon = _gameWon;
-      }
-
-      if (_avatarID != -1) {
-        SendingPayload.avatarId = _avatarID.toString();
-      }
-
-      console.log(SendingPayload);
-      var payload = SendingPayload;
-      var header = {
-        "Content-Type": "application/json; charset=utf-8",
-        Authorization: _mainData.userToken
-      };
-      this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
     } else {
-      console.error("cannot update data as stored data is null");
+      console.log("not student");
     }
   },
   Fetch: function Fetch(_url, _method, _requestBody, _headers) {
@@ -690,7 +694,7 @@ var ServerBackend = cc.Class({
                   } else if (MainData.message.includes("Password should contain atleast one Integer")) {
                     ServerBackend.Instance.ResponseType = ResponseTypeEnum.InvalidEmailPassword;
                     cc.systemEvent.emit("AssignProfileData");
-                  } else if (MainData.message.includes("School License is not valid contact Admin!")) {
+                  } else if (MainData.message.includes("School License is not valid contact Admin!") || MainData.message.includes("School License Does not exist!")) {
                     ServerBackend.Instance.ResponseType = ResponseTypeEnum.LicenseInvalid;
                     cc.systemEvent.emit("AssignProfileData");
                   }

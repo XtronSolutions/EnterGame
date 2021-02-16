@@ -1746,13 +1746,13 @@ var DecksData = cc.Class({
         _manager.ToggleDoublePayNextTurn(true);
         this.CompleteTurnWithToast("You will receive double profits on next payday.", 2400);
         break;
-      case "2": //Roll 1 die, multiply result by $5,000 and receive your advance from the Bank.
+      case "2": //Roll 2 die, multiply result by $5,000 and receive your advance from the Bank.
         console.log(this.WildCards[Index].Description);
         WildCardData = null;
         var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
         var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
 
-        var DiceResult = _manager.RollOneDice();
+        var DiceResult = _manager.RollTwoDices();
         var CashMulitplier = 5000;
         var TotalResult = DiceResult * CashMulitplier;
 
