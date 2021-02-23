@@ -1189,6 +1189,44 @@ var MultiplayerController = cc.Class({
       console.log("you are not in room.");
     }
   },
+  SendCashDeductData: function SendCashDeductData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending SendCashDeductData"); //  console.log(_data);
+
+      try {
+        PhotonRef.raiseEvent(21, {
+          Data: _data,
+          senderName: PhotonRef.myActor().name,
+          senderID: PhotonRef.myActor().actorNr
+        }, {
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
+        });
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+  SendCashAdditionData: function SendCashAdditionData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.log("sending SendCashAdditionData"); //  console.log(_data);
+
+      try {
+        PhotonRef.raiseEvent(22, {
+          Data: _data,
+          senderName: PhotonRef.myActor().name,
+          senderID: PhotonRef.myActor().actorNr
+        }, {
+          receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others
+        });
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
   RoomCompleted: function RoomCompleted() {
     if (PhotonRef.myActor().getCustomProperty("RoomEssentials")["IsSpectate"] == false) {
       var _realPlayer = this.GetRealActors();
@@ -1874,6 +1912,24 @@ var MultiplayerController = cc.Class({
           var senderName = content.senderName;
           var senderID = content.senderID;
           MultiplayerController.Instance.CallRecieveEvent(20, senderName, senderID, _data);
+          break;
+
+        case 21:
+          //receiving cash deduct data
+          console.log("received cash deduct data");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+          MultiplayerController.Instance.CallRecieveEvent(21, senderName, senderID, _data);
+          break;
+
+        case 22:
+          //receiving cash add data
+          console.log("received cash add data");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+          MultiplayerController.Instance.CallRecieveEvent(22, senderName, senderID, _data);
           break;
 
         default:

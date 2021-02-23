@@ -1842,6 +1842,29 @@ var GameplayUIManager = cc.Class({
     //console.log(amount);
     TempMarketingAmount = amount;
   },
+  CheckMarketingAmountShare_CardFunctionality: function CheckMarketingAmountShare_CardFunctionality(_amount) {
+    if (_amount === void 0) {
+      _amount = 0;
+    }
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    for (var index = 0; index < _manager.PlayerGameInfo.length; index++) {
+      if (_manager.PlayerGameInfo[index].CardFunctionality.HasMarketingCompany) {
+        this.RaiseEventForMarketingShare(_amount, _manager.PlayerGameInfo[index].PlayerUID, "You have received market share of $" + _amount + " from your marketing company");
+      }
+    }
+  },
+  RaiseEventForMarketingShare: function RaiseEventForMarketingShare(_amnt, _id, _msg) {
+    var _data = {
+      amount: _amnt,
+      ID: _id,
+      msg: _msg
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(22, _data);
+  },
   OnMarketingAmountSelected_TurnDecision: function OnMarketingAmountSelected_TurnDecision() {
     if (TempMarketingAmount == "" || TempMarketingAmount == null) {
       this.ShowToast("Please enter an amount.");
@@ -1855,7 +1878,8 @@ var GameplayUIManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash - this.marketingAmount;
         GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount + this.marketingAmount;
         this.ShowToast("you successfully marketed amount of $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].MarketingAmount + " , remaining cash is $" + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[_playerIndex].Cash + ".", LongMessageTime);
-        this.UpdateCash_TurnDecision(); //reseting marketing label and its holding variable
+        this.UpdateCash_TurnDecision();
+        this.CheckMarketingAmountShare_CardFunctionality(this.marketingAmount); //reseting marketing label and its holding variable
 
         this.TurnDecisionSetupUI.MarketingEditBox.string = "";
         TempMarketingAmount = "";

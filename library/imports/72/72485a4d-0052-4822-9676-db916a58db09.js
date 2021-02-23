@@ -176,6 +176,12 @@ var CardDataFunctionality = cc.Class({
       type: cc.Integer,
       "default": 0,
       serializable: true
+    },
+    HasMarketingCompany: {
+      displayName: "HasMarketingCompany",
+      type: cc.Boolean,
+      "default": false,
+      serializable: true
     }
   },
   ctor: function ctor() {//constructor
@@ -1423,7 +1429,7 @@ var GameManager = cc.Class({
     // WildCardArrayCounter = 0;
     if (_isBigBusiness) {
       if (_data == null) {
-        BigBusinessArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
+        BigBusinessArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
         BigBusinessArray.sort(function () {
           return 0.5 - Math.random();
         });
@@ -1455,7 +1461,7 @@ var GameManager = cc.Class({
       }
     } else if (_isMarketing) {
       if (_data == null) {
-        MarketingArray = [0, 1, 2, 3, 4, 5, 7, 8, 9, 13];
+        MarketingArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13];
         MarketingArray.sort(function () {
           return 0.5 - Math.random();
         });
@@ -1738,13 +1744,13 @@ var GameManager = cc.Class({
 
           if (_spaceID == 2) {
             //landed on big business cards
-            RandomCard = this.SelectRelatedCard(true, false, false, false); //RandomCard = 5;
+            RandomCard = this.SelectRelatedCard(true, false, false, false); //RandomCard = 11;
           } else if (_spaceID == 5) {
             //landed on some losses cards
             RandomCard = this.SelectRelatedCard(false, true, false, false); //RandomCard = 14;
           } else if (_spaceID == 3) {
             //landed on some marketing cards
-            RandomCard = this.SelectRelatedCard(false, false, true, false); //RandomCard = 5;
+            RandomCard = this.SelectRelatedCard(false, false, true, false); //RandomCard = 10;
           } else if (_spaceID == 1) {
             //landed on some wild cards
             RandomCard = this.SelectRelatedCard(false, false, false, true); // RandomCard = 9;
@@ -2957,6 +2963,49 @@ var GameManager = cc.Class({
       ID: _UserID
     };
     GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(8, _data);
+  },
+  DeductCash_CardFunctionality: function DeductCash_CardFunctionality(_amount) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      var _myIndex = this.GetMyIndex();
+
+      if (this.PlayerGameInfo[_myIndex].Cash >= _amount) {
+        this.PlayerGameInfo[_myIndex].Cash -= _amount;
+      } else if (this.PlayerGameInfo[_myIndex].Cash < _amount) {
+        this.PlayerGameInfo[_myIndex].Cash = 0;
+      }
+
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+    }
+  },
+  AddCash_CardFunctionality: function AddCash_CardFunctionality(_data) {
+    var _amount = _data.amount;
+    var _ID = _data.ID;
+    var _msg = _data.msg;
+    var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+    if (mode == 2) {
+      var _actor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+        var _myIndex = this.GetMyIndex();
+
+        if (_actor.PlayerUID == _ID) {
+          this.PlayerGameInfo[_myIndex].Cash += _amount;
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg);
+        }
+      }
+    } else if (mode == 1) {
+      for (var index = 0; index < this.PlayerGameInfo.length; index++) {
+        if (this.PlayerGameInfo[index].PlayerUID == _ID && index != this.TurnNumber) {
+          this.PlayerGameInfo[index].Cash += _amount;
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_msg);
+        }
+      }
+    }
+
+    this.UpdateUIData();
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().UpdateCash_TurnDecision();
   },
   ReceiveEventDecision_OneQuestion: function ReceiveEventDecision_OneQuestion(_data) {
     var _this13 = this;

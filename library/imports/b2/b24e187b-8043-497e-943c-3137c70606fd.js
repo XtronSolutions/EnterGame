@@ -126,6 +126,15 @@ var MultiplayerSyncManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_MultiplayerController().SendDecksArrayCounter(_data);else if (this.SelectedMode == 1) {//for bot
         //this.ReceiveEvent(_eventCode, "customName", "customID", _data);
       }
+    } else if (_eventCode == 21) {
+      //for player
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCashDeductData(_data);
+    } else if (_eventCode == 22) {
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCashAdditionData(_data);else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
     }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -225,6 +234,20 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().UpdateCounters(_data);
+    } else if (_eventCode == 21) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().DeductCash_CardFunctionality(5000);
+      var _newData = {
+        info: "Tution fee was deducted."
+      };
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowInfo(_newData);
+    } else if (_eventCode == 22) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().AddCash_CardFunctionality(_data);
     }
   }
 });

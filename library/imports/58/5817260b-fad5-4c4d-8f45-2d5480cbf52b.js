@@ -885,7 +885,52 @@ var DecksData = cc.Class({
         break;
 
       case "10":
+        //You start an Online University for Entrepreneurs and charge $5,000 per student. Every player in the game must take your class and learn from you. Receive tuition from each player right now.
         console.log(this.BigBusiness[Index].Description);
+        BigBusinessData = null;
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _amount = 0;
+        var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+        if (mode == 2) {
+          //real players
+          var _actorsArray = _manager.PlayerGameInfo;
+
+          for (var _index4 = 0; _index4 < _actorsArray.length; _index4++) {
+            if (_actorsArray[_index4].IsActive && _index4 != _playerIndex) {
+              _amount += 5000;
+            }
+          }
+
+          var _data = {
+            Deduct: 5000
+          };
+          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(21, _data);
+          _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
+          this.CompleteTurnWithToast("Cash amount $" + _amount + " has successfully added, cash balance becomes $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4000);
+        } else if (mode == 1) {
+          var _actorsArray = _manager.PlayerGameInfo;
+
+          for (var _index5 = 0; _index5 < _actorsArray.length; _index5++) {
+            if (_index5 != _playerIndex) {
+              if (_actorsArray[_index5].Cash >= 5000) {
+                _actorsArray[_index5].Cash -= 5000;
+              } else if (_actorsArray[_index5].Cash < 5000) {
+                _actorsArray[_index5].Cash = 0;
+              }
+
+              _amount += 5000;
+            }
+          }
+
+          _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
+          this.CompleteTurnWithToast("Cash amount $" + _amount + " has successfully added, cash balance becomes $" + _manager.PlayerGameInfo[_playerIndex].Cash, 4000);
+        }
+
         break;
 
       case "11":
@@ -908,8 +953,8 @@ var DecksData = cc.Class({
         if (TotalResult >= 19) {
           var _amount = 0;
 
-          for (var _index4 = 0; _index4 < _manager.PlayerGameInfo.length; _index4++) {
-            _amount = _amount + _manager.PlayerGameInfo[_index4].MarketingAmount;
+          for (var _index6 = 0; _index6 < _manager.PlayerGameInfo.length; _index6++) {
+            _amount = _amount + _manager.PlayerGameInfo[_index6].MarketingAmount;
           }
 
           _manager.PlayerGameInfo[_playerIndex].Cash += _amount;
@@ -920,15 +965,15 @@ var DecksData = cc.Class({
 
             var _data = null;
 
-            for (var _index5 = 0; _index5 < _actorsArray.length; _index5++) {
-              _data = _actorsArray[_index5].customProperties.PlayerSessionData;
+            for (var _index7 = 0; _index7 < _actorsArray.length; _index7++) {
+              _data = _actorsArray[_index7].customProperties.PlayerSessionData;
               _data.MarketingAmount = 0;
 
-              _actorsArray[_index5].setCustomProperty("PlayerSessionData", _data);
+              _actorsArray[_index7].setCustomProperty("PlayerSessionData", _data);
             }
           } else {
-            for (var _index6 = 0; _index6 < _manager.PlayerGameInfo.length; _index6++) {
-              _manager.PlayerGameInfo[_index6].MarketingAmount = 0;
+            for (var _index8 = 0; _index8 < _manager.PlayerGameInfo.length; _index8++) {
+              _manager.PlayerGameInfo[_index8].MarketingAmount = 0;
             }
           }
         } else {
@@ -938,7 +983,24 @@ var DecksData = cc.Class({
         break;
 
       case "12":
+        //You open a Marketing Company. You now collect one dollar for every marketing dollar that is spent or collected in the game (collect from the Bank).
         console.log(this.BigBusiness[Index].Description);
+        BigBusinessData = null;
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+        if (mode == 2) {
+          _manager.PlayerGameInfo[_playerIndex].CardFunctionality.HasMarketingCompany = true;
+          this.CompleteTurnWithToast("From now on, every time a player puts money into a marketing account, you will receive the same amount of money in your account", 4000);
+        } else {
+          _manager.PlayerGameInfo[_playerIndex].CardFunctionality.HasMarketingCompany = true;
+          this.CompleteTurnWithToast("From now on, every time a player puts money into a marketing account, you will receive the same amount of money in your account", 4000);
+        }
+
         break;
 
       case "13":
@@ -1225,7 +1287,47 @@ var DecksData = cc.Class({
         break;
 
       case "7":
+        //Your Social Media ad goes viral! You receive all of your Marketing Budget back, plus $5,000 profit for each business you have.
         console.log(this.Marketing[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var _marketAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+        var _HBAmount = _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount;
+        var _BMAmount = _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount;
+        var _locations = _manager.PlayerGameInfo[_playerIndex].TotalLocationsAmount;
+
+        var _TotalBusinesses = _HBAmount + _BMAmount + _locations;
+
+        var _profit = 5000;
+
+        var _TotalProfit = _TotalBusinesses * _profit + _marketAmount;
+
+        if (_hasTwoScreens) {
+          MarketingData = {
+            Data: {
+              result: _TotalProfit
+            }
+          };
+
+          if (!this.IsBotTurn) {
+            isEven = false;
+            this.ShowCardInfo("\n" + "Total Businesses (with locations) : " + _TotalBusinesses + "\n" + "\n" + "Marketing Amount : " + _marketAmount + "\n" + "\n" + "Profit on each Business : " + _TotalBusinesses + " * 5000 + " + _marketAmount + " = " + _TotalProfit, true);
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Receive";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          //_TotalProfit = MarketingData.Data.result;
+          _manager.PlayerGameInfo[_playerIndex].Cash += _TotalProfit;
+          _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+          this.CompleteTurnWithToast("Total profit of $" + _TotalProfit + " has been added to your cash amount.", 2400);
+          MarketingData = null;
+        }
+
         break;
 
       case "8":
@@ -1275,7 +1377,16 @@ var DecksData = cc.Class({
         break;
 
       case "11":
+        //You can hired a media specialist to do your social media marketing for you. They increase your business' reach. You receive double your income on your next Pay Day.
         console.log(this.Marketing[Index].Description);
+
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+        MarketingData = null;
+
+        _manager.ToggleDoublePayNextTurn(true);
+
+        this.CompleteTurnWithToast("You will receive double profits on next payday.", 2400);
         break;
 
       case "12":

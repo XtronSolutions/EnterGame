@@ -1850,6 +1850,22 @@ var GameplayUIManager = cc.Class({
     TempMarketingAmount = amount;
   },
 
+  CheckMarketingAmountShare_CardFunctionality(_amount = 0) {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    for (let index = 0; index < _manager.PlayerGameInfo.length; index++) {
+      if (_manager.PlayerGameInfo[index].CardFunctionality.HasMarketingCompany) {
+        this.RaiseEventForMarketingShare(_amount, _manager.PlayerGameInfo[index].PlayerUID, "You have received market share of $" + _amount + " from your marketing company");
+      }
+    }
+  },
+
+  RaiseEventForMarketingShare(_amnt, _id, _msg) {
+    var _data = { amount: _amnt, ID: _id, msg: _msg };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(22, _data);
+  },
+
   OnMarketingAmountSelected_TurnDecision: function () {
     if (TempMarketingAmount == "" || TempMarketingAmount == null) {
       this.ShowToast("Please enter an amount.");
@@ -1867,6 +1883,7 @@ var GameplayUIManager = cc.Class({
           LongMessageTime
         );
         this.UpdateCash_TurnDecision();
+        this.CheckMarketingAmountShare_CardFunctionality(this.marketingAmount);
 
         //reseting marketing label and its holding variable
         this.TurnDecisionSetupUI.MarketingEditBox.string = "";
