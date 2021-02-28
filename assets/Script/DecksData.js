@@ -880,14 +880,55 @@ var DecksData = cc.Class({
           this.CompleteTurnWithToast("From now on, every time a player puts money into a marketing account, you will receive the same amount of money in your account", 4000);
         }
         break;
-      case "13":
+      case "13": //You hostilely takeover a business. You sell its assets, run up its credit and file bankruptcy. Choose a player and the business they will lose. Roll two die, multiply result by $10,000. Receive your profits from the Bank, the player you chose, loses their business. If they have a loan on that business, you must pay of the remaining balance of the loan for that business to the Bank.
         console.log(this.BigBusiness[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+        BigBusinessData = null;
+        if (!this.IsBotTurn) {
+          this.ShowCardInfo("", false);
+          _manager.SelectPlayerTakeOver_Space_CardFunctionality(true);
+        } else {
+          console.log("its bot and skipping");
+          BigBusinessData = null;
+          this.CompleteTurnWithToast("", 1200);
+        }
         break;
-      case "14":
+      case "14": //You discover damaging information on one of the other players. Choose a player and offer them a choice;1 - Give you 50% ownership in any one of their businesses (their choice)2 - Roll 2 dice, multiply result by $3,000 and pay you now
         console.log(this.BigBusiness[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+        if (!this.IsBotTurn) {
+          this.ShowCardInfo("", false);
+          _manager.SelectPlayerDamagingInformation_Space_CardFunctionality(true);
+        } else {
+          console.log("its bot and skipping");
+          WildCardData = null;
+          this.CompleteTurnWithToast("", 1200);
+        }
         break;
-      case "15":
+      case "15": //Choose a player and buy half of one of their businesses. Roll two die, multiply by $3,000 and pay the player that amount for 50% interest in their business. You can choose not to, but you must make that choice before you roll.
         console.log(this.BigBusiness[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+        BigBusinessData = null;
+        if (_type == 0) {
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("", false);
+            _manager.SelectPlayerBuyHalfBusiness_Space_CardFunctionality(true);
+          } else {
+            console.log("its bot and skipping");
+            this.CompleteTurnWithToast("", 1200);
+          }
+        } else if (_type == 1) {
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("", false);
+            this.CompleteTurnWithToast("Changing turn now.", 1200);
+          } else {
+            console.log("its bot and skipping");
+            this.CompleteTurnWithToast("", 1200);
+          }
+        }
         break;
       default:
         break;
@@ -1205,8 +1246,50 @@ var DecksData = cc.Class({
         _manager.ToggleDoublePayNextTurn(true);
         this.CompleteTurnWithToast("You will receive double profits on next payday.", 2400);
         break;
-      case "12":
+      case "12": //You market your brand so well a larger company wants to buy one of your businesses.  1 - If you agree, choose a business and roll 2 die, multiply the result by the amount in your marketing budget.  2 - If you decide not to sell, your turn ends here.
         console.log(this.Marketing[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var DiceResult = _manager.RollTwoDices();
+        var _amount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+
+        var TotalResult = DiceResult * _amount;
+
+        if (_type == 0) {
+          if (_amount == 0) {
+            MarketingData = null;
+            this.CompleteTurnWithToast("You do not have any marketing amount, changing turn now.", 1200);
+            return;
+          }
+
+          if (_hasTwoScreens) {
+            MarketingData = { Data: { result: TotalResult } };
+
+            if (!this.IsBotTurn) {
+              this.ShowCardInfo("\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Marketing Amount : " + _amount + "\n" + "\n" + "Total Amount $" + TotalResult, true);
+
+              this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Select";
+              this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+            } else {
+              this.CardFuntionalityButton();
+            }
+          } else {
+            TotalResult = parseInt(MarketingData.Data.result);
+            if (!this.IsBotTurn) {
+              _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+              this.ShowCardInfo("", false);
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSellScreen__SellBusinessUISetup(true, TotalResult);
+            } else {
+              console.log("its ,skipping");
+              MarketingData = null;
+              this.CompleteTurnWithToast("", 1200);
+            }
+          }
+        } else if (_type == 1) {
+          MarketingData = null;
+          this.CompleteTurnWithToast("Changing turn now.", 1200);
+        }
         break;
       case "13":
         console.log(this.Marketing[Index].Description);
@@ -2049,8 +2132,37 @@ var DecksData = cc.Class({
         _manager.ToggleDoublePayNextTurn(true);
         this.CompleteTurnWithToast("You will receive double profits on next payday.", 2400);
         break;
-      case "12":
+      case "12": //Roll both die and multiply the result by $7,000. You can sell any one of your current Businesses to the Bank for that price right now. If it is your only business and you decide to sell it, you must start from the beginning.
         console.log(this.WildCards[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        var DiceResult = _manager.RollTwoDices();
+        var _amount = 3000;
+        var TotalResult = DiceResult * _amount;
+
+        if (_hasTwoScreens) {
+          WildCardData = { Data: { result: TotalResult } };
+
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("\n" + "Dice Result : " + DiceResult + "\n" + "\n" + "Total Amount $" + TotalResult, true);
+
+            this.MainUI.InteractionButtonNode.children[0].children[0].getComponent(cc.Label).string = "Select";
+            this.ToggleButtons(this.isOwner, true, this.IsBotTurn);
+          } else {
+            this.CardFuntionalityButton();
+          }
+        } else {
+          TotalResult = parseInt(WildCardData.Data.result);
+          if (!this.IsBotTurn) {
+            this.ShowCardInfo("", false);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableSellScreen__SellBusinessUISetup(true, TotalResult);
+          } else {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+        }
         break;
       case "13":
         console.log(this.WildCards[Index].Description);

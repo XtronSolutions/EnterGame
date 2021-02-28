@@ -194,6 +194,38 @@ var MultiplayerSyncManager = cc.Class({
         //for bot
         this.ReceiveEvent(_eventCode, "customName", "customID", _data);
       }
+    } else if (_eventCode == 23) {
+      if (this.SelectedMode == 2)
+        //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendTakeBusinessData(_data);
+      else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 24) {
+      if (this.SelectedMode == 2)
+        //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendDamagingData(_data);
+      else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 25) {
+      if (this.SelectedMode == 2)
+        //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendDamagingDecisionData(_data);
+      else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 26) {
+      if (this.SelectedMode == 2)
+        //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendBuyHalfBusinessData(_data);
+      else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
     }
   },
 
@@ -307,6 +339,26 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().AddCash_CardFunctionality(_data);
+    } else if (_eventCode == 23) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_TakeOverBusiness_CardFunctionality(_data);
+    } else if (_eventCode == 24) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_SelectPlayerDamagingDecision_Space_CardFunctionality(_data);
+    } else if (_eventCode == 25) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ReceiveEvent_DamageDecision(_data);
+    } else if (_eventCode == 26) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_BuyHalfBusiness_CardFunctionality(_data);
     }
   },
 });

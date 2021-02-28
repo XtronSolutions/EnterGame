@@ -3,7 +3,9 @@ var _diceinput1 = "";
 var _diceinput2 = "";
 var PreviousDiceRoll1 = -1;
 var PreviousDiceRoll2 = -1;
-
+var halfBusinessAmount = 0;
+var halfBusinessAmountID = "";
+var halfBusinessAmountIndex = 0;
 var PreviousDiceRoll3 = -1;
 var PreviousDiceRoll4 = -1;
 
@@ -178,9 +180,14 @@ var CardDataFunctionality = cc.Class({
       default: 0,
       serializable: true,
     },
-
     HasMarketingCompany: {
       displayName: "HasMarketingCompany",
+      type: cc.Boolean,
+      default: false,
+      serializable: true,
+    },
+    BankruptedNextTurn: {
+      displayName: "BankruptedNextTurn",
       type: cc.Boolean,
       default: false,
       serializable: true,
@@ -568,6 +575,9 @@ var GameManager = cc.Class({
     PreviousDiceRoll1 = -1;
     PreviousDiceRoll2 = -1;
     PlayerLeft = false;
+    halfBusinessAmount = 0;
+    halfBusinessAmountID = "";
+    halfBusinessAmountIndex = 0;
     PreviousDiceRoll3 = -1;
     PreviousDiceRoll4 = -1;
     _nextTurnhalfPay = false;
@@ -1011,11 +1021,18 @@ var GameManager = cc.Class({
           if (!this.PlayerGameInfo[this.TurnNumber].isGameFinished) {
             this.ToggleTurnProgress(true);
             if (!_skipNextTurn) {
-              setTimeout(() => {
-                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+              if (this.PlayerGameInfo[this.TurnNumber].CardFunctionality.BankruptedNextTurn) {
                 GamePlayReferenceManager.Instance.Get_GameplayUIManager().ResetTurnVariable();
-                IsTweening = false;
-              }, 1000);
+                this.PlayerGameInfo[this.TurnNumber].CardFunctionality.BankruptedNextTurn = false;
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewGame_BankRupted("You were bankrupted and will start from begin.");
+                return;
+              } else {
+                setTimeout(() => {
+                  GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecision_TurnDecision(true);
+                  GamePlayReferenceManager.Instance.Get_GameplayUIManager().ResetTurnVariable();
+                  IsTweening = false;
+                }, 1000);
+              }
               console.log("its your turn " + this.PlayerGameInfo[this.TurnNumber].PlayerName);
             }
           }
@@ -1454,7 +1471,7 @@ var GameManager = cc.Class({
 
     if (_isBigBusiness) {
       if (_data == null) {
-        BigBusinessArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        BigBusinessArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
         BigBusinessArray.sort(() => 0.5 - Math.random());
 
@@ -1478,7 +1495,7 @@ var GameManager = cc.Class({
       }
     } else if (_isMarketing) {
       if (_data == null) {
-        MarketingArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13];
+        MarketingArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13];
 
         MarketingArray.sort(() => 0.5 - Math.random());
 
@@ -1490,7 +1507,7 @@ var GameManager = cc.Class({
       }
     } else if (_isWildCard) {
       if (_data == null) {
-        WildCardArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        WildCardArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
         WildCardArray.sort(() => 0.5 - Math.random());
 
@@ -1692,7 +1709,7 @@ var GameManager = cc.Class({
           if (_spaceID == 2) {
             //landed on big business cards
             RandomCard = this.SelectRelatedCard(true, false, false, false);
-            //RandomCard = 11;
+            //RandomCard = 14;
           } else if (_spaceID == 5) {
             //landed on some losses cards
             RandomCard = this.SelectRelatedCard(false, true, false, false);
@@ -1700,11 +1717,12 @@ var GameManager = cc.Class({
           } else if (_spaceID == 3) {
             //landed on some marketing cards
             RandomCard = this.SelectRelatedCard(false, false, true, false);
+            //RandomCard = 11;
             //RandomCard = 10;
           } else if (_spaceID == 1) {
             //landed on some wild cards
             RandomCard = this.SelectRelatedCard(false, false, false, true);
-            // RandomCard = 9;
+            //RandomCard = 11;
           }
 
           IsTweening = false;
@@ -2898,6 +2916,61 @@ var GameManager = cc.Class({
     _gameplayUIManager.SetUpSpaceScreen_SelectPlayerForProfit(_myData, _roomData, _isTurnOver, this.SelectedMode);
   },
 
+  SelectPlayerTakeOver_Space_CardFunctionality(_isTurnOver = false) {
+    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    var _myData;
+    var _roomData;
+    if (this.SelectedMode == 2) {
+      //for real players
+      _roomData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+      _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    } else if (this.SelectedMode == 1) {
+      //for bot
+      _myData = this.PlayerGameInfo[0];
+      _roomData = this.PlayerGameInfo;
+    }
+    _gameplayUIManager.ToggleScreen_SelectPlayerTakeOver(true);
+    _gameplayUIManager.ResetSpaceScreen_SelectPlayerTakeOver();
+    _gameplayUIManager.SetUpSpaceScreen_SelectPlayerTakeOver(_myData, _roomData, _isTurnOver, this.SelectedMode);
+  },
+
+  SelectPlayerBuyHalfBusiness_Space_CardFunctionality(_isTurnOver = false) {
+    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    var _myData;
+    var _roomData;
+    if (this.SelectedMode == 2) {
+      //for real players
+      _roomData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+      _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    } else if (this.SelectedMode == 1) {
+      //for bot
+      _myData = this.PlayerGameInfo[0];
+      _roomData = this.PlayerGameInfo;
+    }
+
+    _gameplayUIManager.ToggleScreen_SelectPlayerTakeOver(true);
+    _gameplayUIManager.ResetSpaceScreen_SelectPlayerTakeOver();
+    _gameplayUIManager.SetUpSpaceScreen_SelectPlayerTakeOver(_myData, _roomData, _isTurnOver, this.SelectedMode, true);
+  },
+
+  SelectPlayerDamagingInformation_Space_CardFunctionality(_isTurnOver = false) {
+    var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+    var _myData;
+    var _roomData;
+    if (this.SelectedMode == 2) {
+      //for real players
+      _roomData = GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray();
+      _myData = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    } else if (this.SelectedMode == 1) {
+      //for bot
+      _myData = this.PlayerGameInfo[0];
+      _roomData = this.PlayerGameInfo;
+    }
+    _gameplayUIManager.ToggleScreen_SelectPlayerDamaging(true);
+    _gameplayUIManager.ResetSpaceScreen_SelectPlayerDamaging();
+    _gameplayUIManager.SetUpSpaceScreen_SelectPlayerDamaging(_myData, _roomData, _isTurnOver, this.SelectedMode);
+  },
+
   ReceiveEvent_SelectPlayerForProfit_Space_CardFunctionality(_data) {
     var _ownID = _data.UserID.toString();
     var _playerIndex = parseInt(_data.UserIndex);
@@ -3092,6 +3165,185 @@ var GameManager = cc.Class({
     var _toPos = cc.Vec2(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.x, GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.position.y);
     this.TweenPlayer_GoBackSpaces(this.AllPlayerNodes[this.TurnNumber], _toPos);
     this.completeCardTurn();
+  },
+
+  ReceiveEvent_TakeOverBusiness_CardFunctionality(_data) {
+    if (this.SelectedMode == 2) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == false) {
+        var _id = _data.ID;
+        var _playerData = _data.Player;
+        var _business = _data.Business;
+        var _businessIndex = _data.BusinessIndex;
+        var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+
+        var _myIndex = -1;
+        console.log(_myActor.PlayerUID);
+        console.log(_id);
+
+        if (_myActor.PlayerUID.toString() == _id.toString()) {
+          for (let index = 0; index < this.PlayerGameInfo.length; index++) {
+            if (this.PlayerGameInfo[index].PlayerUID == _id) {
+              if (this.PlayerGameInfo[index].NoOfBusiness[_businessIndex].BusinessType == 1) {
+                //home based
+                this.PlayerGameInfo[index].HomeBasedAmount--;
+              } else if (this.PlayerGameInfo[index].NoOfBusiness[_businessIndex].BusinessType == 2) {
+                //brick and mortar
+                var _locations = this.PlayerGameInfo[index].NoOfBusiness[_businessIndex].LocationsName.length;
+                this.PlayerGameInfo[index].BrickAndMortarAmount--;
+                this.PlayerGameInfo[index].TotalLocationsAmount -= _locations;
+              }
+
+              this.PlayerGameInfo[index].NoOfBusiness.splice(_businessIndex, 1);
+              _myIndex = index;
+              break;
+            }
+          }
+
+          console.log(this.PlayerGameInfo[_myIndex]);
+          if (_myIndex != -1) {
+            if (this.PlayerGameInfo[_myIndex].NoOfBusiness.length > 0) {
+              //check if player has lost all businesses or not
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Your business " + _business.BusinessName + " was forcefully took over, you have lost that business");
+            } else {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Your business " + _business.BusinessName + " was forcefully took over, you have lost that business, you have been bankrupted, you will start again in next turn.");
+              this.PlayerGameInfo[_myIndex].CardFunctionality.BankruptedNextTurn = true;
+            }
+
+            GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+          }
+        }
+      }
+    }
+  },
+
+  TakeOverBusiness_CardFunctionality(_data, _index, _playerIndex = 0, _buyHalfBusiness = false) {
+    var _business = _data.NoOfBusiness[_index];
+    console.log(_business);
+
+    var _diceRoll = this.RollTwoDices();
+    var _multiplierBusiness = 10000;
+    var _result = _diceRoll * _multiplierBusiness;
+    var _player = null;
+
+    //send rpc to other player as well
+    _player = this.PlayerGameInfo[_playerIndex];
+
+    var _sendingData = { ID: _player.PlayerUID, Player: _player, Business: _business, BusinessIndex: _index };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(23, _sendingData);
+
+    if (!_business.LoanTaken) {
+      this.PlayerGameInfo[this.TurnNumber].Cash += _result;
+
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(
+        "\n" + "Dice Result : " + _diceRoll + "\n" + "\n" + "Amount : " + _diceRoll + " * " + _multiplierBusiness + " = $" + _result + "\n" + "\n" + "Cash amount of $" + _result + " added after deducting supposed loan, total cash becomes $" + this.PlayerGameInfo[this.TurnNumber].Cash
+      );
+
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreenAlongTurnOver__BusinessGenric();
+    } else {
+      var _tempSum = this.PlayerGameInfo[this.TurnNumber].Cash + _result;
+      if (_tempSum >= _business.LoanAmount) {
+        _tempSum -= _business.LoanAmount;
+        this.PlayerGameInfo[this.TurnNumber].Cash = _tempSum;
+
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(
+          "\n" +
+            "Dice Result : " +
+            _diceRoll +
+            "\n" +
+            "\n" +
+            "Loan Amount : $" +
+            _business.LoanAmount +
+            "\n" +
+            "\n" +
+            "Amount : " +
+            _diceRoll +
+            " * " +
+            _multiplierBusiness +
+            " = $" +
+            _result +
+            "\n" +
+            "\n" +
+            "After deducting supposed loan, total cash becomes $" +
+            this.PlayerGameInfo[this.TurnNumber].Cash
+        );
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreenAlongTurnOver__BusinessGenric();
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash to pay off loan, turn will be skipped now");
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreenAlongTurnOver__BusinessGenric();
+      }
+    }
+  },
+
+  ReceiveEvent_BuyHalfBusiness_CardFunctionality(_data) {
+    if (this.SelectedMode == 2) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == false) {
+        var _id = _data.ID;
+        var _cashAmount = _data.Amount;
+        var _businessIndex = _data.BusinessIndex;
+        var _senderID = _data.MyID;
+        var _senderName = _data.MyName;
+        var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+        var _myIndex = this.GetMyIndex();
+        if (_myActor.PlayerUID == _id.toString()) {
+          this.PlayerGameInfo[_myIndex].Cash += parseInt(_cashAmount);
+          this.PlayerGameInfo[_myIndex].NoOfBusiness[_businessIndex].IsPartnership = true;
+          this.PlayerGameInfo[_myIndex].NoOfBusiness[_businessIndex].PartnerID = _senderID;
+          this.PlayerGameInfo[_myIndex].NoOfBusiness[_businessIndex].PartnerName = _senderName;
+
+          GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_senderName + " has send you cash amount $" + _cashAmount + " and has become 50% owner of your business " + this.PlayerGameInfo[_myIndex].NoOfBusiness[_businessIndex].BusinessName);
+        }
+      }
+    }
+  },
+  PayAmount_BuyHalfBusiness_CardFunctionality() {
+    if (this.PlayerGameInfo[this.TurnNumber].Cash >= halfBusinessAmount) {
+      this.PlayerGameInfo[this.TurnNumber].Cash -= halfBusinessAmount;
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully bought half ownership of the business, remaining cash $" + this.PlayerGameInfo[this.TurnNumber].Cash);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreenAlongTurnOver__BusinessGenric();
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_BuyHalfBusiness(false);
+      var _sendingData = { ID: halfBusinessAmountID, Amount: halfBusinessAmount, BusinessIndex: halfBusinessAmountIndex, MyID: this.PlayerGameInfo[this.TurnNumber].PlayerUID, MyName: this.PlayerGameInfo[this.TurnNumber].PlayerName };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(26, _sendingData);
+    } else {
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+      //GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You don't have enough cash.");
+    }
+  },
+  BuyHalfBusiness_CardFunctionality(_data, _index, _playerIndex = 0) {
+    //var _business = _data.NoOfBusiness[_index];
+    //console.log(_business);
+
+    var _diceRoll = this.RollTwoDices();
+    var _multiplierBusiness = 3000;
+    var _result = _diceRoll * _multiplierBusiness;
+
+    halfBusinessAmount = _result;
+    halfBusinessAmountID = this.PlayerGameInfo[_playerIndex].PlayerUID;
+    halfBusinessAmountIndex = _index;
+
+    var _player = null;
+    var _text = "\n" + "Dice Result : " + _diceRoll + "\n" + "\n" + "Payable Amount : " + _diceRoll + " * " + _multiplierBusiness + " = $" + _result;
+
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_BuyHalfBusiness(true);
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetTitleText_BuyHalfBusiness(_text);
+  },
+  ReceiveEvent_SelectPlayerDamagingDecision_Space_CardFunctionality(_data) {
+    if (this.SelectedMode == 2) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == false) {
+        var _player = _data.Player;
+        var _playerIndex = parseInt(_data.PlayerIndex);
+        var _senderID = _data.MyUserID;
+
+        var _gameplayUIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        if (_player.PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
+          console.log("received event: " + _player.PlayerName);
+
+          _gameplayUIManager.SetSenderID_DamageDecision(_senderID);
+          _gameplayUIManager.ToggleMainScreen_DamageDecision(true);
+          _gameplayUIManager.ToggleDiceResultScreen_DamageDecision(false);
+        }
+      }
+    }
   },
 
   //#endregion

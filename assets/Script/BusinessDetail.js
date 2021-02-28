@@ -105,6 +105,36 @@ var BusinessDetail = cc.Class({
       type: cc.Node,
       serializable: true,
     },
+
+    IsBusinessTakeOver: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+
+    IsBusinessDamaging: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+
+    SelectedPlayerIndex: {
+      default: -1,
+      type: cc.Integer,
+      serializable: true,
+    },
+
+    BuyHalfBusiness: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+
+    SellingAmount: {
+      default: 0,
+      type: cc.Integer,
+      serializable: true,
+    },
   },
 
   CheckReferences() {
@@ -119,8 +149,20 @@ var BusinessDetail = cc.Class({
     this.BusinessMode = _val;
   },
 
+  SetPlayerIndex(_val) {
+    this.SelectedPlayerIndex = _val;
+  },
+
   SetBusinessIndex(_val) {
     this.BusinessIndex = _val;
+  },
+
+  SetSellingAmount(_val) {
+    this.SellingAmount = _val;
+  },
+
+  setHalfBusiness(_stat) {
+    this.BuyHalfBusiness = _stat;
   },
 
   SetName(_name) {
@@ -155,6 +197,10 @@ var BusinessDetail = cc.Class({
     this.FinalBusinessValue = _value;
   },
 
+  SetPlayerObject(_obj) {
+    this.PlayerData = _obj;
+  },
+
   ToggleSellBusinessButton(_state) {
     if (this.CanSell) {
       this.SellBusinessBtnNode.getComponent(cc.Button).interactable = _state;
@@ -186,23 +232,48 @@ var BusinessDetail = cc.Class({
         if (_tempData.NoOfBusiness[this.BusinessIndex].LoanTaken) {
           //if there is some loan on selected business
           _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.pop();
-          var _amount = 75000 - _tempData.NoOfBusiness[this.BusinessIndex].LoanAmount;
+
+          var LocationAmount;
+          if (this.SellingAmount == 0) {
+            LocationAmount = 75000;
+          } else {
+            LocationAmount = this.SellingAmount;
+          }
+
+          var _amount = LocationAmount - _tempData.NoOfBusiness[this.BusinessIndex].LoanAmount;
+
+          if (_amount < 0) _amount = 0;
 
           _tempData.NoOfBusiness[this.BusinessIndex].LoanAmount = 0;
           _tempData.NoOfBusiness[this.BusinessIndex].LoanTaken = false;
 
           _tempData.Cash += _amount;
           GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold one of your location, $" + _amount + " added to your cash after paying loan", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         } else {
           _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.pop();
-          _tempData.Cash += 75000;
-          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold one of your location, $75000 added to your cash", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+          var LocationAmount;
+          if (this.SellingAmount == 0) {
+            LocationAmount = 75000;
+          } else {
+            LocationAmount = this.SellingAmount;
+          }
+          _tempData.Cash += LocationAmount;
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold one of your location, $" + LocationAmount + " added to your cash", 2000);
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         }
       }
     }
@@ -218,7 +289,14 @@ var BusinessDetail = cc.Class({
         //home based
         if (_tempData.NoOfBusiness[this.BusinessIndex].LoanTaken) {
           //if there is some loan on selected business
-          var HomeBasedAmount = 10000;
+
+          var HomeBasedAmount;
+          if (this.SellingAmount == 0) {
+            HomeBasedAmount = 10000;
+          } else {
+            HomeBasedAmount = this.SellingAmount;
+          }
+
           _tempData.NoOfBusiness.splice(this.BusinessIndex, 1);
           var _amount = HomeBasedAmount - _tempData.NoOfBusiness[this.BusinessIndex].LoanAmount;
 
@@ -236,23 +314,45 @@ var BusinessDetail = cc.Class({
 
           _tempData.Cash += _amount;
           GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold your business, $" + _amount + " added to your cash after paying loan", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         } else {
-          var HomeBasedAmount = 10000;
+          var HomeBasedAmount;
+          if (this.SellingAmount == 0) {
+            HomeBasedAmount = 10000;
+          } else {
+            HomeBasedAmount = this.SellingAmount;
+          }
           _tempData.NoOfBusiness.splice(this.BusinessIndex, 1);
           _tempData.Cash += HomeBasedAmount;
-          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold your business, $10000 added to your cash", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold your business, $" + HomeBasedAmount + " added to your cash", 2000);
+
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         }
       } else if (this.BusinessMode == 2) {
         //brick and mortar
         if (_tempData.NoOfBusiness[this.BusinessIndex].LoanTaken) {
           //if there is some loan on selected business
-          var MortarAmount = 75000;
+
+          var MortarAmount;
+          if (this.SellingAmount == 0) {
+            MortarAmount = 75000;
+          } else {
+            MortarAmount = this.SellingAmount;
+          }
+
           var _locations = _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.length;
 
           if (_locations > 0)
@@ -275,11 +375,21 @@ var BusinessDetail = cc.Class({
           _tempData.Cash += _amount;
           _tempData.NoOfBusiness.splice(this.BusinessIndex, 1);
           GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold your business along with any locations, $" + _amount + " added to your cash after paying loan", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         } else {
-          var MortarAmount = 75000;
+          var MortarAmount;
+          if (this.SellingAmount == 0) {
+            MortarAmount = 75000;
+          } else {
+            MortarAmount = this.SellingAmount;
+          }
+
           var _locations = _tempData.NoOfBusiness[this.BusinessIndex].LocationsName.length;
 
           if (_locations > 0)
@@ -289,9 +399,13 @@ var BusinessDetail = cc.Class({
           _tempData.NoOfBusiness.splice(this.BusinessIndex, 1);
           _tempData.Cash += MortarAmount;
           GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have successfully sold your business, $" + MortarAmount + " added to your cash", 2000);
-          setTimeout(() => {
-            GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
-          }, 2050);
+          if (this.SellingAmount == 0) {
+            setTimeout(() => {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBusinessUI_SellBusinessUISetup();
+            }, 2050);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitSellScreenAlongTurnOver__SellBusinessUISetup();
+          }
         }
       }
     } else {
@@ -314,6 +428,45 @@ var BusinessDetail = cc.Class({
       }
     } else {
       console.log("game being played by bot");
+    }
+  },
+  TakeOverBusiness() {
+    if (this.IsBusinessTakeOver) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+        if (this.BuyHalfBusiness == false) {
+          //real players
+          console.log("taking over business");
+          console.log(this.PlayerData);
+          GamePlayReferenceManager.Instance.Get_GameManager().TakeOverBusiness_CardFunctionality(this.PlayerData, this.BusinessIndex, this.SelectedPlayerIndex);
+        } else {
+          console.log("buying half business");
+          console.log(this.PlayerData);
+
+          if (!this.PlayerData.NoOfBusiness[this.BusinessIndex].IsPartnership) {
+            GamePlayReferenceManager.Instance.Get_GameManager().BuyHalfBusiness_CardFunctionality(this.PlayerData, this.BusinessIndex, this.SelectedPlayerIndex);
+          } else {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Selected player's Business is in partnership with some other player.");
+          }
+        }
+      } else {
+        console.log("game being played by bot");
+      }
+    }
+  },
+
+  DamagingInformationBusiness() {
+    if (this.IsBusinessDamaging) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+        //real players
+        console.log(this.PlayerData);
+        if (!this.PlayerData.NoOfBusiness[this.BusinessIndex].IsPartnership) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().SelectBusinessForHalfOwnership_DamagingDecision(this.PlayerData, this.BusinessIndex, this.SelectedPlayerIndex);
+        } else {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Selected Business is in partnership with some other player.");
+        }
+      } else {
+        console.log("game being played by bot");
+      }
     }
   },
 

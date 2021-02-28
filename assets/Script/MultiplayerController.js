@@ -158,6 +158,22 @@ var MultiplayerController = cc.Class({
     return _isActive;
   },
 
+  GetBankruptedStatus(_uID = "") {
+    var _isBankrupted = false;
+
+    var _array = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo;
+
+    for (let index = 0; index < _array.length; index++) {
+      if (_array[index].PlayerUID == _uID) {
+        if (_array[index].CardFunctionality.BankruptedNextTurn == true) {
+          _isBankrupted = true;
+        }
+      }
+    }
+
+    return _isBankrupted;
+  },
+
   GetSelectedMode() {
     return this.ModeSelection;
   },
@@ -977,6 +993,94 @@ var MultiplayerController = cc.Class({
             senderID: PhotonRef.myActor().actorNr,
           },
           { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.All }
+        );
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+
+  SendTakeBusinessData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.trace("Send Take Business Data");
+      console.log(_data);
+      try {
+        PhotonRef.raiseEvent(
+          23,
+          {
+            Data: _data,
+            senderName: PhotonRef.myActor().name,
+            senderID: PhotonRef.myActor().actorNr,
+          },
+          { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others }
+        );
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+
+  SendDamagingData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.trace("Send player received damaging data");
+      console.log(_data);
+      try {
+        PhotonRef.raiseEvent(
+          24,
+          {
+            Data: _data,
+            senderName: PhotonRef.myActor().name,
+            senderID: PhotonRef.myActor().actorNr,
+          },
+          { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others }
+        );
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+
+  SendDamagingDecisionData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.trace("Send player received damaging data decision");
+      console.log(_data);
+      try {
+        PhotonRef.raiseEvent(
+          25,
+          {
+            Data: _data,
+            senderName: PhotonRef.myActor().name,
+            senderID: PhotonRef.myActor().actorNr,
+          },
+          { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others }
+        );
+      } catch (err) {
+        console.error("error: " + err.message);
+      }
+    } else {
+      console.log("you are not in room.");
+    }
+  },
+
+  SendBuyHalfBusinessData(_data) {
+    if (PhotonRef.isJoinedToRoom() == true) {
+      console.trace("Send player received damaging data decision");
+      console.log(_data);
+      try {
+        PhotonRef.raiseEvent(
+          26,
+          {
+            Data: _data,
+            senderName: PhotonRef.myActor().name,
+            senderID: PhotonRef.myActor().actorNr,
+          },
+          { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.Others }
         );
       } catch (err) {
         console.error("error: " + err.message);
@@ -1886,6 +1990,42 @@ var MultiplayerController = cc.Class({
           var senderID = content.senderID;
 
           MultiplayerController.Instance.CallRecieveEvent(22, senderName, senderID, _data);
+
+          break;
+        case 23: //receiving take over business data
+          console.log("receiving take over business data");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+
+          MultiplayerController.Instance.CallRecieveEvent(23, senderName, senderID, _data);
+
+          break;
+        case 24: //receiving damaging information
+          console.log("receiving damaging information");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+
+          MultiplayerController.Instance.CallRecieveEvent(24, senderName, senderID, _data);
+
+          break;
+        case 25: //receiving damaging information
+          console.log("receiving damaging information Decison");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+
+          MultiplayerController.Instance.CallRecieveEvent(25, senderName, senderID, _data);
+
+          break;
+        case 26: //receiving buy half business data
+          console.log("receiving buy half business data");
+          var _data = content.Data;
+          var senderName = content.senderName;
+          var senderID = content.senderID;
+
+          MultiplayerController.Instance.CallRecieveEvent(26, senderName, senderID, _data);
 
           break;
         default:

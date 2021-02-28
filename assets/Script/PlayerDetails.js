@@ -15,9 +15,18 @@ var PlayerDetails = cc.Class({
       default: false,
       type: cc.Boolean,
       serializable: true,
-      toolTip: "Is current node can be selected as one question functionality",
     },
     IsPlayerSelectProfit: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+    IsPlayerBusinessTakeOver: {
+      default: false,
+      type: cc.Boolean,
+      serializable: true,
+    },
+    IsPlayerDamaging: {
       default: false,
       type: cc.Boolean,
       serializable: true,
@@ -40,6 +49,12 @@ var PlayerDetails = cc.Class({
     QuestionNode: {
       default: null,
       type: cc.Node,
+      serializable: true,
+    },
+
+    BuyHalfBusiness: {
+      default: false,
+      type: cc.Boolean,
       serializable: true,
     },
   },
@@ -75,6 +90,10 @@ var PlayerDetails = cc.Class({
 
   setPlayerUID(_uID) {
     this.SelectedPlayerUserID = _uID;
+  },
+
+  setBuyHalf(_state) {
+    this.BuyHalfBusiness = _state;
   },
 
   RaiseEventOneQuestion() {
@@ -131,6 +150,80 @@ var PlayerDetails = cc.Class({
     }
   },
 
+  SelectPlayerBusinessTakeOver() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var isActive = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetActiveStatus(this.SelectedPlayerUserID);
+
+      if (isActive) {
+        if (this.BuyHalfBusiness == false) {
+          var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+          var _data = _gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex];
+          console.log(_data);
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().Exit_SelectPlayerGeneric();
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableScreen__BusinessTakeOver(true, _data, this.SelectedPlayerIndex);
+        } //condition for card : Choose a player and buy half of one of their businesses. Roll two die, multiply by $3,000 and pay the player that amount for 50% interest in their business. You can choose not to, but you must make that choice before you roll.
+        else {
+          var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+          var _data = _gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex];
+
+          var _businessLength = _data.NoOfBusiness.length;
+          var _businessCounter = 0;
+
+          for (let index = 0; index < _data.NoOfBusiness.length; index++) {
+            if (_data.NoOfBusiness[index].IsPartnership) {
+              _businessCounter++;
+            }
+          }
+
+          if (_businessCounter >= _businessLength) {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("All existing businesses of player are with partnership with someone.");
+          } else {
+            console.log(_data);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().Exit_SelectPlayerGeneric();
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableScreen__BusinessTakeOver(true, _data, this.SelectedPlayerIndex, true);
+          }
+        }
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore.");
+      }
+    } else {
+      console.log("no selecting player with bot");
+    }
+  },
+
+  SelectPlayerBusinessDamaging() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var isActive = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetActiveStatus(this.SelectedPlayerUserID);
+      var IsBankRupted = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetBankruptedStatus(this.SelectedPlayerUserID);
+
+      if (isActive) {
+        //GamePlayReferenceManager.Instance.Get_GameplayUIManager().Exit_SelectPlayerGeneric();
+
+        if (IsBankRupted) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is already bankrupted this turn.");
+        } else {
+          var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+          var _data = _gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex];
+
+          var _sentdata = { Player: _data, PlayerIndex: this.SelectedPlayerIndex, MyUserID: _gameplayManager.PlayerGameInfo[_gameplayManager.GetTurnNumber()].PlayerUID };
+          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(24, _sentdata);
+          _gameManager = GamePlayReferenceManager.Instance.Get_GameManager();
+          if (this.IsPlayerDamaging) {
+            this.WaitingForReply = true;
+          }
+          //wait for other player
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(true);
+
+          console.log(_sentdata);
+        }
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore.");
+      }
+    } else {
+      console.log("no selecting player with bot");
+    }
+  },
+
   AskVocabularyQuestion() {
     if (this.IsOneQuestion) {
       var _index = GamePlayReferenceManager.Instance.Get_GameManager().GetVocabularyQuestionsIndex();
@@ -150,6 +243,18 @@ var PlayerDetails = cc.Class({
   SelectPlayerForProfit() {
     if (this.IsPlayerSelectProfit) {
       this.RaiseEventSelectPlayerForProfit();
+    }
+  },
+
+  SelectPlayerTakeOver() {
+    if (this.IsPlayerBusinessTakeOver) {
+      this.SelectPlayerBusinessTakeOver();
+    }
+  },
+
+  SelectPlayerDamaging() {
+    if (this.IsPlayerDamaging) {
+      this.SelectPlayerBusinessDamaging();
     }
   },
 
@@ -180,6 +285,15 @@ var PlayerDetails = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore, skipping turn.");
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_OneQuestionSetupUI(false);
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitAlongTurnOver_OneQuestionSetupUI();
+      }
+    }
+
+    if (this.IsPlayerDamaging && this.WaitingForReply) {
+      if (_gameManager.PlayerGameInfo[this.SelectedPlayerIndex].PlayerUID == this.SelectedPlayerUserID && _gameManager.PlayerGameInfo[this.SelectedPlayerIndex].IsActive == false) {
+        this.WaitingForReply = false;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore, skipping turn.");
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(false);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitAlongTurnOver_SelectPlayerGeneric();
       }
     }
   },
