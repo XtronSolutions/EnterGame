@@ -1326,8 +1326,8 @@ var MultiplayerController = cc.Class({
     }, 1000);
   },
   ClearTimer: function ClearTimer() {
-    TimerStarted = false;
-    _timer = 0;
+    TimerStarted = false; //_timer = 0;
+
     clearTimeout(Schedular);
   },
   ProcessCounter: function ProcessCounter() {

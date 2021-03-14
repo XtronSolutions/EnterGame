@@ -1332,7 +1332,7 @@ var MultiplayerController = cc.Class({
 
   ClearTimer() {
     TimerStarted = false;
-    _timer = 0;
+    //_timer = 0;
     clearTimeout(Schedular);
   },
 
