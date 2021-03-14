@@ -36,7 +36,8 @@ var WildCardArray = [];
 var BigBusinessArrayCounter = 0;
 var LossesArrayCounter = 0;
 var MarketingArrayCounter = 0;
-var WildCardArrayCounter = 0; //#region superclasses and enumerations
+var WildCardArrayCounter = 0;
+var CompareDiceData = null; //#region superclasses and enumerations
 //-------------------------------------------enumeration for type of business-------------------------//
 
 var EnumBusinessType = cc.Enum({
@@ -555,6 +556,7 @@ var GameManager = cc.Class({
     LossesArrayCounter = 0;
     MarketingArrayCounter = 0;
     WildCardArrayCounter = 0;
+    CompareDiceData = null;
     _diceinput1 = "";
     _diceinput2 = "";
     PreviousDiceRoll1 = -1;
@@ -711,6 +713,20 @@ var GameManager = cc.Class({
     }
 
     return myIndex;
+  },
+  GetMyPlayerUID: function GetMyPlayerUID() {
+    var _UID = "";
+    var _actor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    var _allActors = this.PlayerGameInfo;
+
+    for (var index = 0; index < _allActors.length; index++) {
+      if (_actor.PlayerUID == _allActors[index].PlayerUID) {
+        _UID = _actor.PlayerUID;
+        break;
+      }
+    }
+
+    return _UID;
   },
   //#endregion
   //#region SpectateMode Code
@@ -1379,7 +1395,7 @@ var GameManager = cc.Class({
         Dice1 = parseInt(_diceinput1);
         Dice2 = parseInt(_diceinput2);
       } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
-        Dice1 = 1;
+        Dice1 = 5;
         Dice2 = 1;
       } else {
         Dice1 = this.getRandom(1, 7);
@@ -1481,7 +1497,7 @@ var GameManager = cc.Class({
       }
     } else if (_isMarketing) {
       if (_data == null) {
-        MarketingArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13];
+        MarketingArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         MarketingArray.sort(function () {
           return 0.5 - Math.random();
         });
@@ -1497,7 +1513,7 @@ var GameManager = cc.Class({
       }
     } else if (_isWildCard) {
       if (_data == null) {
-        WildCardArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        WildCardArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         WildCardArray.sort(function () {
           return 0.5 - Math.random();
         });
@@ -1764,17 +1780,16 @@ var GameManager = cc.Class({
 
           if (_spaceID == 2) {
             //landed on big business cards
-            RandomCard = this.SelectRelatedCard(true, false, false, false); //RandomCard = 14;
+            RandomCard = this.SelectRelatedCard(true, false, false, false);
           } else if (_spaceID == 5) {
             //landed on some losses cards
-            RandomCard = this.SelectRelatedCard(false, true, false, false); //RandomCard = 14;
+            RandomCard = this.SelectRelatedCard(false, true, false, false);
           } else if (_spaceID == 3) {
             //landed on some marketing cards
-            RandomCard = this.SelectRelatedCard(false, false, true, false); //RandomCard = 11;
-            //RandomCard = 10;
+            RandomCard = this.SelectRelatedCard(false, false, true, false);
           } else if (_spaceID == 1) {
             //landed on some wild cards
-            RandomCard = this.SelectRelatedCard(false, false, false, true); //RandomCard = 11;
+            RandomCard = this.SelectRelatedCard(false, false, false, true);
           }
 
           IsTweening = false;
@@ -2352,8 +2367,8 @@ var GameManager = cc.Class({
   TweenPlayer: function TweenPlayer(Node, ToPos) {
     var _this11 = this;
 
-    var speed = 0.4; //if (_isTest) speed = 0.04;
-
+    var speed = 0.4;
+    if (_isTest) speed = 0.04;
     cc.tween(Node) //0.4
     .to(speed, {
       position: cc.v2(ToPos.x, ToPos.y)
@@ -3369,6 +3384,151 @@ var GameManager = cc.Class({
           GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
           GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_senderName + " has send you cash amount $" + _cashAmount + " and has become 50% owner of your business " + this.PlayerGameInfo[_myIndex].NoOfBusiness[_businessIndex].BusinessName);
         }
+      }
+    }
+  },
+  ReceiveEvent_CompareDice_CardFunctionality: function ReceiveEvent_CompareDice_CardFunctionality(_data) {
+    if (this.SelectedMode == 2) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == false) {
+        CompareDiceData = _data;
+        var _receiverPlayer = CompareDiceData.Player;
+        var _receiverPlayerIndex = CompareDiceData.PlayerIndex;
+        var _senderPlayerUID = CompareDiceData.MyUserID;
+        var _senderDice = CompareDiceData.Dice1;
+        var _receiverDice = CompareDiceData.Dice2;
+        var _senderPayLimit = CompareDiceData.Limit1;
+        var _receiverPayLimit = CompareDiceData.Limit2;
+        var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+
+        if (_myActor.PlayerUID == _receiverPlayer.PlayerUID) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleDecsion01Screen_CompareDice(true);
+        }
+      }
+    }
+  },
+  RollDice_CompareDice_CardFunctionality: function RollDice_CompareDice_CardFunctionality() {
+    var _receiverPlayer = CompareDiceData.Player;
+    var _receiverPlayerIndex = CompareDiceData.PlayerIndex;
+    var _senderPlayerUID = CompareDiceData.MyUserID;
+    var _senderDice = CompareDiceData.Dice1;
+    var _receiverDice = CompareDiceData.Dice2;
+    var _senderPayLimit = CompareDiceData.Limit1;
+    var _receiverPayLimit = CompareDiceData.Limit2;
+    var UIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+
+    var _info = "\n" + "Your Dice Result: " + _receiverDice + "\n" + "\n" + " Other Player Dice Result: " + _senderDice;
+
+    UIManager.ToggleDecsion01Screen_CompareDice(false);
+    UIManager.ToggleDecsion02Screen_CompareDice(true);
+    UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+    var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+
+    var _myIndex = this.GetMyIndex();
+
+    if (_senderDice > _receiverDice) //will give 20000
+      {
+        _info += "\n" + "\n" + " You have lost, you have to pay other player $$$.";
+        UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+        UIManager.ToggleDecsion02ScreenButton_CompareDice(true);
+      } else if (_receiverDice > _senderDice) //will receive 20000
+      {
+        this.PlayerGameInfo[_myIndex].Cash += 20000;
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+        _info += "\n" + "\n" + " You have won, amount $20000 has been added to your cash.";
+        UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+        UIManager.ToggleDecsion02ScreenButton_CompareDice(false);
+        setTimeout(function () {
+          UIManager.ToggleDecsion02Screen_CompareDice(false);
+        }, 8000);
+      }
+
+    var _sentdata = {
+      SenderUID: _senderPlayerUID,
+      DecisionObject: CompareDiceData
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(28, _sentdata);
+  },
+  ReceiveEvent_CompareDiceDecision_CardFunctionality: function ReceiveEvent_CompareDiceDecision_CardFunctionality(_data) {
+    if (this.SelectedMode == 2) {
+      if (GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.RoomEssentials.IsSpectate == false) {
+        var _UID = _data.SenderUID;
+        var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+        var UIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        var _receiverPlayer = _data.DecisionObject.Player;
+        var _receiverPlayerIndex = _data.DecisionObject.PlayerIndex;
+        var _senderPlayerUID = _data.DecisionObject.MyUserID;
+        var _senderDice = _data.DecisionObject.Dice1;
+        var _receiverDice = _data.DecisionObject.Dice2;
+        var _senderPayLimit = _data.DecisionObject.Limit1;
+        var _receiverPayLimit = _data.DecisionObject.Limit2;
+
+        var _myIndex = this.GetMyIndex();
+
+        UIManager.ToggleWaitingScreen_PartnerShipSetup(false);
+        console.log(_myActor.PlayerUID);
+        console.log(_UID);
+
+        if (_myActor.PlayerUID.toString() == _UID.toString()) {
+          var _info = "\n" + "Your Dice Result: " + _senderDice + "\n" + "\n" + " Other Player Dice Result: " + _receiverDice;
+
+          UIManager.ToggleWaitingScreen_PartnerShipSetup(false);
+          UIManager.ToggleDecsion01Screen_CompareDice(false);
+          UIManager.ToggleDecsion02Screen_CompareDice(true);
+          UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+          UIManager.ToggleWaitingScreen_PartnerShipSetup(false);
+
+          if (_senderDice > _receiverDice) //will receive 20000
+            {
+              this.PlayerGameInfo[_myIndex].Cash += 20000;
+              _info += "\n" + "\n" + " You have won, amount $20000 has been added to your cash.";
+              UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+              UIManager.ToggleDecsion02ScreenButton_CompareDice(false);
+              setTimeout(function () {
+                UIManager.ToggleDecsion02Screen_CompareDice(false);
+                GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(false);
+                UIManager.ExitAlongTurnOver_SelectPlayerGeneric();
+              }, 10000);
+            } else if (_receiverDice > _senderDice) //will give 20000
+            {
+              _info += "\n" + "\n" + " You have lost, you have to pay other player $$$.";
+              UIManager.ChangeTitle_Decsion02Screen_CompareDice(_info);
+              UIManager.ToggleDecsion02ScreenButton_CompareDice(true);
+            }
+        }
+      }
+    }
+  },
+  PayAmount_CompareDice_CardFunctionality: function PayAmount_CompareDice_CardFunctionality() {
+    var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+
+    var _myIndex = this.GetMyIndex();
+
+    var UIManager = GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+
+    if (this.PlayerGameInfo[_myIndex].Cash >= 20000) {
+      this.PlayerGameInfo[_myIndex].Cash -= 20000;
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBankruptedVar(false);
+      UIManager.ToggleDecsion02Screen_CompareDice(false);
+
+      if (_myIndex == this.TurnNumber) {
+        UIManager.ExitAlongTurnOver_SelectPlayerGeneric();
+      }
+    } else {
+      // if(_myIndex!=this.TurnNumber)
+      // {
+      //   GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBankruptedVar(true);
+      // }else
+      // {
+      //   GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetBankruptedVar(false);
+      // }
+      // GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_InsufficientBalance(true);
+      this.PlayerGameInfo[_myIndex].Cash = 0;
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().setCustomProperty("PlayerSessionData", this.PlayerGameInfo[_myIndex]);
+      UIManager.ToggleDecsion02Screen_CompareDice(false);
+
+      if (_myIndex == this.TurnNumber) {
+        UIManager.ExitAlongTurnOver_SelectPlayerGeneric();
       }
     }
   },

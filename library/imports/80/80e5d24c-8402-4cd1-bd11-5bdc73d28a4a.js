@@ -15,6 +15,14 @@ var oneQuestionNodes = [];
 var selectPlayerProfitNodes = [];
 var selectedPlayerTakeOver = [];
 var selectedPlayerDamaging = [];
+var LaonPartnershipArray = [];
+var CompareDiceArray = [];
+var TelevisionAdTimeout = null;
+var SenderADPPlayer = null;
+var VoteTimeout = null;
+var VotesUpArray = [];
+var VotesDownArray = [];
+var SellAllBusinessArray = [];
 var businessDetailPartnershipNodes = [];
 var businessDetailPayDayNodes = [];
 var PartnerShipData = null;
@@ -29,8 +37,11 @@ var SelectedBusinessIndex = 0;
 var TurnOverForInvest = false;
 var BusinessSetupCardFunctionality = false;
 var GivenCashBusiness = 0;
+var LaonPartnership = false;
 var StartAnyBusinessWithoutCash = false;
 var PreviousCash = 0;
+var RemainingCash = 0;
+var LoanSelectedPlayerData = null;
 var TimeoutRef;
 var CompletionWindowTime = 8000;
 var LongMessageTime = 5000;
@@ -1155,6 +1166,82 @@ var BuyHalfBusinessSetupUI = cc.Class({
   },
   ctor: function ctor() {//constructor
   }
+}); //-------------------------------------------class for CompitatorUISetup-------------------------//
+
+var CompitatorUISetup = cc.Class({
+  name: "CompitatorUISetup",
+  properties: {
+    MainScreen: {
+      displayName: "MainScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    TitleLabel: {
+      displayName: "TitleLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    CompEditBox1: {
+      displayName: "CompEditBox1",
+      type: cc.EditBox,
+      "default": null,
+      serializable: true
+    },
+    CompEditBox2: {
+      displayName: "CompEditBox2",
+      type: cc.EditBox,
+      "default": null,
+      serializable: true
+    },
+    CompEditBox3: {
+      displayName: "CompEditBox3",
+      type: cc.EditBox,
+      "default": null,
+      serializable: true
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
+}); //-------------------------------------------class for TelevisionADUISetup-------------------------//
+
+var TelevisionADUISetup = cc.Class({
+  name: "TelevisionADUISetup",
+  properties: {
+    MainScreen: {
+      displayName: "MainScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    TitleLabel: {
+      displayName: "TitleLabel",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    },
+    MainEditBox: {
+      displayName: "MainEditBox",
+      type: cc.EditBox,
+      "default": null,
+      serializable: true
+    },
+    DecisionScreen: {
+      displayName: "DecisionScreen",
+      type: cc.Node,
+      "default": null,
+      serializable: true
+    },
+    DecisionScreenText: {
+      displayName: "DecisionScreenText",
+      type: cc.Label,
+      "default": null,
+      serializable: true
+    }
+  },
+  ctor: function ctor() {//constructor
+  }
 }); //-------------------------------------------class for GameplayUIManager-------------------------//
 
 var PlayerDataIntance;
@@ -1286,6 +1373,36 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "reference of BuyHalfBusinessSetupUI class"
     },
+    LoanPartnershipSetup: {
+      "default": {},
+      type: SelectPlayerGeneric,
+      serializable: true,
+      tooltip: "reference of SelectPlayerGeneric class"
+    },
+    CompareDiceSetup: {
+      "default": {},
+      type: SelectPlayerGeneric,
+      serializable: true,
+      tooltip: "reference of SelectPlayerGeneric class"
+    },
+    SellAllBusinessSetup: {
+      "default": {},
+      type: SelectBusinessGeneric,
+      serializable: true,
+      tooltip: "reference of SelectPlayerGeneric class"
+    },
+    CompitatorSetupUI: {
+      "default": {},
+      type: CompitatorUISetup,
+      serializable: true,
+      tooltip: "reference of CompitatorUISetup class"
+    },
+    TelevisionADSetupUI: {
+      "default": {},
+      type: TelevisionADUISetup,
+      serializable: true,
+      tooltip: "reference of TelevisionADUISetup class"
+    },
     PopUpUI: {
       "default": null,
       type: cc.Node,
@@ -1388,6 +1505,48 @@ var GameplayUIManager = cc.Class({
       serializable: true,
       tooltip: "Node reference for SelectPlayerDamaging screen"
     },
+    LoanPartnershipScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for LoanPartnership screen"
+    },
+    CompareDiceScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for CompareDice screen"
+    },
+    CompareDiceDecision1Screen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for CompareDice screen"
+    },
+    CompareDiceDecision2Screen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for CompareDice screen"
+    },
+    CompareDiceDecision2Text: {
+      "default": null,
+      type: cc.Label,
+      serializable: true,
+      tooltip: "Node reference for CompareDice label"
+    },
+    CompareDiceDecision2Button: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for CompareDice button"
+    },
+    SellAllBusinessScreen: {
+      "default": null,
+      type: cc.Node,
+      serializable: true,
+      tooltip: "Node reference for SellAllBusiness screen"
+    },
     SelectBusinessTakeOverScreen: {
       "default": null,
       type: cc.Node,
@@ -1424,7 +1583,13 @@ var GameplayUIManager = cc.Class({
   ResetAllData: function ResetAllData() {
     DoubleDayBusinessHB = 0;
     DoubleDayBusinessBM = 0;
+    TelevisionAdTimeout = null;
+    SenderADPPlayer = null;
+    VoteTimeout = null;
+    VotesUpArray = [];
+    VotesDownArray = [];
     NextHalfPayDay = false;
+    LaonPartnership = false;
     GameManager = null;
     GamePlayReferenceManager = null;
     businessDetailNodes = [];
@@ -1436,6 +1601,9 @@ var GameplayUIManager = cc.Class({
     selectPlayerProfitNodes = [];
     selectedPlayerTakeOver = [];
     selectedPlayerDamaging = [];
+    LaonPartnershipArray = [];
+    CompareDiceArray = [];
+    SellAllBusinessArray = [];
     businessDetailPartnershipNodes = [];
     businessDetailPayDayNodes = [];
     PartnerShipData = null;
@@ -1451,6 +1619,8 @@ var GameplayUIManager = cc.Class({
     GivenCashBusiness = 0;
     StartAnyBusinessWithoutCash = false;
     PreviousCash = 0;
+    RemainingCash = 0;
+    LoanSelectedPlayerData = null;
     TimeoutRef = null;
     GiveProfitUserID = "";
     BankRuptedCard = false;
@@ -1598,7 +1768,7 @@ var GameplayUIManager = cc.Class({
       }
     }
   },
-  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _BankruptAmount, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash) {
+  StartNewBusiness_BusinessSetup: function StartNewBusiness_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _BankruptAmount, _isCardFunctionality, _GivenCash, _StartAnyBusinessWithoutCash, _loanPartnership, _OtherplayerData) {
     if (insideGame === void 0) {
       insideGame = false;
     }
@@ -1627,18 +1797,28 @@ var GameplayUIManager = cc.Class({
       _StartAnyBusinessWithoutCash = false;
     }
 
+    if (_loanPartnership === void 0) {
+      _loanPartnership = false;
+    }
+
+    if (_OtherplayerData === void 0) {
+      _OtherplayerData = null;
+    }
+
     //called first time form GameManager onload function
     this.CheckReferences();
     this.BusinessSetupNode.active = true;
     BusinessSetupCardFunctionality = _isCardFunctionality;
     GivenCashBusiness = _GivenCash;
     StartAnyBusinessWithoutCash = _StartAnyBusinessWithoutCash;
+    LaonPartnership = _loanPartnership;
+    LoanSelectedPlayerData = _OtherplayerData;
     this.IsBankrupted = _isBankrupted;
     this.BankruptedAmount = _BankruptAmount;
     if (_isBankrupted) this.ResetTurnVariable();
-    this.Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted);
+    this.Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _loanPartnership);
   },
-  Init_BusinessSetup: function Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted) {
+  Init_BusinessSetup: function Init_BusinessSetup(isFirstTime, insideGame, modeIndex, _isBankrupted, _loanPartnership) {
     if (insideGame === void 0) {
       insideGame = false;
     }
@@ -1649,6 +1829,10 @@ var GameplayUIManager = cc.Class({
 
     if (_isBankrupted === void 0) {
       _isBankrupted = false;
+    }
+
+    if (_loanPartnership === void 0) {
+      _loanPartnership = false;
     }
 
     PlayerDataIntance = new GameManager.PlayerData();
@@ -1790,7 +1974,7 @@ var GameplayUIManager = cc.Class({
         this.ShowToast("please select business between Home Based and brick & mortar.");
       }
     } else {
-      this.ShowToast("You cannot take loan for current business setup");
+      this.ShowToast("You cannot take loan for current business setup or loan already taken.");
     }
   },
   OnLoanBackButtonClicked_BusinessSetup: function OnLoanBackButtonClicked_BusinessSetup(event) {
@@ -1828,6 +2012,8 @@ var GameplayUIManager = cc.Class({
   OnTakenLoanClicked_BusinessSetup: function OnTakenLoanClicked_BusinessSetup(event) {
     if (this.BusinessSetupData.LoanAmount == LoanAmountEnum.Other) PlayerBusinessDataIntance.LoanAmount = RequiredCash;else PlayerBusinessDataIntance.LoanAmount = parseInt(this.BusinessSetupData.LoanAmount);
     PlayerBusinessDataIntance.LoanTaken = true;
+    PlayerDataIntance.LoanTaken = true;
+    PlayerDataIntance.LoanAmount = PlayerBusinessDataIntance.LoanAmount;
     this.OnLoanBackButtonClicked_BusinessSetup();
     PlayerDataIntance.Cash = PlayerDataIntance.Cash + PlayerBusinessDataIntance.LoanAmount;
     this.OnChangeCash_BusinessSetup(PlayerDataIntance.Cash);
@@ -1889,6 +2075,7 @@ var GameplayUIManager = cc.Class({
         if (PlayerDataIntance.HomeBasedAmount < 3) {
           if (!StartAnyBusinessWithoutCash) {
             PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
+            RemainingCash = PlayerDataIntance.Cash;
             this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
           }
 
@@ -1901,6 +2088,7 @@ var GameplayUIManager = cc.Class({
       } else {
         if (!StartAnyBusinessWithoutCash) {
           PlayerDataIntance.Cash = PlayerDataIntance.Cash - _amount;
+          RemainingCash = PlayerDataIntance.Cash;
           this.BusinessSetupData.PlayerCashUI.string = "$" + PlayerDataIntance.Cash;
         }
 
@@ -1926,6 +2114,9 @@ var GameplayUIManager = cc.Class({
       BusinessSetupCardFunctionality = false;
       GivenCashBusiness = 0;
       StartAnyBusinessWithoutCash = false;
+      RemainingCash = 0;
+      LoanSelectedPlayerData = null;
+      LaonPartnership = false;
       GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
     }
   },
@@ -1991,13 +2182,21 @@ var GameplayUIManager = cc.Class({
       InsideGameBusinessSetup = -1;
       this.ToggleDecision_TurnDecision(true);
     } else {
-      PlayerDataIntance.Cash = PreviousCash;
+      if (LaonPartnership) {
+        PlayerDataIntance.Cash = PreviousCash + RemainingCash;
+      } else {
+        PlayerDataIntance.Cash = PreviousCash;
+      }
+
       GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo[InsideGameBusinessSetup] = PlayerDataIntance;
       this.BusinessSetupNode.active = false;
       InsideGameBusinessSetup = -1;
       BusinessSetupCardFunctionality = false;
       GivenCashBusiness = 0;
       StartAnyBusinessWithoutCash = false;
+      LaonPartnership = false;
+      RemainingCash = 0;
+      LoanSelectedPlayerData = null;
       GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
     }
   },
@@ -2014,6 +2213,18 @@ var GameplayUIManager = cc.Class({
         this.PurchaseBusiness(50000, "brick and mortar", false);
 
       if (this.StartGame == true || this.IsBankrupted == true) {
+        if (LaonPartnership) {
+          PlayerBusinessDataIntance.LoanTaken = true;
+          PlayerBusinessDataIntance.LoanAmount = 50000;
+          PlayerDataIntance.LoanAmount = 50000;
+          PlayerDataIntance.LoanTaken = true;
+          PlayerBusinessDataIntance.IsPartnership = true;
+          PlayerBusinessDataIntance.PartnerID = LoanSelectedPlayerData.PlayerUID;
+          PlayerBusinessDataIntance.PartnerName = LoanSelectedPlayerData.PlayerName;
+          var info = "You have been selected by player " + PlayerDataIntance.PlayerName + " to go into partnership in their business named " + PlayerBusinessDataIntance.BusinessName;
+          this.RaiseEventToSyncInfo(info, LoanSelectedPlayerData.PlayerUID);
+        }
+
         PlayerDataIntance.NoOfBusiness.push(PlayerBusinessDataIntance);
 
         if (InsideGameBusinessSetup != -1) {
@@ -2200,6 +2411,9 @@ var GameplayUIManager = cc.Class({
           BusinessSetupCardFunctionality = false;
           GivenCashBusiness = 0;
           StartAnyBusinessWithoutCash = false;
+          RemainingCash = 0;
+          LoanSelectedPlayerData = null;
+          LaonPartnership = false;
           GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
         }
       }, 1600);
@@ -2222,6 +2436,9 @@ var GameplayUIManager = cc.Class({
       BusinessSetupCardFunctionality = false;
       GivenCashBusiness = 0;
       StartAnyBusinessWithoutCash = false;
+      RemainingCash = 0;
+      LoanSelectedPlayerData = null;
+      LaonPartnership = false;
       GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
     }
   },
@@ -3253,6 +3470,10 @@ var GameplayUIManager = cc.Class({
 
       _this7.ExitScreen__BusinessGenric();
 
+      _this7.ToggleDecsion02Screen_CompareDice(false);
+
+      _this7.ToggleDecsion01Screen_CompareDice(false);
+
       _this7.ToggleDiceResultScreen_DamageDecision(false);
 
       _this7.ToggleMainScreen_DamageDecision(false);
@@ -3287,6 +3508,8 @@ var GameplayUIManager = cc.Class({
         this.ToggleMainScreen_DamageDecision(false);
         this.Exit___InsufficientBalance();
         this.Exit_SelectPlayerGeneric();
+        this.ToggleDecsion02Screen_CompareDice(false);
+        this.ToggleDecsion01Screen_CompareDice(false);
         this.ExitScreen__BusinessGenric();
         this.ExitLoanScreen_PayDay();
         var _sendingData = {
@@ -3321,7 +3544,24 @@ var GameplayUIManager = cc.Class({
     this.ProcessBankrupt(true, _txt, 3000);
   },
   ShowInfo: function ShowInfo(_data) {
-    this.ShowToast(_data.info, 2000, true);
+    console.error("reecieved id: " + _data.PlayerUID);
+
+    if (_data.PlayerUID == "") {
+      this.ShowToast(_data.info, 2000, true);
+    } else {
+      var mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
+
+      if (mode == 2) //real players
+        {
+          var _myUID = GamePlayReferenceManager.Instance.Get_GameManager().GetMyPlayerUID();
+
+          if (_myUID == _data.PlayerUID) {
+            this.ShowToast(_data.info, 3000, true);
+          } else {
+            console.error("nothing");
+          }
+        }
+    }
   },
   PayDayCompleted: function PayDayCompleted() {
     var _this8 = this;
@@ -3850,7 +4090,7 @@ var GameplayUIManager = cc.Class({
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
   //#endregion
-  //#region Select Player to Take over business
+  //#region (generic player) Select Player to Take over business
   ToggleScreen_SelectPlayerTakeOver: function ToggleScreen_SelectPlayerTakeOver(_state) {
     this.SelectPlayerTakeOverScreen.active = _state;
   },
@@ -3924,20 +4164,27 @@ var GameplayUIManager = cc.Class({
   },
   Exit_SelectPlayerGeneric: function Exit_SelectPlayerGeneric() {
     this.ResetSpaceScreen_SelectPlayerDamaging();
+    this.ResetSpaceScreen_LoanPartnership();
     this.ResetSpaceScreen_SelectPlayerTakeOver();
+    this.ResetSpaceScreen_CompareDice();
     this.ToggleScreen_SelectPlayerTakeOver(false);
     this.ToggleScreen_SelectPlayerDamaging(false);
+    this.ToggleScreen_LoanPartnership(false);
+    this.ToggleScreen_CompareDice(false);
   },
   ExitAlongTurnOver_SelectPlayerGeneric: function ExitAlongTurnOver_SelectPlayerGeneric() {
     this.ResetSpaceScreen_SelectPlayerDamaging();
+    this.ResetSpaceScreen_LoanPartnership();
     this.ResetSpaceScreen_SelectPlayerTakeOver();
+    this.ResetSpaceScreen_CompareDice();
     this.ToggleScreen_SelectPlayerTakeOver(false);
     this.ToggleScreen_SelectPlayerDamaging(false);
+    this.ToggleScreen_LoanPartnership(false);
+    this.ToggleScreen_CompareDice(false);
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
   //#endregion
-  //
-  //#region Select Business to take over
+  //#region (generic business) Select Business to take over
   ToggleScreen_BusinessTakeOver: function ToggleScreen_BusinessTakeOver(_state) {
     this.SelectBusinessTakeOverScreen.active = _state;
   },
@@ -4029,14 +4276,18 @@ var GameplayUIManager = cc.Class({
   ExitScreen__BusinessGenric: function ExitScreen__BusinessGenric() {
     this.Reset__DamageDecision();
     this.Reset_BusinessTakeOver();
-    this.ToggleBusinessScreen_DamageDecision();
+    this.ToggleBusinessScreen_DamageDecision(false);
     this.ToggleScreen_BusinessTakeOver(false);
+    this.ToggleScreen_SellAllBusiness(false);
+    this.ResetSpaceScreen_SellAllBusiness();
   },
   ExitScreenAlongTurnOver__BusinessGenric: function ExitScreenAlongTurnOver__BusinessGenric() {
     this.Reset__DamageDecision();
     this.Reset_BusinessTakeOver();
     this.ToggleScreen_BusinessTakeOver(false);
-    this.ToggleBusinessScreen_DamageDecision();
+    this.ToggleScreen_SellAllBusiness(false);
+    this.ToggleBusinessScreen_DamageDecision(false);
+    this.ResetSpaceScreen_SellAllBusiness();
     GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
   },
   //#endregion
@@ -4276,6 +4527,9 @@ var GameplayUIManager = cc.Class({
       }
     }
   },
+  SetBankruptedVar: function SetBankruptedVar(_val) {
+    BankRuptedCard = _val;
+  },
   SelectBusinessForHalfOwnership_DamagingDecision: function SelectBusinessForHalfOwnership_DamagingDecision(_playerData, _businessIndex, _selectedPlayerIndex) {
     if (_selectedPlayerIndex === void 0) {
       _selectedPlayerIndex = 0;
@@ -4337,8 +4591,432 @@ var GameplayUIManager = cc.Class({
     this.BuyHalfBusinessUISetup.TitleLabel.string = _txt;
   },
   //#endregion
-  ShowToast: function ShowToast(message, time, _hasbutton) {
+  //#region Taking loan for partnership
+  ToggleScreen_LoanPartnership: function ToggleScreen_LoanPartnership(_state) {
+    this.LoanPartnershipScreen.active = _state;
+  },
+  SetUpSpaceScreen_LoanPartnership: function SetUpSpaceScreen_LoanPartnership(_myData, _actorsData, _isTurnOver, _modeIndex) {
+    if (_modeIndex === void 0) {
+      _modeIndex = 0;
+    }
+
+    console.error(_actorsData);
+    this.LoanPartnershipSetup.TitleLabel.string = "SELECT PLAYER";
+    this.LoanPartnershipSetup.CashLabel.string = "$" + _myData.Cash;
+    this.LoanPartnershipSetup.PlayerNameLabel.string = _myData.PlayerName;
+    this.LoanPartnershipSetup.PlayerDetailLabel.string = "No of Players: " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length;
+    var _mainData = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo;
+
+    if (_modeIndex == 2) {
+      for (var index = 0; index < _actorsData.length; index++) {
+        if (_actorsData[index].customProperties.RoomEssentials.IsSpectate == false) {
+          //check if player is spectate or not, dont add any spectates
+          if (_myData.PlayerUID != _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+            var node = cc.instantiate(this.LoanPartnershipSetup.DetailsPrefab);
+            node.parent = this.LoanPartnershipSetup.ScrollContent;
+            node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
+            node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
+
+            for (var k = 0; k < _mainData.length; k++) {
+              if (_mainData[k].PlayerUID == _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+                node.getComponent("PlayerDetails").setPlayerIndex(k);
+                break;
+              }
+            }
+
+            LaonPartnershipArray.push(node);
+          }
+        }
+      }
+    } else if (_modeIndex == 1) {
+      //for bot
+      console.error(_actorsData);
+      console.error(_myData);
+
+      for (var _index6 = 0; _index6 < _actorsData.length; _index6++) {
+        if (_myData.PlayerUID != _actorsData[_index6].PlayerUID) {
+          var node = cc.instantiate(this.LoanPartnershipSetup.DetailsPrefab);
+          node.parent = this.LoanPartnershipSetup.ScrollContent;
+          node.getComponent("PlayerDetails").setPlayerName(_actorsData[_index6].PlayerName);
+          node.getComponent("PlayerDetails").setPlayerUID(_actorsData[_index6].PlayerUID);
+          LaonPartnershipArray.push(node);
+        }
+      }
+    }
+
+    if (_isTurnOver) {
+      this.LoanPartnershipSetup.ExitButton.active = false;
+      this.LoanPartnershipSetup.TurnOverExitButton.active = true;
+    } else {
+      this.LoanPartnershipSetup.ExitButton.active = true;
+      this.LoanPartnershipSetup.TurnOverExitButton.active = false;
+    }
+  },
+  ResetSpaceScreen_LoanPartnership: function ResetSpaceScreen_LoanPartnership() {
+    for (var index = 0; index < LaonPartnershipArray.length; index++) {
+      LaonPartnershipArray[index].destroy();
+    }
+
+    LaonPartnershipArray = [];
+  },
+  //#endregion
+  //#region Sell all business except one
+  ToggleScreen_SellAllBusiness: function ToggleScreen_SellAllBusiness(_state) {
+    this.SellAllBusinessScreen.active = _state;
+  },
+  EnableScreen__SellAllBusiness: function EnableScreen__SellAllBusiness(_isTurnover, _playerData, _playerIndex) {
+    if (_isTurnover === void 0) {
+      _isTurnover = false;
+    }
+
+    if (_playerData === void 0) {
+      _playerData = null;
+    }
+
+    if (_playerIndex === void 0) {
+      _playerIndex = 0;
+    }
+
+    if (_isTurnover) {
+      this.SellAllBusinessSetup.ExitButton.active = false;
+      this.SellAllBusinessSetup.TurnOverExitButton.active = true;
+    } else {
+      this.SellAllBusinessSetup.ExitButton.active = true;
+      this.SellAllBusinessSetup.TurnOverExitButton.active = false;
+    }
+
+    this.ToggleScreen_SellAllBusiness(true);
+    this.SetBusinessUI_SellAllBusiness(_playerData, _playerIndex);
+  },
+  SetBusinessUI_SellAllBusiness: function SetBusinessUI_SellAllBusiness(_playerData, _OtherPlayerIndex) {
+    if (_OtherPlayerIndex === void 0) {
+      _OtherPlayerIndex = 0;
+    }
+
+    this.ResetSpaceScreen_SellAllBusiness();
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+    var _tempData = _playerData;
+    console.log(_tempData);
+    this.SellAllBusinessSetup.TitleLabel.string = "BUSINESS";
+    this.SellAllBusinessSetup.CashLabel.string = _manager.PlayerGameInfo[_playerIndex].Cash;
+    this.SellAllBusinessSetup.PlayerNameLabel.string = _manager.PlayerGameInfo[_playerIndex].PlayerName;
+    this.SellAllBusinessSetup.BusinessCountLabel.string = "No of Businesses : " + _playerData.NoOfBusiness.length;
+
+    for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
+      var node = cc.instantiate(this.SellAllBusinessSetup.BusinessPrefab);
+      node.parent = this.SellAllBusinessSetup.ScrollContentNode;
+      node.getComponent("BusinessDetail").CheckReferences();
+      node.getComponent("BusinessDetail").SetName(_tempData.NoOfBusiness[index].BusinessName);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetType(_tempData.NoOfBusiness[index].BusinessTypeDescription);
+      node.getComponent("BusinessDetail").SetBusinessIndex(index);
+      node.getComponent("BusinessDetail").SetPlayerObject(_playerData);
+      node.getComponent("BusinessDetail").SetPlayerIndex(_OtherPlayerIndex);
+
+      if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 1) {
+        node.getComponent("BusinessDetail").SetBusinessMode(1);
+        node.getComponent("BusinessDetail").SetMode("Home Based");
+      } else if (parseInt(_tempData.NoOfBusiness[index].BusinessType) == 2) {
+        node.getComponent("BusinessDetail").SetBusinessMode(2);
+        node.getComponent("BusinessDetail").SetMode("Brick & Mortar");
+      }
+
+      node.getComponent("BusinessDetail").SetBalance(_tempData.NoOfBusiness[index].LoanAmount);
+      node.getComponent("BusinessDetail").SetLocations(_tempData.NoOfBusiness[index].LocationsName.length);
+      SellAllBusinessArray.push(node);
+    }
+  },
+  ResetSpaceScreen_SellAllBusiness: function ResetSpaceScreen_SellAllBusiness() {
+    for (var index = 0; index < SellAllBusinessArray.length; index++) {
+      SellAllBusinessArray[index].destroy();
+    }
+
+    SellAllBusinessArray = [];
+  },
+  //#endregion
+  //#region Select Player to compare dice roll
+  ToggleScreen_CompareDice: function ToggleScreen_CompareDice(_state) {
+    this.CompareDiceScreen.active = _state;
+  },
+  SetUpSpaceScreen_CompareDice: function SetUpSpaceScreen_CompareDice(_myData, _actorsData, _isTurnOver, _modeIndex) {
+    if (_modeIndex === void 0) {
+      _modeIndex = 0;
+    }
+
+    console.error(_actorsData);
+    this.CompareDiceSetup.TitleLabel.string = "SELECT PLAYER";
+    this.CompareDiceSetup.CashLabel.string = "$" + _myData.Cash;
+    this.CompareDiceSetup.PlayerNameLabel.string = _myData.PlayerName;
+    this.CompareDiceSetup.PlayerDetailLabel.string = "No of Players: " + GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo.length;
+    var _mainData = GamePlayReferenceManager.Instance.Get_GameManager().PlayerGameInfo;
+
+    if (_modeIndex == 2) {
+      for (var index = 0; index < _actorsData.length; index++) {
+        if (_actorsData[index].customProperties.RoomEssentials.IsSpectate == false) {
+          //check if player is spectate or not, dont add any spectates
+          if (_myData.PlayerUID != _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+            var node = cc.instantiate(this.CompareDiceSetup.DetailsPrefab);
+            node.parent = this.CompareDiceSetup.ScrollContent;
+            node.getComponent("PlayerDetails").setPlayerName(_actorsData[index].customProperties.PlayerSessionData.PlayerName);
+            node.getComponent("PlayerDetails").setPlayerUID(_actorsData[index].customProperties.PlayerSessionData.PlayerUID);
+
+            for (var k = 0; k < _mainData.length; k++) {
+              if (_mainData[k].PlayerUID == _actorsData[index].customProperties.PlayerSessionData.PlayerUID) {
+                node.getComponent("PlayerDetails").setPlayerIndex(k);
+                break;
+              }
+            }
+
+            CompareDiceArray.push(node);
+          }
+        }
+      }
+    } else if (_modeIndex == 1) {
+      //for bot
+      console.error(_actorsData);
+      console.error(_myData);
+
+      for (var _index7 = 0; _index7 < _actorsData.length; _index7++) {
+        if (_myData.PlayerUID != _actorsData[_index7].PlayerUID) {
+          var node = cc.instantiate(this.CompareDiceSetup.DetailsPrefab);
+          node.parent = this.CompareDiceSetup.ScrollContent;
+          node.getComponent("PlayerDetails").setPlayerName(_actorsData[_index7].PlayerName);
+          node.getComponent("PlayerDetails").setPlayerUID(_actorsData[_index7].PlayerUID);
+          CompareDiceArray.push(node);
+        }
+      }
+    }
+
+    if (_isTurnOver) {
+      this.CompareDiceSetup.ExitButton.active = false;
+      this.CompareDiceSetup.TurnOverExitButton.active = true;
+    } else {
+      this.CompareDiceSetup.ExitButton.active = true;
+      this.CompareDiceSetup.TurnOverExitButton.active = false;
+    }
+  },
+  ResetSpaceScreen_CompareDice: function ResetSpaceScreen_CompareDice() {
+    for (var index = 0; index < CompareDiceArray.length; index++) {
+      CompareDiceArray[index].destroy();
+    }
+
+    CompareDiceArray = [];
+  },
+  ToggleDecsion01Screen_CompareDice: function ToggleDecsion01Screen_CompareDice(_state) {
+    this.CompareDiceDecision1Screen.active = _state;
+  },
+  ToggleDecsion02Screen_CompareDice: function ToggleDecsion02Screen_CompareDice(_state) {
+    this.CompareDiceDecision2Screen.active = _state;
+  },
+  ChangeTitle_Decsion02Screen_CompareDice: function ChangeTitle_Decsion02Screen_CompareDice(_msg) {
+    this.CompareDiceDecision2Text.string = _msg;
+  },
+  ToggleDecsion02ScreenButton_CompareDice: function ToggleDecsion02ScreenButton_CompareDice(_state) {
+    this.CompareDiceDecision2Button.active = _state;
+  },
+  //#endregion
+  //#region Naming game compitators
+  ToggleScreen_CompitatorUI: function ToggleScreen_CompitatorUI(_state) {
+    this.CompitatorSetupUI.MainScreen.active = _state;
+    this.CompitatorSetupUI.CompEditBox1.string = "";
+    this.CompitatorSetupUI.CompEditBox2.string = "";
+    this.CompitatorSetupUI.CompEditBox3.string = "";
+  },
+  ChangeTitle_CompitatorUI: function ChangeTitle_CompitatorUI(_msg) {
+    this.CompitatorSetupUI.TitleLabel.string = _msg;
+  },
+  OnDoneClicked_CompitatorUI: function OnDoneClicked_CompitatorUI() {
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var text1 = this.CompitatorSetupUI.CompEditBox1.string;
+    var text2 = this.CompitatorSetupUI.CompEditBox2.string;
+    var text3 = this.CompitatorSetupUI.CompEditBox3.string;
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    var _marketingAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+    var TextArray = [text1, text2, text3];
+    var _checkCounter = 0;
+    var _tempCounter = 0;
+
+    for (var index = 0; index < _manager.PlayerGameInfo.length; index++) {
+      if (_manager.PlayerGameInfo[index].IsActive && _playerIndex != index) _checkCounter++;
+    }
+
+    for (var _index8 = 0; _index8 < _manager.PlayerGameInfo.length; _index8++) {
+      for (var j = 0; j < TextArray.length; j++) {
+        if (TextArray[j].toLowerCase() == _manager.PlayerGameInfo[_index8].PlayerName.toLowerCase()) {
+          _tempCounter++;
+          break;
+        }
+      }
+    }
+
+    if (_tempCounter >= _checkCounter && _tempCounter != 0 && _checkCounter != 0) {
+      console.log("You freakin won");
+      var profit = _marketingAmount + _marketingAmount * 5;
+      _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+      _manager.PlayerGameInfo[_playerIndex].Cash += profit;
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You were successful and received 500% profit on your marketing amount, your cash becomes $" + _manager.PlayerGameInfo[_playerIndex].Cash);
+    } else {
+      _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("You have failed and have lost your marketing amount.");
+    }
+
+    this.ExitAlongTurnOver_CompitatorUI();
+  },
+  ExitAlongTurnOver_CompitatorUI: function ExitAlongTurnOver_CompitatorUI() {
+    this.ToggleScreen_CompitatorUI(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  //#endregion
+  //#region Creating Ad description for everyone to vote
+  ToggleScreen_TelevisionADSetup: function ToggleScreen_TelevisionADSetup(_state) {
+    this.TelevisionADSetupUI.MainScreen.active = _state;
+    this.TelevisionADSetupUI.MainEditBox.string = "";
+  },
+  ToggleDecisionScreen_TelevisionADSetup: function ToggleDecisionScreen_TelevisionADSetup(_state) {
+    this.TelevisionADSetupUI.DecisionScreen.active = _state;
+  },
+  ChangeDecisionScreenText_TelevisionADSetup: function ChangeDecisionScreenText_TelevisionADSetup(_txt) {
+    this.TelevisionADSetupUI.DecisionScreenText.string = _txt;
+  },
+  OnDoneClicked_TelevisionADSetup: function OnDoneClicked_TelevisionADSetup() {
     var _this9 = this;
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    var text1 = this.TelevisionADSetupUI.MainEditBox.string;
+    var _marketingAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+    clearTimeout(TelevisionAdTimeout);
+
+    if (text1 == "") {
+      this.ShowToast("Please enter description for your commercial.");
+    } else {
+      var _sentdata = {
+        Player: _manager.PlayerGameInfo[_playerIndex],
+        Description: text1
+      };
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(29, _sentdata);
+      VotesUpArray = [];
+      VotesDownArray = [];
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(true);
+      TelevisionAdTimeout = setTimeout(function () {
+        _this9.FailedScreen_TelevisionADSetup();
+      }, 25000);
+    }
+  },
+  FailedScreen_TelevisionADSetup: function FailedScreen_TelevisionADSetup() {
+    clearTimeout(TelevisionAdTimeout);
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    this.ShowToast("Either time has been passed for voting or you have failed to leave positive impression on others, you have lost your marketing account.");
+    _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(false);
+    this.ExitAlongTurnOver_TelevisionADSetup();
+  },
+  SuccessScreen_TelevisionADSetup: function SuccessScreen_TelevisionADSetup() {
+    clearTimeout(TelevisionAdTimeout);
+
+    var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+    var _playerIndex = _manager.GetTurnNumber();
+
+    var _marketingAmount = _manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+    var profit = _marketingAmount + _marketingAmount * 6;
+    _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+    _manager.PlayerGameInfo[_playerIndex].Cash += profit;
+    this.ShowToast("You have succeed putting positive impression, you have received 600% profit of your marketing amount, your cash becomes $" + _manager.PlayerGameInfo[_playerIndex].Cash);
+    _manager.PlayerGameInfo[_playerIndex].MarketingAmount = 0;
+    GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(false);
+    this.ExitAlongTurnOver_TelevisionADSetup();
+  },
+  ExitAlongTurnOver_TelevisionADSetup: function ExitAlongTurnOver_TelevisionADSetup() {
+    this.ToggleScreen_TelevisionADSetup(false);
+    GamePlayReferenceManager.Instance.Get_GameManager().completeCardTurn();
+  },
+  ReceiveEvent_TelevisionADSetup: function ReceiveEvent_TelevisionADSetup(_data) {
+    var _this10 = this;
+
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      clearTimeout(VoteTimeout);
+      var _senderPlayerData = _data.Player;
+      var _des = _data.Description;
+      SenderADPPlayer = _senderPlayerData;
+      this.ToggleDecisionScreen_TelevisionADSetup(true);
+      this.ChangeDecisionScreenText_TelevisionADSetup(_des);
+      VoteTimeout = setTimeout(function () {
+        _this10.ToggleDecisionScreen_TelevisionADSetup(false);
+      }, 24000);
+    }
+  },
+  VoteUpDecision_TelevisionADSetup: function VoteUpDecision_TelevisionADSetup() {
+    clearTimeout(VoteTimeout);
+    var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    this.ToggleDecisionScreen_TelevisionADSetup(false);
+    var _sentdata = {
+      SenderID: _myActor.PlayerUID,
+      ReciverID: SenderADPPlayer.PlayerUID,
+      VoteUp: true
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(30, _sentdata);
+  },
+  VoteDownDecision_TelevisionADSetup: function VoteDownDecision_TelevisionADSetup() {
+    clearTimeout(VoteTimeout);
+    var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+    this.ToggleDecisionScreen_TelevisionADSetup(false);
+    var _sentdata = {
+      SenderID: _myActor.PlayerUID,
+      ReciverID: SenderADPPlayer.PlayerUID,
+      VoteUp: false
+    };
+    GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(30, _sentdata);
+  },
+  ReceiveEvent_VoteTelevisionADSetup: function ReceiveEvent_VoteTelevisionADSetup(_data) {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().CheckSpectate() == false) {
+      var _myActor = GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.PlayerSessionData;
+      var _myID = _data.ReciverID;
+      var _otherID = _data.SenderID;
+      var _voteUp = _data.VoteUp;
+
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+      var _playerIndex = _manager.GetTurnNumber();
+
+      var _totalPlayer = 0;
+
+      if (_myActor.PlayerUID == _myID) {
+        if (_voteUp) VotesUpArray.push(_otherID);else VotesDownArray.push(_otherID);
+
+        for (var index = 0; index < _manager.PlayerGameInfo.length; index++) {
+          if (_manager.PlayerGameInfo[index].IsActive && index != _playerIndex) _totalPlayer++;
+        }
+
+        var _RecievedVotes = VotesUpArray.length + VotesDownArray.length;
+
+        console.log(_RecievedVotes);
+        console.log(VotesUpArray);
+        console.log(VotesDownArray);
+        console.log(_totalPlayer);
+
+        if (_RecievedVotes >= _totalPlayer) {
+          if (VotesUpArray.length > VotesDownArray.length) this.SuccessScreen_TelevisionADSetup();else this.FailedScreen_TelevisionADSetup();
+        }
+      }
+    }
+  },
+  //#endregion
+  ShowToast: function ShowToast(message, time, _hasbutton) {
+    var _this11 = this;
 
     if (time === void 0) {
       time = ShortMessageTime;
@@ -4373,7 +5051,7 @@ var GameplayUIManager = cc.Class({
           this.PopUpUIButton.active = true;
           clearTimeout(TimeoutRef);
           TimeoutRef = setTimeout(function () {
-            _this9.CompleteToast();
+            _this11.CompleteToast();
           }, CompletionWindowTime);
         } else {
           this.PopUpUIButton.active = false;
@@ -4388,7 +5066,7 @@ var GameplayUIManager = cc.Class({
           this.PopUpUIButton.active = true;
           clearTimeout(TimeoutRef);
           TimeoutRef = setTimeout(function () {
-            _this9.CompleteToast();
+            _this11.CompleteToast();
           }, CompletionWindowTime);
         } else {
           this.PopUpUIButton.active = false;
@@ -4411,20 +5089,26 @@ var GameplayUIManager = cc.Class({
   RestartTheGame: function RestartTheGame() {
     GamePlayReferenceManager.Instance.Get_MultiplayerController().RestartGame();
   },
-  RaiseEventToSyncInfo: function RaiseEventToSyncInfo(_dataInfo) {
+  RaiseEventToSyncInfo: function RaiseEventToSyncInfo(_dataInfo, _toPlayerUID) {
+    if (_toPlayerUID === void 0) {
+      _toPlayerUID = "";
+    }
+
     var _mode = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode();
 
     if (_mode == 2) {
       //for real players
       var _data = {
-        info: _dataInfo
+        info: _dataInfo,
+        PlayerUID: _toPlayerUID
       };
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(15, _data);
     } else if (_mode == 1) {
       //for bot
       if (this.IsBotTurn) {
         var _data = {
-          info: _dataInfo
+          info: _dataInfo,
+          PlayerUID: _toPlayerUID
         };
         GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(15, _data);
       }

@@ -118,6 +118,11 @@ var BusinessDetail = cc.Class({
       "default": 0,
       type: cc.Integer,
       serializable: true
+    },
+    IsSellAllBusiness: {
+      "default": false,
+      type: cc.Boolean,
+      serializable: true
     }
   },
   CheckReferences: function CheckReferences() {
@@ -384,6 +389,64 @@ var BusinessDetail = cc.Class({
       }
     } else {
       GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Cannot sell, you need atleast one business to continue playing game.", 2000);
+    }
+  },
+  SellAllExceptOne: function SellAllExceptOne() {
+    if (this.IsSellAllBusiness) {
+      var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+      var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+      var _tempData = _manager.PlayerGameInfo[_playerIndex];
+
+      var _dice = _manager.RollTwoDices();
+
+      var _multiplier = 10000;
+
+      var _result = _dice * _multiplier;
+
+      var _totalBusinesses = 0;
+      var _loanAmount = 0;
+      var _SelectedBusiness = _tempData.NoOfBusiness[this.BusinessIndex];
+
+      for (var index = 0; index < _tempData.NoOfBusiness.length; index++) {
+        if (index != this.BusinessIndex) {
+          _totalBusinesses++;
+          _totalBusinesses = _totalBusinesses + _tempData.NoOfBusiness[index].LocationsName.length;
+          if (_tempData.NoOfBusiness[index].LoanTaken) _loanAmount = _tempData.NoOfBusiness[index].LoanAmount;
+        }
+      }
+
+      _result *= _totalBusinesses;
+      _result -= _loanAmount;
+      _manager.PlayerGameInfo[_playerIndex].Cash += _result;
+      _manager.PlayerGameInfo[_playerIndex].NoOfBusiness = [];
+      _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount = 0;
+      _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount = 0;
+      _manager.PlayerGameInfo[_playerIndex].TotalLocationsAmount = 0;
+      _manager.PlayerGameInfo[_playerIndex].CardFunctionality.SkipHMNextPayday = false;
+      _manager.PlayerGameInfo[_playerIndex].CardFunctionality.SkipBMNextPayday = false;
+
+      if (_SelectedBusiness.BusinessType == 1) {
+        _manager.PlayerGameInfo[_playerIndex].HomeBasedAmount += 1;
+      } else if (_SelectedBusiness.BusinessType == 2) {
+        _manager.PlayerGameInfo[_playerIndex].BrickAndMortarAmount += 1;
+        _manager.PlayerGameInfo[_playerIndex].TotalLocationsAmount = _SelectedBusiness.LocationsName.length;
+      }
+
+      _manager.PlayerGameInfo[_playerIndex].NoOfBusiness.push(_SelectedBusiness);
+
+      if (_loanAmount != 0) {
+        _manager.PlayerGameInfo[_playerIndex].LoanTaken = false;
+        _manager.PlayerGameInfo[_playerIndex].LoanAmount = 0;
+      }
+
+      var _info = "\n" + "Dice Result: " + _dice + "\n" + "\n" + "Total Amount: " + _dice + " * " + _multiplier + " * " + _totalBusinesses + " - " + _loanAmount + " = " + _result + "\n" + "\n" + "\n" + "You have successfully sold off business/es, amount has been added and your total cash becomes $" + _manager.PlayerGameInfo[_playerIndex].Cash;
+
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast(_info, 8000, false);
+      setTimeout(function () {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitScreenAlongTurnOver__BusinessGenric();
+      }, 8100);
     }
   },
   GetIntoPartnerShip: function GetIntoPartnerShip() {

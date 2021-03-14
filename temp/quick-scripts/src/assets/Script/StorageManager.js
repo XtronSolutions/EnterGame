@@ -24,9 +24,19 @@ var StorageManager = cc.Class({
     // }
   },
   onLoad: function onLoad() {
-    console.log("V13"); // console.log = function () {};
-    //  console.error = function () {};
-    // console.warn = function () {};
+    console.log("V15");
+
+    if (IsWeb) {
+      console.log = function () {};
+
+      console.error = function () {};
+
+      console.warn = function () {};
+
+      console.info = function () {};
+
+      console.trace = function () {};
+    }
 
     GamePlayReferenceManager = null;
     this.Loader.active = true;

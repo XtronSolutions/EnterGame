@@ -159,6 +159,30 @@ var MultiplayerSyncManager = cc.Class({
         //for bot
         this.ReceiveEvent(_eventCode, "customName", "customID", _data);
       }
+    } else if (_eventCode == 27) {
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCompareDiceData(_data);else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 28) {
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendCompareDiceDataDecision(_data);else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 29) {
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendTVADData(_data);else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
+    } else if (_eventCode == 30) {
+      if (this.SelectedMode == 2) //for player
+        GamePlayReferenceManager.Instance.Get_MultiplayerController().SendTVADDataVotes(_data);else if (this.SelectedMode == 1) {
+        //for bot
+        this.ReceiveEvent(_eventCode, "customName", "customID", _data);
+      }
     }
   },
   ReceiveEvent: function ReceiveEvent(_eventCode, _senderName, _senderID, _data) {
@@ -292,6 +316,26 @@ var MultiplayerSyncManager = cc.Class({
       console.log("sender name: " + _senderName);
       console.log("sender ID: " + _senderID);
       GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_BuyHalfBusiness_CardFunctionality(_data);
+    } else if (_eventCode == 27) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_CompareDice_CardFunctionality(_data);
+    } else if (_eventCode == 28) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameManager().ReceiveEvent_CompareDiceDecision_CardFunctionality(_data);
+    } else if (_eventCode == 29) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ReceiveEvent_TelevisionADSetup(_data);
+    } else if (_eventCode == 30) {
+      //receiving cash deduction data
+      console.log("sender name: " + _senderName);
+      console.log("sender ID: " + _senderID);
+      GamePlayReferenceManager.Instance.Get_GameplayUIManager().ReceiveEvent_VoteTelevisionADSetup(_data);
     }
   }
 });

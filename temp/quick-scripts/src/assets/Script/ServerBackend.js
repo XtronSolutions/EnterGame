@@ -11,7 +11,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var IsWeb = true; //-------------------------------------------enumeration for type of business-------------------------//
+var IsWeb = true;
+var OnMobile = false; //-------------------------------------------enumeration for type of business-------------------------//
 
 var ResponseTypeEnum = cc.Enum({
   None: 0,
@@ -434,12 +435,7 @@ var ServerBackend = cc.Class({
   sendPostRequest: function sendPostRequest() {
     var http = new XMLHttpRequest();
     var request_url = this.loginUserAPI;
-    var params = ""; // if (options.params) {
-    //   for (var key in options.params) {
-    //     params += "&" + key + "=" + options.params[key];
-    //   }
-    // }
-
+    var params = "";
     var payload = new UserLoginPayload("xtrondev@gmail.com", "12345678", "Student", "UCK2SR4YMG7J");
 
     var _json = JSON.stringify(payload);

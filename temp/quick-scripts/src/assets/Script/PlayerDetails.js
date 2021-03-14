@@ -60,10 +60,21 @@ var PlayerDetails = cc.Class({
       "default": false,
       type: cc.Boolean,
       serializable: true
+    },
+    LaonPartnership: {
+      "default": false,
+      type: cc.Boolean,
+      serializable: true
+    },
+    CompareDice: {
+      "default": false,
+      type: cc.Boolean,
+      serializable: true
     }
   },
   onEnable: function onEnable() {
     this.CheckReferences();
+    _gameManager = GamePlayReferenceManager.Instance.Get_GameManager();
 
     if (this.IsOneQuestion) {
       this.QuestionAsked = false;
@@ -232,6 +243,93 @@ var PlayerDetails = cc.Class({
       console.log("no selecting player with bot");
     }
   },
+  SelectPlayerLoanPartnership: function SelectPlayerLoanPartnership() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var isActive = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetActiveStatus(this.SelectedPlayerUserID);
+      var IsBankRupted = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetBankruptedStatus(this.SelectedPlayerUserID);
+
+      if (isActive) {
+        if (IsBankRupted) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is bankrupted this turn.");
+        } else {
+          var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          var _data = _gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex];
+          var _sentdata = {
+            Player: _data,
+            PlayerIndex: this.SelectedPlayerIndex,
+            MyUserID: _gameplayManager.PlayerGameInfo[_gameplayManager.GetTurnNumber()].PlayerUID
+          }; //GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(27, _sentdata);
+
+          _gameManager = GamePlayReferenceManager.Instance.Get_GameManager(); //_gameplayManager.PlayerGameInfo[_gameplayManager.GetTurnNumber()].Cash+=50000;
+          // if (this.LaonPartnership) {
+          //   this.WaitingForReply = true;
+          // }
+          //isFirstTime, insideGame = false, modeIndex = 0, _isBankrupted = false, _BankruptAmount = 0, _isCardFunctionality = false, _GivenCash = 0, _StartAnyBusinessWithoutCash = false,_loanPartnership=false
+
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().StartNewBusiness_BusinessSetup(false, true, GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode(), false, 0, true, 50000, false, true, _data);
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().Exit_SelectPlayerGeneric();
+          console.log(_sentdata);
+        }
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore.");
+      }
+    } else {
+      console.log("no selecting player with bot");
+    }
+  },
+  SelectPlayerCompareDice: function SelectPlayerCompareDice() {
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      var isActive = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetActiveStatus(this.SelectedPlayerUserID);
+      var IsBankRupted = GamePlayReferenceManager.Instance.Get_MultiplayerController().GetBankruptedStatus(this.SelectedPlayerUserID);
+
+      if (isActive) {
+        if (IsBankRupted) {
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is bankrupted this turn.");
+        } else {
+          var _gameplayManager = GamePlayReferenceManager.Instance.Get_GameManager();
+
+          var _data = _gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex];
+          var CashLimit = 20000;
+
+          var _Player1dice = _gameplayManager.RollTwoDices();
+
+          var _Player2dice = _gameplayManager.RollTwoDices();
+
+          var _player1CashLimit = false;
+          var _player2CashLimit = false;
+          if (_gameplayManager.PlayerGameInfo[_gameplayManager.GetTurnNumber()].Cash >= 20000) _player1CashLimit = true;
+          if (_gameplayManager.PlayerGameInfo[this.SelectedPlayerIndex].Cash >= 20000) _player2CashLimit = true;
+
+          while (_Player1dice == _Player2dice) {
+            _Player2dice = _gameplayManager.RollTwoDices();
+          }
+
+          GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("Your dice result: " + _Player1dice, 1000, false);
+          var _sentdata = {
+            Player: _data,
+            PlayerIndex: this.SelectedPlayerIndex,
+            MyUserID: _gameplayManager.PlayerGameInfo[_gameplayManager.GetTurnNumber()].PlayerUID,
+            Dice1: _Player1dice,
+            Dice2: _Player2dice,
+            Limit1: _player1CashLimit,
+            Limit2: _player2CashLimit
+          };
+          GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RaiseEvent(27, _sentdata);
+          _gameManager = GamePlayReferenceManager.Instance.Get_GameManager();
+          this.WaitingForReply = true;
+          setTimeout(function () {
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(true);
+          }, 1000);
+          console.log(_sentdata);
+        }
+      } else {
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore.");
+      }
+    } else {
+      console.log("no selecting player with bot");
+    }
+  },
   AskVocabularyQuestion: function AskVocabularyQuestion() {
     if (this.IsOneQuestion) {
       var _index = GamePlayReferenceManager.Instance.Get_GameManager().GetVocabularyQuestionsIndex();
@@ -261,6 +359,16 @@ var PlayerDetails = cc.Class({
   SelectPlayerDamaging: function SelectPlayerDamaging() {
     if (this.IsPlayerDamaging) {
       this.SelectPlayerBusinessDamaging();
+    }
+  },
+  SelectingPlayerLaonPartnership: function SelectingPlayerLaonPartnership() {
+    if (this.LaonPartnership) {
+      this.SelectPlayerLoanPartnership();
+    }
+  },
+  SelectingPlayerCompareDice: function SelectingPlayerCompareDice() {
+    if (this.CompareDice) {
+      this.SelectPlayerCompareDice();
     }
   },
   AskEstablishmentQuestion: function AskEstablishmentQuestion() {
@@ -293,6 +401,15 @@ var PlayerDetails = cc.Class({
     }
 
     if (this.IsPlayerDamaging && this.WaitingForReply) {
+      if (_gameManager.PlayerGameInfo[this.SelectedPlayerIndex].PlayerUID == this.SelectedPlayerUserID && _gameManager.PlayerGameInfo[this.SelectedPlayerIndex].IsActive == false) {
+        this.WaitingForReply = false;
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore, skipping turn.");
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleWaitingScreen_PartnerShipSetup(false);
+        GamePlayReferenceManager.Instance.Get_GameplayUIManager().ExitAlongTurnOver_SelectPlayerGeneric();
+      }
+    }
+
+    if (this.CompareDice && this.WaitingForReply) {
       if (_gameManager.PlayerGameInfo[this.SelectedPlayerIndex].PlayerUID == this.SelectedPlayerUserID && _gameManager.PlayerGameInfo[this.SelectedPlayerIndex].IsActive == false) {
         this.WaitingForReply = false;
         GamePlayReferenceManager.Instance.Get_GameplayUIManager().ShowToast("current selected player is not active anymore, skipping turn.");

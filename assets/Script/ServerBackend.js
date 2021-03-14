@@ -1,4 +1,5 @@
 var IsWeb = true;
+var OnMobile=false;
 //-------------------------------------------enumeration for type of business-------------------------//
 var ResponseTypeEnum = cc.Enum({
   None: 0,
@@ -240,12 +241,6 @@ var ServerBackend = cc.Class({
     var request_url = this.loginUserAPI;
 
     var params = "";
-    // if (options.params) {
-    //   for (var key in options.params) {
-    //     params += "&" + key + "=" + options.params[key];
-    //   }
-    // }
-
     var payload = new UserLoginPayload("xtrondev@gmail.com", "12345678", "Student", "UCK2SR4YMG7J");
     var _json = JSON.stringify(payload);
     http.open("POST", request_url, true);

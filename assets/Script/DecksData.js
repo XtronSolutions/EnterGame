@@ -1291,8 +1291,29 @@ var DecksData = cc.Class({
           this.CompleteTurnWithToast("Changing turn now.", 1200);
         }
         break;
-      case "13":
+      case "13"://Name your top three competitors for each of your businesses. For each successful attempt, receive 500% profit.
         console.log(this.Marketing[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _uIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        var _playerIndex=_manager.GetTurnNumber();
+        var _marketAmount=_manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+        MarketingData = null;
+        if(!this.IsBotTurn)
+        {
+          if(_marketAmount>0)
+          {
+            this.ShowCardInfo("",false);
+            _uIManager.ToggleScreen_CompitatorUI(true);
+          }
+          else
+          {
+            this.CompleteTurnWithToast("You don't have any marketing amount, changing turn now.", 2800);
+          }
+        }else
+        {
+          console.log("its ,skipping");
+          this.CompleteTurnWithToast("", 1200);
+        }
         break;
       case "14": //lose all your money in marketing account
         console.log(this.Marketing[Index].Description);
@@ -1302,8 +1323,34 @@ var DecksData = cc.Class({
         if (_loseAmount > 0) this.CompleteTurnWithToast("You have lost your marketing amount of $" + _loseAmount, 2100);
         else this.CompleteTurnWithToast("You don't have any marketing amount", 2100);
         break;
-      case "15":
+      case "15"://You make a television commercial for one of your businesses. Tell us what it looks like in 45 seconds and receive all of your Marketing Budget back plus 600% profit from the Bank. If you cannot, lose your entire marketing budget to the Bank.
         console.log(this.Marketing[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _uIManager=GamePlayReferenceManager.Instance.Get_GameplayUIManager();
+        var _playerIndex=_manager.GetTurnNumber();
+        var _marketAmount=_manager.PlayerGameInfo[_playerIndex].MarketingAmount;
+        MarketingData = null;
+        if(!this.IsBotTurn)
+        {
+          if(_marketAmount>0)
+          {
+            this.ShowCardInfo("",false);
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode()==2)
+              _uIManager.ToggleScreen_TelevisionADSetup(true);
+            else
+              {
+                this.CompleteTurnWithToast("playing with bot, changing turn now.", 2800);
+              }
+          }
+          else
+          {
+            this.CompleteTurnWithToast("You don't have any marketing amount, changing turn now.", 2800);
+          }
+        }else
+        {
+          console.log("its ,skipping");
+          this.CompleteTurnWithToast("", 1200);
+        }
         break;
       default:
         break;
@@ -2164,14 +2211,122 @@ var DecksData = cc.Class({
           }
         }
         break;
-      case "13":
+      case "13"://You may take out a Bank loan of $50,000, but you must invest it in a business partnership with another player. You both become 50% owners. You share income and expenses 50/50 for the rest of the game. They chose what the business is and the name of the business. Choose a player to go into a business partnership with.
         console.log(this.WildCards[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+        var _takenLoan=_manager.PlayerGameInfo[_playerIndex].LoanTaken;
+        console.error("Loan Taken:L :"+_takenLoan);
+       
+        if(_type==0) //yes button
+        {
+          if(_takenLoan)
+          {
+            this.ShowCardInfo("", false);
+            this.CompleteTurnWithToast("You have already taken loan, changing turn.", 2600);
+            return;
+          }
+
+          if (!this.IsBotTurn) {
+            WildCardData = null;
+            this.ShowCardInfo("", false);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_LoanPartnership(true);
+
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode()==2)
+            {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetUpSpaceScreen_LoanPartnership(_manager.PlayerGameInfo[_playerIndex],GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray(),true,GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode());
+            }
+            else
+            {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetUpSpaceScreen_LoanPartnership(_manager.PlayerGameInfo[_playerIndex],_manager.PlayerGameInfo,true,GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode());
+            }
+        }
+          else
+          {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+
+        }else if(_type==1) // no button
+        {
+          if (!this.IsBotTurn) {
+            WildCardData = null;
+            this.ShowCardInfo("", false);
+            this.CompleteTurnWithToast("Changing turn now.", 1600);
+          } else {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+        }
         break;
-      case "14":
+      case "14"://A large corporation wants to buy all of your businesses except for one. You must decide before you roll. Choose which one business to keep and roll 2 die for each business you are selling; multiply each result by $10,000 and receive your income from the Bank.
         console.log(this.WildCards[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+
+        if(_type==0) //yes button
+        {
+          if (!this.IsBotTurn) {
+            WildCardData = null;
+            this.ShowCardInfo("", false);
+
+            if(_manager.PlayerGameInfo[_playerIndex].NoOfBusiness.length>1)
+            {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().EnableScreen__SellAllBusiness(true,_manager.PlayerGameInfo[_playerIndex],0);
+            }else
+            {
+              this.ShowCardInfo("", false);
+              this.CompleteTurnWithToast("You only have one business, changing turn now.", 1600);
+            }
+
+        }
+          else
+          {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+
+        }else if(_type==1) // no button
+        {
+          if (!this.IsBotTurn) {
+            WildCardData = null;
+            this.ShowCardInfo("", false);
+            this.CompleteTurnWithToast("Changing turn now.", 1600);
+          } else {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
+        }
         break;
-      case "15":
+      case "15"://Choose a player and you both roll 2 die. The person with the lower roll must pay the other player $20,000. If the losing player does not have $20,000 cash, the winning player will become 50% owner in one of the losing player’s businesses, the winning player gets to choose which business.
         console.log(this.WildCards[Index].Description);
+        var _manager = GamePlayReferenceManager.Instance.Get_GameManager();
+        var _playerIndex = GamePlayReferenceManager.Instance.Get_GameManager().GetTurnNumber();
+        WildCardData = null;
+       
+        if (!this.IsBotTurn) {
+            WildCardData = null;
+            this.ShowCardInfo("", false);
+            GamePlayReferenceManager.Instance.Get_GameplayUIManager().ToggleScreen_CompareDice(true);
+            if(GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode()==2)
+            {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetUpSpaceScreen_CompareDice(_manager.PlayerGameInfo[_playerIndex],GamePlayReferenceManager.Instance.Get_MultiplayerController().getPhotonRef().myRoomActorsArray(),true,GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode());
+            }
+            else
+            {
+              GamePlayReferenceManager.Instance.Get_GameplayUIManager().SetUpSpaceScreen_CompareDice(_manager.PlayerGameInfo[_playerIndex],_manager.PlayerGameInfo,true,GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode());
+            }
+          }
+          else
+          {
+            console.log("its ,skipping");
+            WildCardData = null;
+            this.CompleteTurnWithToast("", 1200);
+          }
         break;
       default:
         break;
