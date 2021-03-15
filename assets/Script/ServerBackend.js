@@ -1,4 +1,7 @@
-var IsWeb = true;
+//for web make: IsMobile=false and IsWeb=true
+//for mobile make: IsMobile=true and IsWeb=false
+var IsWeb = false;
+var IsMobile=true;
 var OnMobile=false;
 //-------------------------------------------enumeration for type of business-------------------------//
 var ResponseTypeEnum = cc.Enum({
@@ -273,12 +276,22 @@ var ServerBackend = cc.Class({
   GetUserData(_email, _role, _accessToken, _subType = -1) {
     var payload = new UserPayload(_email, _role);
     var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _accessToken };
-    this.CallRESTAPI(this.getUserAPI, "POST", payload, 1, header, _subType);
+
+    console.log("calling get user data");
+
+    if(!IsMobile)
+      this.CallRESTAPI(this.getUserAPI, "POST", payload, 1, header, _subType);
+    else
+      this.CallRESTAPI_XML(this.getUserAPI, "POST", payload, 1, _accessToken, _subType);
+    
   },
 
   LoginUser(_email, _password, _role, _license) {
     var payload = new UserLoginPayload(_email, _password, _role, _license);
-    this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2, null, -1);
+    if(!IsMobile)
+      this.CallRESTAPI(this.loginUserAPI, "POST", payload, 2, null, -1);
+    else
+      this.CallRESTAPI_XML(this.loginUserAPI, "POST", payload, 2, null, -1);
   },
 
   UpdateUserData(_cash = -1, _gameWon = -1, _avatarID = -1) {
@@ -325,7 +338,11 @@ var ServerBackend = cc.Class({
         console.log(SendingPayload);
         var payload = SendingPayload;
         var header = { "Content-Type": "application/json; charset=utf-8", Authorization: _mainData.userToken };
-        this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
+
+        if(!IsMobile)
+          this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);
+        else
+          this.CallRESTAPI_XML(this.UpdateUserDataAPI, "PUT", payload, 3, _mainData.userToken, -1);
       } else {
         console.error("cannot update data as stored data is null");
       }
@@ -372,6 +389,217 @@ var ServerBackend = cc.Class({
       try {
         var Response = await ServerBackend.Instance.Fetch(_url, _method, _requestBody, _headers);
         var TempData = await Response.json();
+
+        if (_type == 1) {
+          //getting user data
+          var MainData = new UserDataResponse(TempData.statusCode, TempData.message, TempData.data);
+          console.log(TempData);
+          if (_subType == 0) {
+            //return data to storage class
+            if (MainData.message.includes("SUCCESS") || MainData.message.includes("sucessfully")) {
+              console.log("got data successfully");
+              console.log(MainData);
+
+              //both below calls are written inside storgaemanager
+              cc.systemEvent.emit("WriteData", MainData.data);
+              cc.systemEvent.emit("RefreshData", 0);
+            } else {
+              cc.systemEvent.emit("RefreshData", 1);
+            }
+          }
+        } else if (_type == 2) {
+          //login user
+          var MainData = new UserDataResponse(TempData.statusCode, TempData.message, TempData.data);
+          console.log(TempData);
+          if (MainData.message.includes("sucessfully")) {
+            cc.systemEvent.emit("WriteData", MainData.data);
+            console.log("user logged in successfully");
+            console.log(MainData);
+            if (MainData.data.roleType.includes("Student")) {
+              ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+              ServerBackend.Instance.AssignStudentData(MainData.data, true);
+              cc.systemEvent.emit("AssignProfileData", true, false, false, false, false);
+            } else if (MainData.data.roleType.includes("Teacher")) {
+              ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+              ServerBackend.Instance.AssignTeacherData(MainData.data, true);
+              cc.systemEvent.emit("AssignProfileData", false, true, false, false, false);
+            } else if (MainData.data.roleType.includes("ProgramAmbassador")) {
+              ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+              ServerBackend.Instance.AssignMentorData(MainData.data, true);
+              cc.systemEvent.emit("AssignProfileData", false, false, true, false, false);
+            } else if (MainData.data.roleType.includes("SchoolAdmin")) {
+              ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+              ServerBackend.Instance.AssignAdminData(MainData.data, true);
+              cc.systemEvent.emit("AssignProfileData", false, false, false, true, false);
+            } else if (MainData.data.roleType.includes("ProgramDirector")) {
+              ServerBackend.Instance.ResponseType = ResponseTypeEnum.Successful;
+              ServerBackend.Instance.AssignDirectorData(MainData.data, true);
+              cc.systemEvent.emit("AssignProfileData", false, false, false, false, true);
+            }
+          } else if (MainData.message.includes("wrong") || MainData.message.includes("characters")) {
+            ServerBackend.Instance.ResponseType = ResponseTypeEnum.InvalidEmailPassword;
+            cc.systemEvent.emit("AssignProfileData");
+          } else if (MainData.message.includes("Data not Found!")) {
+            ServerBackend.Instance.ResponseType = ResponseTypeEnum.UserNotFound;
+            cc.systemEvent.emit("AssignProfileData");
+          } else if (MainData.message.includes("Password should contain atleast one Integer")) {
+            ServerBackend.Instance.ResponseType = ResponseTypeEnum.InvalidEmailPassword;
+            cc.systemEvent.emit("AssignProfileData");
+          } else if (MainData.message.includes("School License is not valid contact Admin!") || MainData.message.includes("School License Does not exist!")) {
+            ServerBackend.Instance.ResponseType = ResponseTypeEnum.LicenseInvalid;
+            cc.systemEvent.emit("AssignProfileData");
+          }
+        } else if (_type == 3) {
+          var MainData = new UserDataResponse(TempData.statusCode, TempData.message, TempData.data);
+          console.log(TempData);
+        }
+      } catch (e) {
+        if (_type == 2) {
+          //login user error
+          ServerBackend.Instance.ResponseType = ResponseTypeEnum.WentWrong;
+          cc.systemEvent.emit("AssignProfileData");
+        }
+        console.log("something goes bezaar");
+        console.error(e.toString());
+      } finally {
+        //  console.log('We do cleanup here');
+      }
+    }
+    //#region Commented
+    // fetch(
+    //     _url,
+    //     {
+    //         headers: { "Content-Type": "application/json; charset=utf-8" },
+    //         method: _method,
+    //         body: JSON.stringify(_requestBody)
+    //     }
+    //   )
+    //   .then(response=>{
+    //       response.json().then(data=>{
+    //         //console.log(data);
+    //         //return data;
+    //     });
+    //   })
+    //   .catch(function(err) {
+    //     console.log(err);
+    //   });
+    //#endregion
+  },
+
+  Fetch_XML(_url, _method, _requestBody, _headers = null) {
+    var http = new XMLHttpRequest();
+    var request_url = _url;
+    var params = "";
+
+    if (_method == "GET") {
+      if (_headers == null) {
+
+        return new Promise(resolve => {
+        http.open("GET", request_url, true);
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+        http.onreadystatechange = function () {
+        var httpStatus = http.statusText;
+        var responseJSON=null;
+        if (http.responseText) {
+          responseJSON = eval("(" + http.responseText + ")");
+        }
+
+        //console.log(http.readyState);
+        switch (http.readyState) {
+          case 4:
+            console.log(responseJSON);
+            resolve(responseJSON);
+        }
+        };
+
+        http.send();
+        });
+
+        
+      } else {
+        return new Promise(resolve => {
+        http.open("GET", request_url, true);
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+        http.setRequestHeader("Authorization", _headers);
+        http.onreadystatechange = function () {
+        var httpStatus = http.statusText;
+        var responseJSON=null;
+        if (http.responseText) {
+          responseJSON = eval("(" + http.responseText + ")");
+        } else {
+          responseJSON = null;
+        }
+
+        switch (http.readyState) {
+          case 4:
+            console.log(responseJSON);
+            resolve(responseJSON);
+        }
+        };
+
+        http.send();
+      });
+      }
+    } else {
+      if (_headers == null) {
+        return new Promise(resolve => {
+        http.open(_method, request_url, true);
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+        http.onreadystatechange = function () {
+        var httpStatus = http.statusText;
+        var responseJSON=null;
+        if (http.responseText) {
+          responseJSON = eval("(" + http.responseText + ")");
+        }
+
+        switch (http.readyState) {
+          case 4:
+            console.log(responseJSON);
+            resolve(responseJSON);
+        }
+        };
+
+        http.send(JSON.stringify(_requestBody));
+      });
+      } else { 
+        return new Promise(resolve => {
+        http.open(_method, request_url, true);
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+        http.setRequestHeader("Authorization", _headers);
+        http.onreadystatechange = function () {
+        var httpStatus = http.statusText;
+        var responseJSON=null;
+        if (http.responseText) {
+          responseJSON = eval("(" + http.responseText + ")");
+        } 
+
+        switch (http.readyState) {
+          case 4:
+            console.log(responseJSON);
+            resolve(responseJSON);
+        }
+        };
+
+        http.send(JSON.stringify(_requestBody));
+      });
+      }
+    }
+  },
+
+  CallRESTAPI_XML(_url, _method, _requestBody, _type, _headers = null, _subType = -1) {
+    Fetch_Promise_XML(_url, _method, _requestBody, _headers);
+    async function Fetch_Promise_XML(_url, _method, _requestBody, _headers = null) {
+      try {
+        console.log("called");
+        var Response = await ServerBackend.Instance.Fetch_XML(_url, _method, _requestBody, _headers);
+        var TempData = Response;
+
+        if(TempData==null || TempData==undefined)
+        {
+          // ServerBackend.Instance.ResponseType = ResponseTypeEnum.WentWrong;
+          // cc.systemEvent.emit("AssignProfileData");
+          return;
+        }
 
         if (_type == 1) {
           //getting user data

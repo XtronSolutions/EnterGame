@@ -4,8 +4,10 @@ cc._RF.push(module, 'f5a14bMsD9JSZovKg9aBEdQ', 'StorageManager');
 
 "use strict";
 
-var GamePlayReferenceManager = null;
-var IsWeb = true;
+var GamePlayReferenceManager = null; //for web make: IsWeb=true
+//for mobile make: IsWeb=false
+
+var IsWeb = false;
 var StorageManager = cc.Class({
   name: "StorageManager",
   "extends": cc.Component,

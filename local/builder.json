@@ -1,8 +1,8 @@
 {
-  "platform": "web-mobile",
-  "actualPlatform": "web-mobile",
+  "platform": "android",
+  "actualPlatform": "android",
   "template": "link",
-  "buildPath": "E:\\build",
+  "buildPath": "E:\\build\\Android",
   "debug": false,
   "sourceMaps": false,
   "embedWebDebugger": false,
