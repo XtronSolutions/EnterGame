@@ -804,7 +804,7 @@ var GameManager = cc.Class({
       console.log("card event received: " + CardEventReceived);
 
       if (CardEventReceived == true) {
-        clearTimeout(CardDisplaySetTimout); //console.error(this.CardCounter);
+        clearTimeout(CardDisplaySetTimout); //console.log(this.CardCounter);
 
         CardEventReceived = false;
 
@@ -836,7 +836,7 @@ var GameManager = cc.Class({
       if (this.PlayerGameInfo[this.TurnNumber].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) GamePlayReferenceManager.Instance.Get_SpaceManager().Data[counter].ReferenceLocation.getComponent("SpaceHandler").OnLandedOnSpace(true, RandomCard);else CardEventReceived = true;
     } else if (this.SelectedMode == 1) {
       if (this.PlayerGameInfo[this.TurnNumber].IsBot == false) GamePlayReferenceManager.Instance.Get_SpaceManager().Data[counter].ReferenceLocation.getComponent("SpaceHandler").OnLandedOnSpace(true, RandomCard);else GamePlayReferenceManager.Instance.Get_SpaceManager().Data[counter].ReferenceLocation.getComponent("SpaceHandler").OnLandedOnSpace(false, RandomCard, true);
-    } // console.error(CardEventReceived);
+    } // console.log(CardEventReceived);
 
   },
 
@@ -1314,16 +1314,16 @@ var GameManager = cc.Class({
       if (this.PlayerGameInfo[this.TurnNumber].NoOfBusiness[0].BusinessType == 2) {
         RollCounter = 0;
         this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned = true;
-        console.error(RollCounter);
+        console.log(RollCounter);
       } else {
         this.PlayerGameInfo[this.TurnNumber].InitialCounterAssigned = true;
         RollCounter = 14;
-        console.error(RollCounter);
+        console.log(RollCounter);
       }
     } else {
       if (this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter == 13) this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 22;else this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter + 1;
       RollCounter = this.PlayerGameInfo[this.TurnNumber].PlayerRollCounter;
-      console.error(RollCounter - 1);
+      console.log(RollCounter - 1);
     }
 
     DiceRoll = _result;
@@ -1376,14 +1376,14 @@ var GameManager = cc.Class({
     }
 
     if (tempcounter2 - 1 < 0) {
-      console.error("starting from oblivion");
+      console.log("starting from oblivion");
       tempcounter = tempcounter2 + _rolling - 1;
       var dicetobe = parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[tempcounter].ReferenceLocation.getComponent("SpaceHandler").SpaceData.SpacesType);
-      console.error("to be: " + dicetobe);
+      console.log("to be: " + dicetobe);
     } else {
       tempcounter = tempcounter2 + _rolling;
       var dicetobe = parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[tempcounter].ReferenceLocation.getComponent("SpaceHandler").SpaceData.SpacesType);
-      console.error("to be: " + dicetobe);
+      console.log("to be: " + dicetobe);
     }
   },
   RollDice: function RollDice() {
@@ -1395,8 +1395,8 @@ var GameManager = cc.Class({
         Dice1 = parseInt(_diceinput1);
         Dice2 = parseInt(_diceinput2);
       } else if (this.PlayerGameInfo[this.TurnNumber].IsBot == true && _isTest) {
-        Dice1 = 5;
-        Dice2 = 1;
+        Dice1 = 20;
+        Dice2 = 20;
       } else {
         Dice1 = this.getRandom(1, 7);
         Dice2 = this.getRandom(1, 7);
@@ -1793,7 +1793,7 @@ var GameManager = cc.Class({
           }
 
           IsTweening = false;
-          console.error(_spaceID);
+          console.log(_spaceID);
 
           if (this.SelectedMode == 2) {
             //for real player
@@ -1841,7 +1841,7 @@ var GameManager = cc.Class({
           if (!isGameOver) {
             if (this.PlayerGameInfo[this.TurnNumber].isGameFinished) {
               this.completeCardTurn();
-              console.error("complete turn is called");
+              console.log("complete turn is called");
             }
           }
         }
@@ -1877,10 +1877,10 @@ var GameManager = cc.Class({
       if (!this.PlayerGameInfo[_playerIndex].IsActive) {
         this.PlayerGameInfo[_playerIndex].isGameFinished = true;
         this.PlayerGameInfo[_playerIndex].TotalScore = 0;
-        console.error("player is not active returning");
+        console.log("player is not active returning");
       } else {
         if (this.PlayerGameInfo[_playerIndex].PlayerUID == GamePlayReferenceManager.Instance.Get_MultiplayerController().PhotonActor().customProperties.Data.userID) {
-          console.error("calculating....");
+          console.log("calculating....");
           console.log("agme is not finished");
           this.PlayerGameInfo[_playerIndex].isGameFinished = true;
           var _cash = this.PlayerGameInfo[_playerIndex].Cash;
@@ -2393,7 +2393,7 @@ var GameManager = cc.Class({
               if (parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent("SpaceHandler").SpaceData.SpacesType) == 6 || parseInt(GamePlayReferenceManager.Instance.Get_SpaceManager().Data[RollCounter].ReferenceLocation.getComponent("SpaceHandler").SpaceData.SpacesType) == 7) {
                 PassedPayDay = true;
                 PassedPayDayCounter++;
-              } /// console.error(PassedPayDayCounter);
+              } /// console.log(PassedPayDayCounter);
 
             } else {
               console.log("user game is over skipping");

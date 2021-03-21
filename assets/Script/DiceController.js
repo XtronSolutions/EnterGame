@@ -43,6 +43,10 @@ var DiceController=cc.Class({
             serializable: true,
         },
     },
+    statics: {
+        Instance: null,
+      },
+    
 
     CheckReferences()
     {
@@ -50,8 +54,14 @@ var DiceController=cc.Class({
         GamePlayReferenceManager=require('GamePlayReferenceManager');
     },
 
+    ClearAllTimeouts()
+    {
+        clearTimeout();
+    },
+
     onEnable()
     {
+        DiceController.Instance=this;
         this.CheckReferences();
         this.ResetDice();
         this.DiceCounter=0;
@@ -76,39 +86,56 @@ var DiceController=cc.Class({
 
     AnimateDice(_dice1Value=0,_dice2Value=0)
     {
-        if(this.DiceCounter<this.MaxCounter)
-        {
-            if(this.HasOneDice)
+        try {
+            if(this.DiceCounter<this.MaxCounter)
             {
-                var _displayIndex=this.getRandom(0,6)
-                this.IterateDice(this.DiceOneData.DiceNodes,_displayIndex);
+                if(this.HasOneDice)
+                {
+                    if(this.DiceOneData)
+                    {
+                        var _displayIndex=this.getRandom(0,6)
+                        this.IterateDice(this.DiceOneData.DiceNodes,_displayIndex);
+                    }
+                }
+    
+                if(this.HasTwoDices)
+                {
+                    if(this.DiceTwoData)
+                    {
+                        var _displayIndex2=this.getRandom(0,6)
+                        this.IterateDice(this.DiceTwoData.DiceNodes,_displayIndex2);
+                    }
+                }
+    
+                setTimeout(() => {
+                    this.DiceCounter++;
+                    this.AnimateDice(_dice1Value,_dice2Value);
+                 },this.DiceSpeed);
             }
-
-            if(this.HasTwoDices)
+            else
             {
-                var _displayIndex2=this.getRandom(0,6)
-                this.IterateDice(this.DiceTwoData.DiceNodes,_displayIndex2);
-            }
-
-            setTimeout(() => {
-                this.DiceCounter++;
-                this.AnimateDice(_dice1Value,_dice2Value);
-             },this.DiceSpeed);
-        }
-        else
-        {
-            this.DiceCounter=0;
+                this.DiceCounter=0;
+                
+                if(this.DiceOneData && this.DiceTwoData)
+                {
+                if(this.HasOneDice)
+                    this.IterateDice(this.DiceOneData.DiceNodes,(_dice1Value-1));
+    
+                if(this.HasTwoDices)
+                    this.IterateDice(this.DiceTwoData.DiceNodes,(_dice2Value-1));
+                }
+                 
+               setTimeout(() => {
+                   if(GamePlayReferenceManager.Instance.Get_GameManager())
+                   {
+                    GamePlayReferenceManager.Instance.Get_GameManager().DiceFuntionality();
+                   }
+               }, 1000); 
+            }   
+        } catch (error) {
             
-            if(this.HasOneDice)
-                this.IterateDice(this.DiceOneData.DiceNodes,(_dice1Value-1));
-
-            if(this.HasTwoDices)
-                this.IterateDice(this.DiceTwoData.DiceNodes,(_dice2Value-1));
-             
-           setTimeout(() => {
-                GamePlayReferenceManager.Instance.Get_GameManager().DiceFuntionality();
-           }, 1000); 
         }
+       
     },
 
     getRandom:function(min,max)
@@ -118,7 +145,12 @@ var DiceController=cc.Class({
 
     ResetDice()
     {
+        if(this.DiceOneData && this.DiceTwoData)
+        {
         this.IterateDice(this.DiceOneData.DiceNodes,0);
         this.IterateDice(this.DiceTwoData.DiceNodes,0);
+        }
     },
 });
+
+module.exports = DiceController;

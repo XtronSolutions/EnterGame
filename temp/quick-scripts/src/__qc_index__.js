@@ -8,6 +8,7 @@ require('./assets/Script/GamePlayReferenceManager');
 require('./assets/Script/GameplayUIManager');
 require('./assets/Script/MultiplayerController');
 require('./assets/Script/MultiplayerSyncManager');
+require('./assets/Script/PersistNode');
 require('./assets/Script/PlayerDetails');
 require('./assets/Script/PlayerProfileManager');
 require('./assets/Script/Preloading');

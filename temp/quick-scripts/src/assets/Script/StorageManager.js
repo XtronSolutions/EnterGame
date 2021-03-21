@@ -26,19 +26,17 @@ var StorageManager = cc.Class({
     // }
   },
   onLoad: function onLoad() {
-    console.log("V15");
+    console.log("V16");
 
-    if (IsWeb) {
-      console.log = function () {};
+    console.log = function () {};
 
-      console.error = function () {};
+    console.error = function () {};
 
-      console.warn = function () {};
+    console.warn = function () {};
 
-      console.info = function () {};
+    console.info = function () {};
 
-      console.trace = function () {};
-    }
+    console.trace = function () {};
 
     GamePlayReferenceManager = null;
     this.Loader.active = true;

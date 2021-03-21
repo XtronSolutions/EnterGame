@@ -223,7 +223,7 @@ var ServerBackend = cc.Class({
       ServerBackend.Instance = this;
       cc.game.addPersistRootNode(this.node);
       this.StudentData = new Student();
-      //  console.error("creating instance " + this.node.name);
+      //  console.log("creating instance " + this.node.name);
     }
 
     //private variables
@@ -344,7 +344,7 @@ var ServerBackend = cc.Class({
         else
           this.CallRESTAPI_XML(this.UpdateUserDataAPI, "PUT", payload, 3, _mainData.userToken, -1);
       } else {
-        console.error("cannot update data as stored data is null");
+        console.log("cannot update data as stored data is null");
       }
     } else {
       console.log("not student");
@@ -366,8 +366,8 @@ var ServerBackend = cc.Class({
       }
     } else {
       if (_headers == null) {
-        //console.error("header is null");
-        //console.error(_requestBody);
+        //console.log("header is null");
+        //console.log(_requestBody);
         return fetch(_url, {
           headers: { "Content-Type": "application/json; charset=utf-8" },
           method: _method,
@@ -459,8 +459,8 @@ var ServerBackend = cc.Class({
           ServerBackend.Instance.ResponseType = ResponseTypeEnum.WentWrong;
           cc.systemEvent.emit("AssignProfileData");
         }
-        console.log("something goes bezaar");
-        console.error(e.toString());
+        console.log("something goes wrong");
+        console.log(e.toString());
       } finally {
         //  console.log('We do cleanup here');
       }
@@ -671,7 +671,7 @@ var ServerBackend = cc.Class({
           cc.systemEvent.emit("AssignProfileData");
         }
         console.log("something goes bezaar");
-        console.error(e.toString());
+        console.log(e.toString());
       } finally {
         //  console.log('We do cleanup here');
       }
@@ -698,7 +698,7 @@ var ServerBackend = cc.Class({
   },
 
   AssignStudentData(DataResponse, isLoggedIn) {
-    //console.error(DataResponse);
+    //console.log(DataResponse);
     this.StudentData.name = DataResponse.name;
     this.StudentData.dOB = DataResponse.doB;
     this.StudentData.gradeLevel = DataResponse.gradeLevel;

@@ -4,6 +4,10 @@ cc._RF.push(module, '80e5dJMhAJM0b0RW9xz0opK', 'GameplayUIManager');
 
 "use strict";
 
+var _DiceController = _interopRequireDefault(require("./DiceController"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 var GameManager = null;
 var DamageDecisionResult = 0;
 var GamePlayReferenceManager = null;
@@ -1570,11 +1574,19 @@ var GameplayUIManager = cc.Class({
       type: cc.Node,
       serializable: true
     },
+    ExitRoomButton: {
+      "default": null,
+      type: cc.Node,
+      serializable: true
+    },
     AvatarSprites: {
       "default": [],
       type: cc.SpriteFrame,
       serializable: true
     }
+  },
+  statics: {
+    Instance: null
   },
 
   /**
@@ -1670,7 +1682,8 @@ var GameplayUIManager = cc.Class({
     @summary called when this node gets active
    **/
   onEnable: function onEnable() {
-    //events subscription to be called
+    GameplayUIManager.Instance = this; //events subscription to be called
+
     cc.systemEvent.on("SyncData", this.SyncData, this);
   },
 
@@ -1717,8 +1730,18 @@ var GameplayUIManager = cc.Class({
   },
   ToggleLeaveRoomButton_SpectateModeUI: function ToggleLeaveRoomButton_SpectateModeUI(_state) {
     this.LeaveRoomButton.active = _state;
+    if (_state) this.ToggleExitButton(false);
+  },
+  ToggleExitButton: function ToggleExitButton(_state) {
+    this.ExitRoomButton.active = _state;
   },
   OnLeaveButtonClicked_SpectateModeUI: function OnLeaveButtonClicked_SpectateModeUI() {
+    GameplayUIManager.Instance.setTimeScale(0);
+
+    if (_DiceController["default"].Instance) {
+      _DiceController["default"].Instance.ClearAllTimeouts();
+    }
+
     GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleLeaveRoom_Bool(true);
     GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
     setTimeout(function () {
@@ -1727,8 +1750,44 @@ var GameplayUIManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
       GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
       GamePlayReferenceManager.Instance.RemovePersistNode();
-      cc.director.loadScene("MainMenu");
-    }, 500);
+      clearTimeout();
+      cc.director.loadScene("MainMenu", function () {
+        GameplayUIManager.Instance.setTimeScale(1);
+      });
+    }, 1);
+  },
+  setTimeScale: function setTimeScale(scale) {
+    cc.director.calculateDeltaTime = function (now) {
+      if (!now) now = performance.now();
+      this._deltaTime = (now - this._lastUpdate) / 1000;
+      this._deltaTime *= scale;
+      this._lastUpdate = now;
+    };
+  },
+  OnExitButtonClicked: function OnExitButtonClicked() {
+    GameplayUIManager.Instance.setTimeScale(0);
+
+    if (_DiceController["default"].Instance) {
+      _DiceController["default"].Instance.ClearAllTimeouts();
+    }
+
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleLeaveRoom_Bool(true);
+
+    if (GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode() == 2) {
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
+    }
+
+    setTimeout(function () {
+      GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+      GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+      GamePlayReferenceManager.Instance.RemovePersistNode();
+      clearTimeout();
+      cc.director.loadScene("MainMenu", function () {
+        GameplayUIManager.Instance.setTimeScale(1);
+      });
+    }, 1);
   },
   //#endregion
   //#region BusinessSetup with loan
@@ -2172,7 +2231,7 @@ var GameplayUIManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
       }
     } else {
-      console.error("no mode selected");
+      console.log("no mode selected");
     }
   },
   StartNewSetup_DuringGame_BusinessSetup: function StartNewSetup_DuringGame_BusinessSetup() {
@@ -2476,7 +2535,7 @@ var GameplayUIManager = cc.Class({
     }
 
     TurnOverForInvest = _isTurnOver;
-    console.error(_isTurnOver);
+    console.log(_isTurnOver);
     if (TurnOverForInvest) StockBusinessName = "Friend's Business";
 
     if (!this.StockInvested || TurnOverForInvest) {
@@ -3404,7 +3463,7 @@ var GameplayUIManager = cc.Class({
 
         if (_manager.PlayerGameInfo[_playerIndex].SkippedLoanPayment) this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = false;else this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = true;
         this.PayDaySetupUI.LoanResultPanelNode.active = true;
-        console.error("out of money");
+        console.log("out of money");
       }
     }
   },
@@ -3544,7 +3603,7 @@ var GameplayUIManager = cc.Class({
     this.ProcessBankrupt(true, _txt, 3000);
   },
   ShowInfo: function ShowInfo(_data) {
-    console.error("reecieved id: " + _data.PlayerUID);
+    console.log("reecieved id: " + _data.PlayerUID);
 
     if (_data.PlayerUID == "") {
       this.ShowToast(_data.info, 2000, true);
@@ -3558,7 +3617,7 @@ var GameplayUIManager = cc.Class({
           if (_myUID == _data.PlayerUID) {
             this.ShowToast(_data.info, 3000, true);
           } else {
-            console.error("nothing");
+            console.log("nothing");
           }
         }
     }
@@ -4600,7 +4659,7 @@ var GameplayUIManager = cc.Class({
       _modeIndex = 0;
     }
 
-    console.error(_actorsData);
+    console.log(_actorsData);
     this.LoanPartnershipSetup.TitleLabel.string = "SELECT PLAYER";
     this.LoanPartnershipSetup.CashLabel.string = "$" + _myData.Cash;
     this.LoanPartnershipSetup.PlayerNameLabel.string = _myData.PlayerName;
@@ -4630,8 +4689,8 @@ var GameplayUIManager = cc.Class({
       }
     } else if (_modeIndex == 1) {
       //for bot
-      console.error(_actorsData);
-      console.error(_myData);
+      console.log(_actorsData);
+      console.log(_myData);
 
       for (var _index6 = 0; _index6 < _actorsData.length; _index6++) {
         if (_myData.PlayerUID != _actorsData[_index6].PlayerUID) {
@@ -4747,7 +4806,7 @@ var GameplayUIManager = cc.Class({
       _modeIndex = 0;
     }
 
-    console.error(_actorsData);
+    console.log(_actorsData);
     this.CompareDiceSetup.TitleLabel.string = "SELECT PLAYER";
     this.CompareDiceSetup.CashLabel.string = "$" + _myData.Cash;
     this.CompareDiceSetup.PlayerNameLabel.string = _myData.PlayerName;
@@ -4777,8 +4836,8 @@ var GameplayUIManager = cc.Class({
       }
     } else if (_modeIndex == 1) {
       //for bot
-      console.error(_actorsData);
-      console.error(_myData);
+      console.log(_actorsData);
+      console.log(_myData);
 
       for (var _index7 = 0; _index7 < _actorsData.length; _index7++) {
         if (_myData.PlayerUID != _actorsData[_index7].PlayerUID) {
@@ -5077,9 +5136,11 @@ var GameplayUIManager = cc.Class({
       }
   },
   CompleteToast: function CompleteToast() {
-    console.error("complete toast called");
-    this.PopUpUI.active = false;
-    clearTimeout(TimeoutRef);
+    try {
+      console.log("complete toast called");
+      if (this.PopUpUI) this.PopUpUI.active = false;
+      clearTimeout(TimeoutRef);
+    } catch (error) {}
   },
   ShowResultScreen: function ShowResultScreen(_status, _data) {
     this.ResultSetupUI.ResultScreen.active = true;

@@ -1,3 +1,4 @@
+import DiceController from  "./DiceController";
 var GameManager = null;
 var DamageDecisionResult = 0;
 var GamePlayReferenceManager = null;
@@ -1621,11 +1622,21 @@ var GameplayUIManager = cc.Class({
       type: cc.Node,
       serializable: true,
     },
+
+    ExitRoomButton: {
+      default: null,
+      type: cc.Node,
+      serializable: true,
+    },
     AvatarSprites: {
       default: [],
       type: cc.SpriteFrame,
       serializable: true,
     },
+  },
+
+  statics: {
+    Instance: null,
   },
 
   /**
@@ -1724,6 +1735,7 @@ var GameplayUIManager = cc.Class({
     @summary called when this node gets active
    **/
   onEnable: function () {
+    GameplayUIManager.Instance=this;
     //events subscription to be called
     cc.systemEvent.on("SyncData", this.SyncData, this);
   },
@@ -1778,9 +1790,22 @@ var GameplayUIManager = cc.Class({
 
   ToggleLeaveRoomButton_SpectateModeUI(_state) {
     this.LeaveRoomButton.active = _state;
+
+    if(_state)
+      this.ToggleExitButton(false);
+  },
+
+  ToggleExitButton(_state)
+  {
+    this.ExitRoomButton.active=_state;
   },
 
   OnLeaveButtonClicked_SpectateModeUI() {
+    GameplayUIManager.Instance.setTimeScale(0);
+    if(DiceController.Instance)
+    {
+      DiceController.Instance.ClearAllTimeouts();
+    }
     GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleLeaveRoom_Bool(true);
     GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
     setTimeout(() => {
@@ -1789,8 +1814,46 @@ var GameplayUIManager = cc.Class({
       GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
       GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
       GamePlayReferenceManager.Instance.RemovePersistNode();
-      cc.director.loadScene("MainMenu");
-    }, 500);
+      clearTimeout();
+      cc.director.loadScene("MainMenu",function(){
+        GameplayUIManager.Instance.setTimeScale(1);
+      });
+    }, 1);
+  },
+
+  setTimeScale(scale) {
+    cc.director.calculateDeltaTime = function(now) {
+      if (!now) now = performance.now();
+      this._deltaTime = (now - this._lastUpdate) / 1000;
+      this._deltaTime *= scale;
+      this._lastUpdate = now;
+    };
+  },
+
+  OnExitButtonClicked()
+  {
+    GameplayUIManager.Instance.setTimeScale(0);
+    if(DiceController.Instance)
+    {
+      DiceController.Instance.ClearAllTimeouts();
+    }
+    GamePlayReferenceManager.Instance.Get_MultiplayerController().ToggleLeaveRoom_Bool(true);
+
+    if(GamePlayReferenceManager.Instance.Get_MultiplayerController().GetSelectedMode()==2)
+    {
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().DisconnectPhoton();
+    }
+    setTimeout(() => {
+      GamePlayReferenceManager.Instance.Get_GameManager().ClearDisplayTimeout();
+      GamePlayReferenceManager.Instance.Get_MultiplayerController().RemovePersistNode();
+      GamePlayReferenceManager.Instance.Get_MultiplayerSyncManager().RemovePersistNode();
+      GamePlayReferenceManager.Instance.Get_ServerBackend().RemovePersistNode();
+      GamePlayReferenceManager.Instance.RemovePersistNode();
+      clearTimeout();
+      cc.director.loadScene("MainMenu",function(){
+        GameplayUIManager.Instance.setTimeScale(1);
+      });
+    }, 1);
   },
   //#endregion
 
@@ -2188,7 +2251,7 @@ var GameplayUIManager = cc.Class({
         GamePlayReferenceManager.Instance.Get_GameManager().StartTurnAfterBankrupt();
       }
     } else {
-      console.error("no mode selected");
+      console.log("no mode selected");
     }
   },
 
@@ -2496,7 +2559,7 @@ var GameplayUIManager = cc.Class({
   OnStockDiceClicked_TurnDecision: function (event = null, _isTurnOver = false) {
     TurnOverForInvest = _isTurnOver;
 
-    console.error(_isTurnOver);
+    console.log(_isTurnOver);
 
     if (TurnOverForInvest) StockBusinessName = "Friend's Business";
 
@@ -3383,7 +3446,7 @@ var GameplayUIManager = cc.Class({
         else this.PayDaySetupUI.SkipLoanButton.getComponent(cc.Button).interactable = true;
 
         this.PayDaySetupUI.LoanResultPanelNode.active = true;
-        console.error("out of money");
+        console.log("out of money");
       }
     }
   },
@@ -3502,7 +3565,7 @@ var GameplayUIManager = cc.Class({
 
   ShowInfo(_data) {
 
-    console.error("reecieved id: "+_data.PlayerUID);
+    console.log("reecieved id: "+_data.PlayerUID);
     if(_data.PlayerUID=="")
     {
       this.ShowToast(_data.info, 2000, true);
@@ -3518,7 +3581,7 @@ var GameplayUIManager = cc.Class({
             this.ShowToast(_data.info, 3000, true);
           }else
           {
-            console.error("nothing");
+            console.log("nothing");
           }
       }
     }
@@ -4472,7 +4535,7 @@ var GameplayUIManager = cc.Class({
   },
 
   SetUpSpaceScreen_LoanPartnership(_myData, _actorsData, _isTurnOver, _modeIndex = 0) {
-    console.error(_actorsData);
+    console.log(_actorsData);
     this.LoanPartnershipSetup.TitleLabel.string = "SELECT PLAYER";
     this.LoanPartnershipSetup.CashLabel.string = "$" + _myData.Cash;
     this.LoanPartnershipSetup.PlayerNameLabel.string = _myData.PlayerName;
@@ -4503,8 +4566,8 @@ var GameplayUIManager = cc.Class({
     } else if (_modeIndex == 1) {
       //for bot
 
-      console.error(_actorsData);
-      console.error(_myData);
+      console.log(_actorsData);
+      console.log(_myData);
       for (let index = 0; index < _actorsData.length; index++) {
         if (_myData.PlayerUID != _actorsData[index].PlayerUID) {
           var node = cc.instantiate(this.LoanPartnershipSetup.DetailsPrefab);
@@ -4603,7 +4666,7 @@ var GameplayUIManager = cc.Class({
     },
   
     SetUpSpaceScreen_CompareDice(_myData, _actorsData, _isTurnOver, _modeIndex = 0) {
-      console.error(_actorsData);
+      console.log(_actorsData);
       this.CompareDiceSetup.TitleLabel.string = "SELECT PLAYER";
       this.CompareDiceSetup.CashLabel.string = "$" + _myData.Cash;
       this.CompareDiceSetup.PlayerNameLabel.string = _myData.PlayerName;
@@ -4634,8 +4697,8 @@ var GameplayUIManager = cc.Class({
       } else if (_modeIndex == 1) {
         //for bot
   
-        console.error(_actorsData);
-        console.error(_myData);
+        console.log(_actorsData);
+        console.log(_myData);
         for (let index = 0; index < _actorsData.length; index++) {
           if (_myData.PlayerUID != _actorsData[index].PlayerUID) {
             var node = cc.instantiate(this.CompareDiceSetup.DetailsPrefab);
@@ -4966,9 +5029,16 @@ var GameplayUIManager = cc.Class({
   },
 
   CompleteToast() {
-    console.error("complete toast called");
-    this.PopUpUI.active = false;
-    clearTimeout(TimeoutRef);
+    try {
+      console.log("complete toast called");
+      if(this.PopUpUI)
+        this.PopUpUI.active = false;
+
+      clearTimeout(TimeoutRef);
+    } catch (error) {
+      
+    }
+   
   },
 
   ShowResultScreen: function (_status, _data) {

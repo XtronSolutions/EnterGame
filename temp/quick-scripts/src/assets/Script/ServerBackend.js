@@ -422,7 +422,7 @@ var ServerBackend = cc.Class({
     if (!ServerBackend.Instance) {
       ServerBackend.Instance = this;
       cc.game.addPersistRootNode(this.node);
-      this.StudentData = new Student(); //  console.error("creating instance " + this.node.name);
+      this.StudentData = new Student(); //  console.log("creating instance " + this.node.name);
     } //private variables
 
 
@@ -535,7 +535,7 @@ var ServerBackend = cc.Class({
         };
         if (!IsMobile) this.CallRESTAPI(this.UpdateUserDataAPI, "PUT", payload, 3, header, -1);else this.CallRESTAPI_XML(this.UpdateUserDataAPI, "PUT", payload, 3, _mainData.userToken, -1);
       } else {
-        console.error("cannot update data as stored data is null");
+        console.log("cannot update data as stored data is null");
       }
     } else {
       console.log("not student");
@@ -562,8 +562,8 @@ var ServerBackend = cc.Class({
       }
     } else {
       if (_headers == null) {
-        //console.error("header is null");
-        //console.error(_requestBody);
+        //console.log("header is null");
+        //console.log(_requestBody);
         return fetch(_url, {
           headers: {
             "Content-Type": "application/json; charset=utf-8"
@@ -716,8 +716,8 @@ var ServerBackend = cc.Class({
                   cc.systemEvent.emit("AssignProfileData");
                 }
 
-                console.log("something goes bezaar");
-                console.error(_context.t0.toString());
+                console.log("something goes wrong");
+                console.log(_context.t0.toString());
 
               case 16:
                 _context.prev = 16;
@@ -983,7 +983,7 @@ var ServerBackend = cc.Class({
                 }
 
                 console.log("something goes bezaar");
-                console.error(_context2.t0.toString());
+                console.log(_context2.t0.toString());
 
               case 17:
                 _context2.prev = 17;
@@ -1000,7 +1000,7 @@ var ServerBackend = cc.Class({
     }
   },
   AssignStudentData: function AssignStudentData(DataResponse, isLoggedIn) {
-    //console.error(DataResponse);
+    //console.log(DataResponse);
     this.StudentData.name = DataResponse.name;
     this.StudentData.dOB = DataResponse.doB;
     this.StudentData.gradeLevel = DataResponse.gradeLevel;

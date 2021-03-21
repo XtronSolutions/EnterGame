@@ -24,15 +24,13 @@ var StorageManager = cc.Class({
     // }
   },
   onLoad() {
-    console.log("V15");
-    if(IsWeb)
-    {
-      console.log = function () {};
-      console.error = function () {};
-      console.warn = function () {};
-      console.info = function () {};
-      console.trace = function () {};
-    }
+    console.log("V16");
+    console.log = function () {};
+    console.error = function () {};
+    console.warn = function () {};
+    console.info = function () {};
+    console.trace = function () {};
+
     GamePlayReferenceManager = null;
     this.Loader.active = true;
     var anim = this.Loader.children[0].children[1].getComponent(cc.Animation);

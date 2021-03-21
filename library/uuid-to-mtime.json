@@ -1,17 +1,17 @@
 {
   "29f52784-2fca-467b-92e7-8fd9ef8c57b7": {
-    "asset": 1614885534550,
-    "meta": 1615645733597,
+    "asset": 1616019743013,
+    "meta": 1616019783085,
     "relativePath": "Scene"
   },
   "4734c20c-0db8-4eb2-92ea-e692f4d70934": {
-    "asset": 1614885534876,
-    "meta": 1615645733599,
+    "asset": 1616019743353,
+    "meta": 1616019783087,
     "relativePath": "Script"
   },
   "7b81d4e8-ec84-4716-968d-500ac1d78a54": {
-    "asset": 1614885535100,
-    "meta": 1615645733603,
+    "asset": 1616019743449,
+    "meta": 1616019783094,
     "relativePath": "Texture"
   },
   "a8027877-d8d6-4645-97a0-52d4a0123dba": {
@@ -20,8 +20,8 @@
     "relativePath": "Texture\\singleColor.png"
   },
   "81509ba0-e75e-4a32-b4e1-f8b00c6a020c": {
-    "asset": 1614885535393,
-    "meta": 1615645733609,
+    "asset": 1616019743609,
+    "meta": 1616019783098,
     "relativePath": "Texture\\Gameplay"
   },
   "5091d9cc-b61b-4e35-9d00-b224417a10e5": {
@@ -60,8 +60,8 @@
     "relativePath": "Texture\\Gameplay\\Start.png"
   },
   "b69dd489-a312-47c1-b392-19a3b8037220": {
-    "asset": 1615669563818,
-    "meta": 1615753621312,
+    "asset": 1616019742976,
+    "meta": 1616019783083,
     "relativePath": "Prefabs"
   },
   "4cc083b6-481f-4ba0-ac6d-db6d5fbc2f8a": {
@@ -70,8 +70,8 @@
     "relativePath": "Texture\\Gameplay\\space.png"
   },
   "9b99da6f-5ede-45d4-8b21-00d870554558": {
-    "asset": 1612266790215,
-    "meta": 1612266790230,
+    "asset": 1616360297603,
+    "meta": 1616360297622,
     "relativePath": "Scene\\Splash.fire"
   },
   "2aaff17c-fe7a-4f8c-9a53-9f3d6012e064": {
@@ -120,8 +120,8 @@
     "relativePath": "Texture\\LOADING2.png"
   },
   "7a9e2025-834d-4005-a4f8-0292ae595961": {
-    "asset": 1614885534313,
-    "meta": 1615645733592,
+    "asset": 1616019742799,
+    "meta": 1616019783080,
     "relativePath": "Animations"
   },
   "1c39e284-218d-4a40-b38f-efd7d53f25a3": {
@@ -130,8 +130,8 @@
     "relativePath": "Animations\\loading.anim"
   },
   "4139d5cb-c3bc-4adc-9868-69ebbaf164ee": {
-    "asset": 1614885535429,
-    "meta": 1615645733611,
+    "asset": 1616019743634,
+    "meta": 1616019783100,
     "relativePath": "Texture\\Gameplay\\Avatars"
   },
   "ababc4d8-df39-41b9-9f40-be404415845a": {
@@ -669,14 +669,9 @@
     "meta": 1609797824446,
     "relativePath": "Texture\\Gameplay\\Rectangle 64.png"
   },
-  "23d62fd1-4ba0-421c-b967-96a8b689df71": {
-    "asset": 1609023138698,
-    "meta": 1609800313401,
-    "relativePath": "Script\\DiceController.js"
-  },
   "44672244-60ba-4985-8238-4ab6681c0189": {
-    "asset": 1614885534967,
-    "meta": 1615645733601,
+    "asset": 1616019743370,
+    "meta": 1616019783090,
     "relativePath": "Script\\Libraries"
   },
   "9bffb17a-d41b-4f51-a858-2192b6e99c5a": {
@@ -830,8 +825,8 @@
     "relativePath": "Texture\\Gameplay\\BG_pop.png"
   },
   "9e1d2821-2a63-47e3-b81f-2d39a351f503": {
-    "asset": 1614885535098,
-    "meta": 1615645733607,
+    "asset": 1616019743447,
+    "meta": 1616019783096,
     "relativePath": "Texture\\AvatarUI"
   },
   "e8681e7c-be24-40da-b114-f8a4fee2418d": {
@@ -970,8 +965,8 @@
     "relativePath": "Prefabs\\PlayerDamagingPrefab.prefab"
   },
   "07aa3f94-110b-48dd-8a4b-43686a5a9c0a": {
-    "asset": 1615753940651,
-    "meta": 1615753940952,
+    "asset": 1616345988781,
+    "meta": 1616345989010,
     "relativePath": "Scene\\GamePlay.fire"
   },
   "48473dbb-ebfc-48ab-bc34-d11a582b5f16": {
@@ -1014,34 +1009,54 @@
     "meta": 1615691080180,
     "relativePath": "Script\\MultiplayerSyncManager.js"
   },
-  "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
-    "asset": 1615692237285,
-    "meta": 1615692239213,
-    "relativePath": "Script\\GameplayUIManager.js"
-  },
   "5817260b-fad5-4c4d-8f45-2d5480cbf52b": {
     "asset": 1615692923563,
     "meta": 1615693353729,
     "relativePath": "Script\\DecksData.js"
   },
+  "fd7a0769-4714-4b22-9d64-cb501dcf515d": {
+    "asset": 1616019743380,
+    "meta": 1616019783092,
+    "relativePath": "Sounds"
+  },
+  "09c30dfe-417e-43ce-86ce-eba0de67e149": {
+    "asset": 1616011527446,
+    "meta": 1616011528564,
+    "relativePath": "Sounds\\theme.mp3"
+  },
+  "bfecf965-9120-415a-a695-ed0e95d1827b": {
+    "asset": 1616012352239,
+    "meta": 1616012352633,
+    "relativePath": "Script\\PersistNode.js"
+  },
   "72485a4d-0052-4822-9676-db916a58db09": {
-    "asset": 1615693267735,
-    "meta": 1615693354346,
+    "asset": 1616250220409,
+    "meta": 1616250274407,
     "relativePath": "Script\\GameManager.js"
   },
   "5cea08ea-872c-4f5e-9880-b668ed0bbf94": {
-    "asset": 1615757512380,
-    "meta": 1615757516302,
+    "asset": 1616250203945,
+    "meta": 1616250275439,
     "relativePath": "Script\\MultiplayerController.js"
   },
   "1954f761-8ba1-4080-980c-1dd4d3d6b82d": {
-    "asset": 1615842051700,
-    "meta": 1615842190988,
+    "asset": 1616250127707,
+    "meta": 1616250275746,
     "relativePath": "Script\\ServerBackend.js"
   },
   "f5a146cc-b03f-4949-9a2f-2a0f5a044750": {
-    "asset": 1615842558352,
-    "meta": 1615842561068,
+    "asset": 1616250272482,
+    "meta": 1616250275798,
     "relativePath": "Script\\StorageManager.js"
+  },
+  "80e5d24c-8402-4cd1-bd11-5bdc73d28a4a": {
+    "asset": 1616349617678,
+    "meta": 1616349621770,
+    "relativePath": "Script\\GameplayUIManager.js"
+  },
+  "23d62fd1-4ba0-421c-b967-96a8b689df71": {
+    "asset": 1616353752290,
+    "meta": 1616353753357,
+    "relativePath": "Script\\DiceController.js"
   }
 }

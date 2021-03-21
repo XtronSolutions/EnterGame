@@ -528,7 +528,7 @@ var MultiplayerController = cc.Class({
           { receivers: Photon.LoadBalancing.Constants.ReceiverGroup.All }
         );
       } catch (err) {
-        console.error("error: " + err.message);
+        console.log("error: " + err.message);
       }
     } else {
       console.log("you are not in room.");

@@ -8,7 +8,7 @@
   },
   "packageName": "org.cocos2d.helloworld",
   "startScene": "9b99da6f-5ede-45d4-8b21-00d870554558",
-  "title": "The_Entrepreneur_Game",
+  "title": "TheEntrepreneurGamebyEESpeaks",
   "webOrientation": "landscape",
   "inlineSpriteFrames": true,
   "inlineSpriteFrames_native": true,
@@ -23,7 +23,7 @@
   "fb-instant-games": {},
   "android": {
     "REMOTE_SERVER_ROOT": "",
-    "packageName": "com.game.enter"
+    "packageName": "com.TEG.entrepreneure.eespeaks.game"
   },
   "ios": {
     "REMOTE_SERVER_ROOT": "",
